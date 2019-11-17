@@ -1,4 +1,15 @@
-CREATE TABLE category (
+CREATE TABLE users (
+    id serial,
+    primary key(id),
+    name text,
+    email text,
+    password text,
+    total_balance float,
+    create_date timestamp,
+    last_update timestamp
+);
+
+CREATE TABLE categories (
     id serial,
     primary key(id),
     name text,
@@ -8,21 +19,8 @@ CREATE TABLE category (
     create_date timestamp,
     last_update timestamp,
     active boolean,
-    inner_transaction boolean
-);
-
-CREATE TABLE transactions (
-    id serial,
-    primary key(id),
-    name text,
-    active boolean,
-    transaction_date TIMESTAMP,
-    last_update TIMESTAMP,
-    create_date TIMESTAMP,
-    amount float,
-    account_id int references accounts(id),
-    to_account int references accounts(id),
-    transaction_type text
+    inner_transaction boolean,
+    user_id int references users(id)
 );
 
 CREATE TABLE accounts (
@@ -39,5 +37,21 @@ CREATE TABLE accounts (
     bank_name text,
     bank_type text,
     create_date timestamp,
-    last_update timestamp
+    last_update timestamp,
+    user_id int references users(id)
+);
+
+CREATE TABLE transactions (
+    id serial,
+    primary key(id),
+    name text,
+    active boolean,
+    transaction_date TIMESTAMP,
+    last_update TIMESTAMP,
+    create_date TIMESTAMP,
+    amount float,
+    account_id int references accounts(id),
+    to_account int references accounts(id),
+    transaction_type text,
+    user_id int references users(id)
 );

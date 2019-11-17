@@ -1,0 +1,26 @@
+body {
+    margin: 0px;
+}
+
+.container {
+    padding-left: 50px;
+    padding-right: 50px;
+}
+
+nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color: rgba(7, 153, 146,0.6);
+}
+
+nav > a {
+    color: black;
+    flex: auto 1 1;
+    text-align: center;
+    margin: 10px 0px;
+}
+
+nav > .placeholder {
+    flex: auto 16 1;
+}
