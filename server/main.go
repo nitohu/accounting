@@ -42,6 +42,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println(err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
 
 	tmpl.ExecuteTemplate(w, "index.html", ctx)
