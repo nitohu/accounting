@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <title>Accounting</title>
 
+        <link href="https://fonts.googleapis.com/css?family=Dosis|Quicksand|Raleway&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/static/css/style.css">
     </head>
 
@@ -22,6 +23,16 @@
 
         <div class="container">
             <h1>Welcome {{ .User.Name }}</h1>
+
+            <div class="account-list">
+                {{ range .User.AccountIDs }}
+                    <div class="tile">
+                        <span class="name">{{ .Name }}</span><br />
+                        <span class="iban">{{ .Iban }}</span><br />
+                        <div class="balance">{{ .Balance }} €</div>
+                    </div>
+                {{ end }}
+            </div>
         </div>
     </body>
 </html>

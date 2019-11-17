@@ -44,8 +44,6 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	fmt.Printf("Authenticated: %t, Name: %s, email: %s", ctx.Authenticated, ctx.User.Name, ctx.User.Email)
-
 	tmpl.ExecuteTemplate(w, "index.html", ctx)
 }
 
@@ -105,12 +103,6 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func handleHelloWorld(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	fmt.Fprintf(w, "Welcome to the dark side %s", name)
-}
-
 func main() {
 	db = initDb("127.0.0.1", "nitohu", "123", "accounting", 5432)
 	defer db.Close()
@@ -133,8 +125,6 @@ func main() {
 	r.HandleFunc("/login/", logging(handleLogin))
 
 	r.HandleFunc("/logout/", logging(handleLogout))
-
-	r.HandleFunc("/hello/{name}", logging(handleHelloWorld))
 
 	http.ListenAndServe(":80", r)
 }

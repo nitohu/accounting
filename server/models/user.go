@@ -19,12 +19,13 @@ type User struct {
 	TotalBalance float64
 	CreateDate   time.Time
 	LastUpdate   time.Time
+	AccountIDs   []Account
 }
 
 // EmptyUser creates an empty user
 func EmptyUser() User {
 	t := time.Now().Local()
-	res := User{false, 0, "", "", 0.0, t, t}
+	res := User{false, 0, "", "", 0.0, t, t, []Account{}}
 
 	return res
 }
@@ -58,7 +59,7 @@ func (u *User) Login(cr *sql.DB, email, password string) error {
 	pw := fmt.Sprintf("%X", p)
 
 	if strings.Compare(pw, dbPass) != 0 {
-		return errors.New("[ERROR] Wrong password.\n")
+		return errors.New("[ERROR] Wrong password")
 	}
 
 	u.FindByID(cr, user.ID)
@@ -68,6 +69,7 @@ func (u *User) Login(cr *sql.DB, email, password string) error {
 	return (nil)
 }
 
+// FindByID ...
 func (u *User) FindByID(cr *sql.DB, uid int) error {
 	query := "SELECT active, id, name, email, total_balance, create_date, last_update FROM users WHERE id=$1"
 
@@ -85,7 +87,51 @@ func (u *User) FindByID(cr *sql.DB, uid int) error {
 		return err
 	}
 
+	u.getAccounts(cr)
+
 	return nil
+}
+
+func (u *User) getAccounts(cr *sql.DB) {
+	query := "SELECT id, name, active, balance, balance_forecast, iban, account_holder, bank_code, account_nr, "
+	query += "bank_name, bank_type, create_date, last_update FROM accounts WHERE user_id=$1"
+
+	rows, err := cr.Query(query, u.ID)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		a := EmptyAccount()
+
+		err := rows.Scan(
+			&a.ID,
+			&a.Name,
+			&a.Active,
+			&a.Balance,
+			&a.BalanceForecast,
+			&a.Iban,
+			&a.Holder,
+			&a.BankCode,
+			&a.AccountNr,
+			&a.BankName,
+			&a.BankType,
+			&a.CreateDate,
+			&a.LastUpdate,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
+		u.AccountIDs = append(u.AccountIDs, a)
+	}
+
+	for i := range u.AccountIDs {
+		fmt.Printf("Account Name: %s\n", u.AccountIDs[i].Name)
+	}
+	fmt.Println(u.AccountIDs)
 }
 
 // FindUserByID ...

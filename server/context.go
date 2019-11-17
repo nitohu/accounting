@@ -16,6 +16,7 @@ type Context struct {
 	User          models.User
 }
 
+// EmptyContext ...
 func EmptyContext() Context {
 	ctx := Context{false, models.EmptyUser()}
 
@@ -27,19 +28,15 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 
 	authenticated, ok := session.Values["authenticated"].(bool)
 
-	fmt.Printf("Auth: %t, OK: %t\n", authenticated, ok)
-
 	if !ok {
-		err := fmt.Sprintf("[ERROR] %s CreateContextFromSession(): Authenticated not present in session\n", time.Now().Local())
+		err := fmt.Sprintf("[ERROR] %s CreateContextFromSession(): Authenticated not present in session", time.Now().Local())
 		return EmptyContext(), errors.New(err)
 	}
 
 	uid, ok := session.Values["uid"].(int)
 
-	fmt.Printf("UID: %d, OK: %t\n", uid, ok)
-
 	if !ok {
-		err := fmt.Sprintf("[ERROR] %s CreateContextFromSession(): UserID not present in session\n", time.Now().Local())
+		err := fmt.Sprintf("[ERROR] %s CreateContextFromSession(): UserID not present in session", time.Now().Local())
 		return EmptyContext(), errors.New(err)
 	}
 
