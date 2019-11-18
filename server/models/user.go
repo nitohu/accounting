@@ -5,27 +5,27 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 )
 
 // User ...
 type User struct {
-	Active       bool
-	ID           int
-	Name         string
-	Email        string
-	TotalBalance float64
-	CreateDate   time.Time
-	LastUpdate   time.Time
-	AccountIDs   []Account
+	Active         bool
+	ID             int
+	Name           string
+	Email          string
+	TotalBalance   float64
+	CreateDate     time.Time
+	LastUpdate     time.Time
+	AccountIDs     []Account
+	TransactionIDs []Transaction
 }
 
 // EmptyUser creates an empty user
 func EmptyUser() User {
 	t := time.Now().Local()
-	res := User{false, 0, "", "", 0.0, t, t, []Account{}}
+	res := User{false, 0, "", "", 0.0, t, t, []Account{}, []Transaction{}}
 
 	return res
 }
@@ -53,8 +53,6 @@ func (u *User) Login(cr *sql.DB, email, password string) error {
 		return errors.New("[ERROR] No user with this email (" + email + ").\n")
 	}
 
-	fmt.Println("USERID: " + strconv.Itoa(user.ID))
-
 	p := sha256.Sum256([]byte(password))
 	pw := fmt.Sprintf("%X", p)
 
@@ -63,8 +61,6 @@ func (u *User) Login(cr *sql.DB, email, password string) error {
 	}
 
 	u.FindByID(cr, user.ID)
-
-	fmt.Println("USERID: " + strconv.Itoa(u.ID))
 
 	return (nil)
 }
@@ -88,6 +84,7 @@ func (u *User) FindByID(cr *sql.DB, uid int) error {
 	}
 
 	u.getAccounts(cr)
+	u.getTransactions(cr)
 
 	return nil
 }
@@ -127,11 +124,59 @@ func (u *User) getAccounts(cr *sql.DB) {
 
 		u.AccountIDs = append(u.AccountIDs, a)
 	}
+}
 
-	for i := range u.AccountIDs {
-		fmt.Printf("Account Name: %s\n", u.AccountIDs[i].Name)
+func (u *User) getTransactions(cr *sql.DB) {
+	query := "SELECT t.id, t.name, t.active, t.transaction_date, t.create_date, t.last_update,"
+	query += " t.amount, t.transaction_type, u.name, a.name, t.to_account FROM transactions AS t"
+	query += " JOIN users AS u ON t.user_id=u.id"
+	query += " JOIN accounts AS a ON t.account_id=a.id"
+	query += " WHERE t.user_id=$1 ORDER BY t.transaction_date DESC"
+
+	rows, err := cr.Query(query, u.ID)
+
+	if err != nil {
+		panic(err)
 	}
-	fmt.Println(u.AccountIDs)
+
+	for rows.Next() {
+		a := EmptyTransaction()
+
+		var toAccountID interface{}
+		var tDate, cDate, lDate time.Time
+
+		err := rows.Scan(
+			&a.ID,
+			&a.Name,
+			&a.Active,
+			&tDate,
+			&cDate,
+			&lDate,
+			&a.Amount,
+			&a.TransactionType,
+			&a.User,
+			&a.FromAccount,
+			&toAccountID,
+		)
+
+		if err != nil {
+			panic(err)
+		}
+
+		if toAccountID != nil {
+			query = "SELECT name FROM accounts WHERE id=$1"
+
+			cr.QueryRow(query, toAccountID).Scan(
+				&a.ToAccount,
+			)
+		}
+
+		a.TransactionDate = tDate.Format(time.RFC822)
+		a.CreateDate = cDate.Format(time.RFC822)
+		a.LastUpdate = lDate.Format(time.RFC822)
+
+		u.TransactionIDs = append(u.TransactionIDs, a)
+	}
 }
 
 // FindUserByID ...

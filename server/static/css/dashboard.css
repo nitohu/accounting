@@ -1,0 +1,63 @@
+.dashboard {
+    height: 100%;
+    padding: 5px;
+    margin: 0px;
+    background-color: #ecf0f1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
+.tile {
+    background-color: white;
+    border: 1px solid #dfe4ea;
+    border-bottom: 3px solid #ced6e0;
+    height: auto;
+    margin: 3px;
+}
+
+.tile > h2 {
+    background-color: #2ed573;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin: 0px;
+    border-bottom: 2px solid #ced6e0;
+    width: 100%;
+}
+
+.tile > h2::before {
+    content: "\00a0 \00a0 ";
+}
+
+.tile > .content {
+    margin: 10px;
+}
+
+/* Tile with full width */
+.tile-full-width {
+    min-width: 100%
+}
+
+.lastest_transactions {
+    border-spacing: 0px;
+}
+
+.lastest_transactions > thead > tr {
+    background-color: #0097e6;
+    color: white;
+}
+
+.latest_transactions * th, td {
+    padding: 15px;
+    text-align: left;
+    margin: 0px;
+}
+
+.lastest_transactions * tr {
+    background-color: #f5f6fa;
+}
+
+.lastest_transactions * tr:nth-child(even) {
+    background-color: #dcdde1;
+}

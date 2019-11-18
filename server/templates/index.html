@@ -5,6 +5,7 @@
 
         <link href="https://fonts.googleapis.com/css?family=Dosis|Quicksand|Raleway&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/dashboard.css">
     </head>
 
     <body>
@@ -21,18 +22,56 @@
             {{ end }}
         </nav>
 
-        <div class="container">
-            <h1>Welcome {{ .User.Name }}</h1>
-
-            <div class="account-list">
-                {{ range .User.AccountIDs }}
-                    <div class="tile">
-                        <span class="name">{{ .Name }}</span><br />
-                        <span class="iban">{{ .Iban }}</span><br />
-                        <div class="balance">{{ .Balance }} €</div>
-                    </div>
-                {{ end }}
+        <div class="dashboard">
+            <div class="tile tile-full-width list-row accounts">
+                <h2>Your Accounts</h2>
+                <div class="content account-list">
+                    {{ range .User.AccountIDs }}
+                        <div class="tile">
+                            <span class="name">{{ .Name }}</span><br />
+                            <span class="iban">{{ .Iban }}</span><br />
+                            <div class="balance">{{ .Balance }} €</div>
+                        </div>
+                    {{ end }}
+                </div>
+            </div>
+    
+            <div class="tile transaction-list">
+                <h2>Latest Transactions</h2>
+                <table class="content lastest_transactions">
+                    <thead>
+                        <tr>
+                            <td>Reference</td>
+                            <td>Amount</td>
+                            <td>From</td>
+                            <td>Date</td>
+                            <td>To</td>
+                        </tr>
+                    </thead>
+    
+                    <tbody>
+                        {{ range .User.TransactionIDs }}
+                            <tr>
+                                <td>{{ .Name }}</td>
+                                <td>{{ .Amount }} €</td>
+                                <td>{{ .FromAccount }}</td>
+                                <td>{{ .TransactionDate }}</td>
+                                <td>{{ .ToAccount }}</td>
+                            </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
             </div>
         </div>
+
+        <!-- <h1>Transactions</h1>
+
+        <div>{{ .User.TransactionIDs }}</div>
+
+        <div class="transaction-list">
+            {{ range .User.TransactionIDs }}
+                <p>{{ .Name }}, {{ .Amount }}, {{ .FromAccount }}</p>
+            {{ end }}
+        </div> -->
     </body>
 </html>

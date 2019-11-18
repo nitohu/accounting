@@ -41,6 +41,7 @@ nav > .placeholder {
     min-width: 300px;
     padding: 5px;
     color: #ecf0f1;
+    margin-left: 20px;
 }
 
 .account-list > .tile > .name {
