@@ -2,55 +2,59 @@ package main
 
 import (
 	"database/sql"
-	"strconv"
+	"fmt"
+
+	"./models"
 )
 
-// QueryArgument is an argument for the sql query
-type QueryArgument struct {
-	Connector string // and, or
-	Field     string
-	Op        string
-	Value     interface{}
-}
+var db *sql.DB
 
-func Query(cr *sql.DB, arguments []QueryArgument) User {
-	var data dbUser
-	var args []interface{}
+func dbInit(host, user, password, dbname string, port int) *sql.DB {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
 
-	query := "SELECT id,name,email,total_balance,create_date,last_update FROM users"
+	db, err := sql.Open("postgres", psqlInfo)
 
-	for i := range arguments {
-		arg := arguments[i]
-		var subQuery string
-		if len(arg.Connector) > 0 {
-			subQuery = " " + arg.Connector + " " + arg.Field + " " + arg.Op + " $" + strconv.Itoa(i+1)
-		} else {
-			subQuery = " " + arg.Field + " " + arg.Op + " $" + strconv.Itoa(i+1)
-		}
-
-		args = append(args, arg.Value)
-
-		if i == 0 {
-			query += " WHERE" + subQuery
-		} else {
-			query += subQuery
-		}
+	if err != nil {
+		fmt.Printf("An error occurred while connecting to the database.\n"+
+			"%s", err)
 	}
 
-	err := cr.QueryRow(query, args...).Scan(
-		&data.ID,
-		&data.Name,
-		&data.Email,
-		&data.TotalBalance,
-		&data.CreateDate,
-		&data.LastUpdate,
+	fmt.Printf("[INFO] Successfully connected to postgres!\n")
+	return db
+}
+
+func dbCreateAccount(cr *sql.DB, account models.Account) int64 {
+	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban, account_holder,"
+	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update, user_id"
+	query += " ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);"
+
+	res, err := cr.Exec(query,
+		account.Name,
+		account.Active,
+		account.Balance,
+		account.BalanceForecast,
+		account.Iban,
+		account.Holder,
+		account.BankCode,
+		account.AccountNr,
+		account.BankName,
+		account.BankType,
+		account.CreateDate,
+		account.LastUpdate,
+		account.UserID,
 	)
 
 	if err != nil {
-		panic(err)
+		msg := fmt.Sprintf("dbCreateAccount(): %s", err)
+		panic(msg)
 	}
 
-	res := User{Data: &data}
+	id, _ := res.LastInsertId()
 
-	return res
+	if rowCount, err := res.RowsAffected(); err != nil || rowCount < 1 {
+		logError("dbCreateAccount", "No rows affected. ID: %s", id)
+	}
+
+	return id
 }

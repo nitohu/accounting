@@ -1,9 +1,9 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	"text/template"
 	"time"
 
@@ -15,7 +15,6 @@ import (
 )
 
 var tmpl *template.Template
-var db *sql.DB
 
 var (
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
@@ -24,6 +23,10 @@ var (
 
 func logInfo(funcName, msg string, args ...interface{}) {
 	fmt.Printf("[INFO] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
+}
+
+func logError(funcName, msg string, args ...interface{}) {
+	fmt.Printf("[ERROR] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
 }
 
 func logging(f http.HandlerFunc) http.HandlerFunc {
@@ -48,11 +51,46 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "index.html", ctx)
 }
 
+func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	ctx, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logError("handleAccountCreation", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+	}
+
+	ctx["Title"] = "Create Account"
+
+	if r.Method != http.MethodPost {
+		tmpl.ExecuteTemplate(w, "account_form.html", ctx)
+		return
+	}
+
+	account := models.EmptyAccount()
+
+	account.Name = r.FormValue("name")
+	account.Balance, _ = strconv.ParseFloat(r.FormValue("balance"), 64)
+	account.BalanceForecast = account.Balance
+	account.Iban = r.FormValue("iban")
+	account.BankCode = r.FormValue("bankCode")
+	account.AccountNr = r.FormValue("accountNumber")
+	account.BankName = r.FormValue("bankName")
+	account.BankType = r.FormValue("accountType")
+	account.UserID = ctx["User"].(models.User).ID
+
+	dbCreateAccount(db, account)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+}
+
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 
 	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
-		logInfo("handleLogin()", "User is already logged in", r.URL.Path)
+		logInfo(r.URL.Path, "User is already logged in")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 
@@ -105,7 +143,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db = initDb("127.0.0.1", "nitohu", "123", "accounting", 5432)
+	db = dbInit("127.0.0.1", "nitohu", "123", "accounting", 5432)
 	defer db.Close()
 
 	// user := user.Query(db, []user.QueryArgument{
@@ -113,7 +151,7 @@ func main() {
 	// 	{Connector: "AND", Field: "id", Op: "=", Value: "1"},
 	// })
 
-	tmpl = template.Must(initTemplates("index.html", "login.html"))
+	tmpl = template.Must(initTemplates("index.html", "login.html", "account_form.html"))
 
 	staticFiles := http.FileServer(http.Dir("static/"))
 
@@ -123,9 +161,30 @@ func main() {
 
 	r.HandleFunc("/", logging(handleRoot))
 
+	r.HandleFunc("/accounts/create", logging(handleAccountCreation))
+
 	r.HandleFunc("/login/", logging(handleLogin))
 
 	r.HandleFunc("/logout/", logging(handleLogout))
 
 	http.ListenAndServe(":80", r)
 }
+
+// func main() {
+// 	db = dbInit("127.0.0.1", "nitohu", "123", "accounting", 5432)
+// 	defer db.Close()
+
+// 	u := models.FindUserByID(db, 1)
+
+// 	a := models.EmptyAccount()
+// 	a.Name = "TestAccount"
+// 	a.Active = true
+// 	a.Balance = 2.49
+// 	a.BalanceForecast = 2.49
+// 	a.BankName = "Bitcoin"
+// 	a.UserID = u.ID
+
+// 	id := dbCreateAccount(db, a)
+
+// 	fmt.Printf("Id: %s\n", id)
+// }

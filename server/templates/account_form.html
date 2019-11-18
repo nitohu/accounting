@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{{ .Title }} – Accounting</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="/static/css/with_bootstrap.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="titlebar">
+                <a href="/" style="font-size: 24px;">&lt;- Home</a>
+            </div>
+
+            <h1>Create a new account</h1>
+            <br>
+            <form method="post">
+                <label for="accountName">Account Name</label>
+                <input type="text" id="accountName" name="name" class="form-control" placeholder="E.g. Paypal or Credit Card">
+
+                <label for="balance">Initial Balance</label>
+                <input type="number" id="balance" name="balance" class="form-control" >
+
+                <b>Account Type</b><br>
+                <input type="radio" id="online" name="accountType" value="online" checked>
+                <label for="online">Online Account (Paypal etc)</label>
+                <input type="radio" id="bank" name="accountType" value="bank">
+                <label for="bank">Bank Account</label>
+
+                <div id="bankFields">
+                    <label for="iban">IBAN</label>
+                    <input type="text" id="iban" name="iban" class="form-control">
+
+                    <label for="code">Bank Code</label>
+                    <input type="text" id="code" name="bankCode" class="form-control">
+
+                    <label for="acc_num">Account Number</label>
+                    <input type="text" id="acc_num" name="accountNumber" class="form-control">
+
+                    <label for="bankName">Name of the bank</label>
+                    <input type="text" id="bankName" name="bankName" class="form-control">
+                </div>
+
+                <div id="onlineFields">
+                    <label for="providerName">Name of the provider</label>
+                    <input type="text" id="providerName" name="bankName" class="form-control">
+                </div>
+
+                <br>
+
+                <input type="submit" class="btn btn-success" value="Create Account">
+                <a href="/" class="btn btn-light">Cancel</a>
+            </form>
+
+            <script>
+                const selection = document.getElementsByName("accountType").forEach((elem) => {
+                    elem.addEventListener("change", changeFields)
+                })
+
+                changeFields()
+
+                function changeFields() {
+                    const selection = document.getElementsByName("accountType")
+                    for (let i = 0; i < selection.length; i++) {
+                        let curr = selection[i]
+
+                        if (curr.id == "online" && curr.checked) {
+                            document.getElementById("bankFields").hidden = true;
+                            document.getElementById("onlineFields").hidden = false;
+                        }
+
+                        if (curr.id == "bank" && curr.checked) {
+                            document.getElementById("bankFields").hidden = false;
+                            document.getElementById("onlineFields").hidden = true;
+                        }
+                    }
+                }
+            </script>
+        </div>
+    </body>
+</html>
