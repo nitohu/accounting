@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ .Title }} – Accounting</title>
+
+        <link href="https://fonts.googleapis.com/css?family=Dosis|Quicksand|Raleway&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/dashboard.css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"> -->
+    </head>
+
+    <body>
+        <nav>
+            <a href="#" class="title">Accounts Overview</a>
+
+            <div class="placeholder"></div>
+
+            <a href="#" class="active">Home</a>
+            <a href="/accounts/create/">Create Account</a>
+            {{ if .Authenticated }}
+                <a href="/logout/">Logout</a>
+            {{ else }}
+                <a href="/login/">Login</a>
+            {{ end }}
+        </nav>
+
+        <div class="container">
+            <h1>Accounts</h1>
+            <table class="widget_table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <td>Name</td>
+                        <td>Balance</td>
+                        <td>Forecasted Balance</td>
+                        <td>IBAN</td>
+                        <td>Account Holder</td>
+                        <td>Bank name</td>
+                        <td><i class="material-icons">delete</i></td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .User.AccountIDs }}
+                        <tr>
+                            <td>{{ .Name }}</td>
+                            <td>{{ (call $.HumanReadable .Balance) }} €</td>
+                            <td>{{ (call $.HumanReadable .BalanceForecast) }} €</td>
+                            <td>{{ .Iban }}</td>
+                            <td>{{ .Holder }}</td>
+                            <td>{{ .BankName }}</td>
+                            <td class="deleteEntry" id="{{ .ID }}"><i class="material-icons">delete</i></td>
+                        </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>

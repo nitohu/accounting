@@ -48,7 +48,28 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
 
-	tmpl.ExecuteTemplate(w, "index.html", ctx)
+	err = tmpl.ExecuteTemplate(w, "index.html", ctx)
+
+	if err != nil {
+		logError("handleLogin", "%s", err)
+	}
+}
+
+func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	ctx, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logError("handleAccountOverview", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "accounts.html", ctx)
+
+	if err != nil {
+		logError("handleAccountOverview", "%s", err)
+	}
 }
 
 func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +85,10 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 	ctx["Title"] = "Create Account"
 
 	if r.Method != http.MethodPost {
-		tmpl.ExecuteTemplate(w, "account_form.html", ctx)
+		err = tmpl.ExecuteTemplate(w, "account_form.html", ctx)
+		if err != nil {
+			logError("handleLogin", "%s", err)
+		}
 		return
 	}
 
@@ -151,7 +175,7 @@ func main() {
 	// 	{Connector: "AND", Field: "id", Op: "=", Value: "1"},
 	// })
 
-	tmpl = template.Must(initTemplates("index.html", "login.html", "account_form.html"))
+	tmpl = template.Must(initTemplates("index.html", "login.html", "accounts.html", "account_form.html"))
 
 	staticFiles := http.FileServer(http.Dir("static/"))
 
@@ -161,7 +185,8 @@ func main() {
 
 	r.HandleFunc("/", logging(handleRoot))
 
-	r.HandleFunc("/accounts/create", logging(handleAccountCreation))
+	r.HandleFunc("/accounts/", logging(handleAccountOverview))
+	r.HandleFunc("/accounts/create/", logging(handleAccountCreation))
 
 	r.HandleFunc("/login/", logging(handleLogin))
 
@@ -169,22 +194,3 @@ func main() {
 
 	http.ListenAndServe(":80", r)
 }
-
-// func main() {
-// 	db = dbInit("127.0.0.1", "nitohu", "123", "accounting", 5432)
-// 	defer db.Close()
-
-// 	u := models.FindUserByID(db, 1)
-
-// 	a := models.EmptyAccount()
-// 	a.Name = "TestAccount"
-// 	a.Active = true
-// 	a.Balance = 2.49
-// 	a.BalanceForecast = 2.49
-// 	a.BankName = "Bitcoin"
-// 	a.UserID = u.ID
-
-// 	id := dbCreateAccount(db, a)
-
-// 	fmt.Printf("Id: %s\n", id)
-// }

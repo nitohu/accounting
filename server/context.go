@@ -35,6 +35,7 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 		return EmptyContext(), errors.New(err)
 	}
 
+	ctx["HumanReadable"] = HumanReadable
 	ctx["Authenticated"] = authenticated
 	ctx["User"] = models.FindUserByID(cr, uid)
 

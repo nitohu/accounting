@@ -15,6 +15,7 @@
             <div class="placeholder"></div>
 
             <a href="#" class="active">Home</a>
+            <a href="/accounts/">Accounts</a>
             {{ if .Authenticated }}
                 <a href="/logout/">Logout</a>
             {{ else }}
@@ -38,7 +39,7 @@
     
             <div class="tile transaction-list">
                 <h2>Latest Transactions</h2>
-                <table class="content lastest_transactions">
+                <table class="content widget_table">
                     <thead>
                         <tr>
                             <td>Reference</td>
