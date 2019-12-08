@@ -79,8 +79,7 @@ func (a *Account) Create(cr *sql.DB) error {
 	)
 
 	if err != nil {
-		msg := fmt.Sprintf("dbCreateAccount(): %s", err)
-		panic(msg)
+		return err
 	}
 
 	id, _ := res.LastInsertId()
