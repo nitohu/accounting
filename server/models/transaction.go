@@ -99,7 +99,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 	id, _ := res.LastInsertId()
 
 	if rowCount, err := res.RowsAffected(); err != nil || rowCount < 1 {
-		return errors.New("No rows affected. ID: " + fmt.Sprintf("%s", id))
+		return errors.New("No rows affected. ID: " + fmt.Sprintf("%d", id))
 	}
 
 	t.ID = id
@@ -113,10 +113,10 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	if t.ID == 0 {
 		return errors.New("This account as now id, maybe create it first?")
 	} else if t.Amount == 0.0 {
-		return errors.New("The Amount of the transaction with the id " + fmt.Sprintf("%s", t.ID) + " is 0")
+		return errors.New("The Amount of the transaction with the id " + fmt.Sprintf("%d", t.ID) + " is 0")
 	}
 
-	query := "UPDATE accounts SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
+	query := "UPDATE transactions SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
 	query += " to_account=$8, transaction_type=$9 WHERE id=$1"
 
 	t.TransactionDate = time.Now().Local()
@@ -152,7 +152,7 @@ func (t *Transaction) Delete(cr *sql.DB) error {
 		return errors.New("The account you want to delete does not have an id")
 	}
 
-	query := "DELETE FROM accounts WHERE id=$1"
+	query := "DELETE FROM transactions WHERE id=$1"
 
 	_, err := cr.Exec(query, t.ID)
 
@@ -164,8 +164,8 @@ func (t *Transaction) Delete(cr *sql.DB) error {
 }
 
 // FindByID finds a transaction with it's id
-func (t *Transaction) FindByID(cr *sql.DB, transactionID int) error {
-	query := "SELECT * FROM accounts WHERE id=$1"
+func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
+	query := "SELECT * FROM transactions WHERE id=$1"
 
 	err := cr.QueryRow(query, transactionID).Scan(
 		&t.ID,
@@ -189,7 +189,7 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int) error {
 }
 
 // FindTransactionByID is similar to FindByID but returns the transaction
-func FindTransactionByID(cr *sql.DB, transactionID int) Transaction {
+func FindTransactionByID(cr *sql.DB, transactionID int64) Transaction {
 	t := EmptyTransaction()
 
 	err := t.FindByID(cr, transactionID)

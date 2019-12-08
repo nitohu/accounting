@@ -126,57 +126,36 @@ func (u *User) getAccounts(cr *sql.DB) {
 	}
 }
 
-func (u *User) getTransactions(cr *sql.DB) {
-	query := "SELECT t.id, t.name, t.active, t.transaction_date, t.create_date, t.last_update,"
-	query += " t.amount, t.transaction_type, u.name, a.name, t.to_account FROM transactions AS t"
-	query += " JOIN users AS u ON t.user_id=u.id"
-	query += " JOIN accounts AS a ON t.account_id=a.id"
-	query += " WHERE t.user_id=$1 ORDER BY t.transaction_date DESC"
+func (u *User) getTransactions(cr *sql.DB) error {
+
+	if u.ID == 0 {
+		return errors.New("The user you are trying to get the transactions for has no id")
+	}
+
+	query := "SELECT id FROM transactions WHERE user_id=$1"
 
 	rows, err := cr.Query(query, u.ID)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for rows.Next() {
-		a := EmptyTransaction()
+		var id int64
 
-		var toAccountID interface{}
-		var tDate, cDate, lDate time.Time
-
-		err := rows.Scan(
-			&a.ID,
-			&a.Name,
-			&a.Active,
-			&tDate,
-			&cDate,
-			&lDate,
-			&a.Amount,
-			&a.TransactionType,
-			&a.User,
-			&a.FromAccount,
-			&toAccountID,
-		)
+		err := rows.Scan(&id)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		if toAccountID != nil {
-			query = "SELECT name FROM accounts WHERE id=$1"
+		transaction := FindTransactionByID(cr, id)
 
-			cr.QueryRow(query, toAccountID).Scan(
-				&a.ToAccount,
-			)
-		}
-
-		a.TransactionDate = tDate.Format(time.RFC822)
-		a.CreateDate = cDate.Format(time.RFC822)
-		a.LastUpdate = lDate.Format(time.RFC822)
-
-		u.TransactionIDs = append(u.TransactionIDs, a)
+		u.TransactionIDs = append(u.TransactionIDs, transaction)
 	}
+
+	return nil
+
 }
 
 // FindUserByID ...

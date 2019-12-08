@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Account object
 type Account struct {
 	ID              int64
 	Name            string
@@ -85,7 +86,7 @@ func (a *Account) Create(cr *sql.DB) error {
 	id, _ := res.LastInsertId()
 
 	if rowCount, err := res.RowsAffected(); err != nil || rowCount < 1 {
-		return errors.New("No rows affected. ID: " + fmt.Sprintf("%s", id))
+		return errors.New("No rows affected. ID: " + fmt.Sprintf("%d", id))
 	}
 
 	a.ID = id
