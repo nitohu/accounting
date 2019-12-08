@@ -17,6 +17,7 @@
 
             <a href="#" class="active">Home</a>
             <a href="/accounts/">Accounts</a>
+            <a href="/transactions/">Transactions</a>
             {{ if .Authenticated }}
                 <a href="/logout/">Logout</a>
             {{ else }}
@@ -56,9 +57,9 @@
                             <tr>
                                 <td>{{ .Name }}</td>
                                 <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
-                                <td>{{ .FromAccount }}</td>
+                                <td>{{ .FromAccountName }}</td>
                                 <td>{{ .TransactionDate }}</td>
-                                <td>{{ .ToAccount }}</td>
+                                <td>{{ .ToAccountName }}</td>
                             </tr>
                         {{ end }}
                     </tbody>

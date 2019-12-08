@@ -29,33 +29,40 @@ WHERE t.user_id= *id*;
 
 // Transaction model
 type Transaction struct {
-	ID              int64
-	Name            string
-	Active          bool
-	TransactionDate time.Time
-	CreateDate      time.Time
-	LastUpdate      time.Time
-	Amount          float64
-	FromAccount     int64
-	ToAccount       int64
-	TransactionType string
-	UserID          int
+	// Database fields
+	ID     int64
+	Name   string
+	Active bool
+	// TODO: Replace with better naming
+	TransactionDDate time.Time
+	CreateDate       time.Time
+	LastUpdate       time.Time
+	Amount           float64
+	FromAccount      int64
+	ToAccount        int64
+	TransactionType  string
+	UserID           int
+
+	// Computed fields
+	FromAccountName string
+	ToAccountName   string
+	TransactionDate string
 }
 
 // EmptyTransaction ..
 func EmptyTransaction() Transaction {
 	t := Transaction{
-		ID:              0,
-		Name:            "",
-		Active:          false,
-		TransactionDate: time.Now().Local(),
-		CreateDate:      time.Now().Local(),
-		LastUpdate:      time.Now().Local(),
-		Amount:          0.0,
-		FromAccount:     0,
-		ToAccount:       0,
-		TransactionType: "",
-		UserID:          0,
+		ID:               0,
+		Name:             "",
+		Active:           false,
+		TransactionDDate: time.Now().Local(),
+		CreateDate:       time.Now().Local(),
+		LastUpdate:       time.Now().Local(),
+		Amount:           0.0,
+		FromAccount:      0,
+		ToAccount:        0,
+		TransactionType:  "",
+		UserID:           0,
 	}
 
 	return t
@@ -79,18 +86,36 @@ func (t *Transaction) Create(cr *sql.DB) error {
 	t.CreateDate = time.Now().Local()
 	t.LastUpdate = time.Now().Local()
 
-	res, err := cr.Exec(query,
-		t.Name,
-		t.Active,
-		t.TransactionDate,
-		t.LastUpdate,
-		t.CreateDate,
-		t.Amount,
-		t.FromAccount,
-		t.ToAccount,
-		t.TransactionType,
-		t.UserID,
-	)
+	var res sql.Result
+	var err error
+
+	if t.ToAccount == 0 {
+		res, err = cr.Exec(query,
+			t.Name,
+			t.Active,
+			t.TransactionDDate,
+			t.LastUpdate,
+			t.CreateDate,
+			t.Amount,
+			t.FromAccount,
+			nil,
+			t.TransactionType,
+			t.UserID,
+		)
+	} else {
+		res, err = cr.Exec(query,
+			t.Name,
+			t.Active,
+			t.TransactionDDate,
+			t.LastUpdate,
+			t.CreateDate,
+			t.Amount,
+			t.FromAccount,
+			t.ToAccount,
+			t.TransactionType,
+			t.UserID,
+		)
+	}
 
 	if err != nil {
 		return err
@@ -117,21 +142,44 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	}
 
 	query := "UPDATE transactions SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
-	query += " to_account=$8, transaction_type=$9 WHERE id=$1"
 
-	t.TransactionDate = time.Now().Local()
+	if t.ToAccount != 0 {
+		query += " to_account=$9,"
+	} else {
+		query += " to_account=NULL,"
+	}
 
-	res, err := cr.Exec(query,
-		t.ID,
-		t.Name,
-		t.Active,
-		t.TransactionDate,
-		t.LastUpdate,
-		t.Amount,
-		t.FromAccount,
-		t.ToAccount,
-		t.TransactionType,
-	)
+	query += " transaction_type=$8 WHERE id=$1"
+
+	t.TransactionDDate = time.Now().Local()
+
+	var res sql.Result
+	var err error
+
+	if t.ToAccount == 0 {
+		res, err = cr.Exec(query,
+			t.ID,
+			t.Name,
+			t.Active,
+			t.TransactionDDate,
+			t.LastUpdate,
+			t.Amount,
+			t.FromAccount,
+			t.TransactionType,
+		)
+	} else {
+		res, err = cr.Exec(query,
+			t.ID,
+			t.Name,
+			t.Active,
+			t.TransactionDDate,
+			t.LastUpdate,
+			t.Amount,
+			t.FromAccount,
+			t.TransactionType,
+			t.ToAccount,
+		)
+	}
 
 	if err != nil {
 		return err
@@ -163,23 +211,70 @@ func (t *Transaction) Delete(cr *sql.DB) error {
 	return nil
 }
 
+// ComputeFields computes the fields which are not directly received
+// from the database
+func (t *Transaction) ComputeFields(cr *sql.DB) error {
+	// Compute: FromAccountName
+	if t.FromAccount != 0 {
+		fromAccount, err := FindAccountByID(cr, t.FromAccount)
+
+		if err != nil {
+			return err
+		}
+
+		t.FromAccountName = fromAccount.Name
+	}
+
+	// Compute: ToAccountName
+	if t.ToAccount != 0 {
+		toAccount, err := FindAccountByID(cr, t.ToAccount)
+
+		if err != nil {
+			return err
+		}
+
+		t.ToAccountName = toAccount.Name
+	}
+
+	// Compute: TransactionDate
+	t.TransactionDate = t.TransactionDDate.String()
+
+	return nil
+}
+
 // FindByID finds a transaction with it's id
 func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 	query := "SELECT * FROM transactions WHERE id=$1"
+
+	var fromAccountID, toAccountID interface{}
 
 	err := cr.QueryRow(query, transactionID).Scan(
 		&t.ID,
 		&t.Name,
 		&t.Active,
-		&t.TransactionDate,
+		&t.TransactionDDate,
 		&t.LastUpdate,
 		&t.CreateDate,
 		&t.Amount,
-		&t.FromAccount,
-		&t.ToAccount,
+		&fromAccountID,
+		&toAccountID,
 		&t.TransactionType,
 		&t.UserID,
 	)
+
+	if fromAccountID != nil {
+		t.FromAccount = fromAccountID.(int64)
+	}
+
+	if toAccountID != nil {
+		t.ToAccount = toAccountID.(int64)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	t.ComputeFields(cr)
 
 	if err != nil {
 		return err

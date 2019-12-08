@@ -150,7 +150,7 @@ func (a *Account) Delete(cr *sql.DB) error {
 }
 
 // FindByID finds an account with it's id
-func (a *Account) FindByID(cr *sql.DB, accountID int) error {
+func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 	query := "SELECT * FROM accounts WHERE id=$1"
 
 	err := cr.QueryRow(query, accountID).Scan(
@@ -178,14 +178,14 @@ func (a *Account) FindByID(cr *sql.DB, accountID int) error {
 }
 
 // FindAccountByID is similar to FindByID but returns the account
-func FindAccountByID(cr *sql.DB, accountID int) Account {
+func FindAccountByID(cr *sql.DB, accountID int64) (Account, error) {
 	a := EmptyAccount()
 
 	err := a.FindByID(cr, accountID)
 
 	if err != nil {
-		panic(err)
+		return a, err
 	}
 
-	return a
+	return a, nil
 }

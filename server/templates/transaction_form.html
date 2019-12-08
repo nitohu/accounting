@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{{ .Title }} – Accounting</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="/static/css/with_bootstrap.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="titlebar">
+                <a href="/accounts/" style="font-size: 24px;">&lt;- Back</a>
+            </div>
+
+            <h1>{{ .Header }}</h1>
+            <br>
+            {{ if .Error }}
+                <p>{{ .Error }}</p>
+            {{ end }}
+            <form method="post">
+                <label for="transactionName">Name of the Transaction</label>
+                <input type="text" id="transactionName" name="name"
+                    class="form-control" placeholder="" value="{{ .Transaction.Name }}">
+
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" name="amount"
+                    class="form-control" value="{{ .Transaction.Amount }}">
+
+                <p>Add transaction date picker here</p>
+
+                <label for="fromAccount">From: </label>
+                <select name="fromAccount" id="fromAccount">
+                    {{ range .User.AccountIDs }}
+                        <option id="from_{{ .ID }}" value="{{ .ID }}">{{ .Name }}</option>
+                    {{ end }}
+                </select>
+
+                <label for="toAccount">To: </label>
+                <select name="toAccount" id="toAccount">
+                    <option id="to_0" value="0">External Account</option>
+                    {{ range .User.AccountIDs }}
+                        <option id="to_{{ .ID }}" value="{{ .ID }}">{{ .Name }}</option>
+                    {{ end }}
+                </select>
+
+                <br>
+
+                <input type="submit" class="btn btn-success" value="Save">
+                <a href="/" class="btn btn-light">Cancel</a>
+            </form>
+
+        </div>
+
+        <script>
+            const fromAccountDropdown = document.getElementById("fromAccount")
+            const toAccountDropdown   = document.getElementById("toAccount")
+
+            let lastFromID = fromAccountDropdown.value
+
+            document.getElementById("to_"+lastFromID).hidden = true
+
+            fromAccountDropdown.onchange = function() {
+                if (this.value == toAccountDropdown.value) {
+                    toAccountDropdown.value = lastFromID
+                }
+
+                document.getElementById("to_"+lastFromID).hidden = false
+                document.getElementById("to_"+this.value).hidden = true
+                lastFromID = this.value
+            }
+
+            toAccountDropdown.onchange = function() {
+                if (fromAccountDropdown.value == this.value) {
+                    this.value = lastFromID
+                }
+
+                document.getElementById("to_"+lastFromID).hidden = false
+                document.getElementById("to_"+fromAccountDropdown.value).hidden = true
+            }
+        </script>
+    </body>
+</html>

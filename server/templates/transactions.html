@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title }} – Accounting</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Dosis|Quicksand|Raleway&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <a href="#" class="title">Transactions Overview</a>
+
+        <div class="placeholder"></div>
+
+        <a href="/" class="active">Home</a>
+        <a href="/accounts/">Accounts</a>
+        <a href="/transactions/create/">Create Transaction</a>
+        {{ if .Authenticated }}
+            <a href="/logout/">Logout</a>
+        {{ else }}
+            <a href="/login/">Login</a>
+        {{ end }}
+    </nav>
+
+    <div class="container">
+        <h1>Transactions</h1>
+
+        <table class="widget_table" style="width:100%;">
+            <thead>
+                    <tr>
+                        <td>Reference</td>
+                        <td>Amount</td>
+                        <td>From</td>
+                        <td>Date</td>
+                        <td>To</td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .User.TransactionIDs }}
+                        <tr>
+                            <td><a href="/transactions/edit/{{ .ID }}">{{ .Name }}</a></td>
+                            <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
+                            <td>{{ .FromAccountName }}</td>
+                            <td>{{ .TransactionDate }}</td>
+                            <td>{{ .ToAccountName }}</td>
+                        </tr>
+                    {{ end }}
+                </tbody>
+        </table>
+    </div>
+</body>
+</html>
