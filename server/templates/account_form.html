@@ -11,17 +11,22 @@
     <body>
         <div class="container">
             <div class="titlebar">
-                <a href="/" style="font-size: 24px;">&lt;- Home</a>
+                <a href="/accounts/" style="font-size: 24px;">&lt;- Back</a>
             </div>
 
-            <h1>Create a new account</h1>
+            <h1>{{ .Header }}</h1>
             <br>
+            {{ if .Error }}
+                <p>{{ .Error }}</p>
+            {{ end }}
             <form method="post">
                 <label for="accountName">Account Name</label>
-                <input type="text" id="accountName" name="name" class="form-control" placeholder="E.g. Paypal or Credit Card">
+                <input type="text" id="accountName" name="name"
+                    class="form-control" placeholder="E.g. Paypal or Credit Card" value="{{ .Account.Name }}">
 
                 <label for="balance">Initial Balance</label>
-                <input type="number" id="balance" name="balance" class="form-control" >
+                <input type="number" id="balance" name="balance"
+                    class="form-control" value="{{ .Account.Balance }}">
 
                 <b>Account Type</b><br>
                 <input type="radio" id="online" name="accountType" value="online" checked>
@@ -31,26 +36,31 @@
 
                 <div id="bankFields">
                     <label for="iban">IBAN</label>
-                    <input type="text" id="iban" name="iban" class="form-control">
+                    <input type="text" id="iban" name="iban"
+                        class="form-control" value="{{ .Account.Iban }}">
 
                     <label for="code">Bank Code</label>
-                    <input type="text" id="code" name="bankCode" class="form-control">
+                    <input type="text" id="code" name="bankCode"
+                        class="form-control" value="{{ .Account.BankCode }}">
 
                     <label for="acc_num">Account Number</label>
-                    <input type="text" id="acc_num" name="accountNumber" class="form-control">
+                    <input type="text" id="acc_num" name="accountNumber"
+                        class="form-control" value="{{ .Account.AccountNr }}">
 
                     <label for="bankName">Name of the bank</label>
-                    <input type="text" id="bankName" name="bankName" class="form-control">
+                    <input type="text" id="bankName" name="bankName"
+                        class="form-control" value="{{ .Account.BankName }}">
                 </div>
 
                 <div id="onlineFields">
                     <label for="providerName">Name of the provider</label>
-                    <input type="text" id="providerName" name="bankName" class="form-control">
+                    <input type="text" id="providerName" name="providerName"
+                        class="form-control" value="{{ .Account.BankName }}">
                 </div>
 
                 <br>
 
-                <input type="submit" class="btn btn-success" value="Create Account">
+                <input type="submit" class="btn btn-success" value="{{ .Btn }}">
                 <a href="/" class="btn btn-light">Cancel</a>
             </form>
 

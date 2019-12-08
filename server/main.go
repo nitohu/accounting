@@ -25,6 +25,10 @@ func logInfo(funcName, msg string, args ...interface{}) {
 	fmt.Printf("[INFO] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
 }
 
+func logWarn(funcName, msg string, args ...interface{}) {
+	fmt.Printf("[WARN] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
+}
+
 func logError(funcName, msg string, args ...interface{}) {
 	fmt.Printf("[ERROR] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
 }
@@ -65,6 +69,8 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
 
+	ctx["Title"] = "All Accounts"
+
 	err = tmpl.ExecuteTemplate(w, "accounts.html", ctx)
 
 	if err != nil {
@@ -83,6 +89,9 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx["Title"] = "Create Account"
+	ctx["Header"] = "Create a new account"
+	ctx["Btn"] = "Create Account"
+	ctx["Account"] = models.EmptyAccount()
 
 	if r.Method != http.MethodPost {
 		err = tmpl.ExecuteTemplate(w, "account_form.html", ctx)
@@ -104,9 +113,102 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 	account.BankType = r.FormValue("accountType")
 	account.UserID = ctx["User"].(models.User).ID
 
-	dbCreateAccount(db, account)
+	err = account.Create(db)
+
+	if err != nil {
+		logError("handleAccountCreation", "%s", err)
+		http.Redirect(w, r, "/accounts", http.StatusSeeOther)
+		return
+	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+}
+
+func handleAccountEditing(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	ctx, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logError("handleAccountEditing", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+	}
+
+	vars := mux.Vars(r)
+	accountID, _ := strconv.Atoi(vars["id"])
+
+	account := models.EmptyAccount()
+	account.FindByID(db, accountID)
+
+	ctx["Title"] = "Edit Account: " + account.Name
+	ctx["Header"] = "Edit " + account.Name
+	ctx["Btn"] = "Save Account"
+	ctx["Account"] = account
+
+	if r.Method != http.MethodPost {
+		err := tmpl.ExecuteTemplate(w, "account_form.html", ctx)
+		if err != nil {
+			logError("handleAccountEditing", "%s", err)
+		}
+		return
+	}
+
+	account.Name = r.FormValue("name")
+	account.Balance, _ = strconv.ParseFloat(r.FormValue("balance"), 64)
+	account.BalanceForecast = account.Balance
+	account.Iban = r.FormValue("iban")
+	account.BankCode = r.FormValue("bankCode")
+	account.AccountNr = r.FormValue("accountNumber")
+	account.BankType = r.FormValue("accountType")
+
+	if account.BankType == "bank" {
+		account.BankName = r.FormValue("bankName")
+	} else {
+		account.BankName = r.FormValue("providerName")
+	}
+
+	if account.BankType != "bank" && account.BankType != "online" {
+		logError("handleAccountEditing", "Wrong value for bank type: %s", account.BankType)
+		ctx["Error"] = "There was an error in the form."
+		err = tmpl.ExecuteTemplate(w, "account_form.html", ctx)
+		return
+	}
+
+	err = account.Save(db)
+
+	if err != nil {
+		logError("handleAccountEditing", "%s", err)
+		http.Redirect(w, r, "/accounts/", http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/accounts/", http.StatusSeeOther)
+}
+
+func handleAccountDeletion(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	_, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logError("handleAccountDeletion", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	id, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		logError("handleAccountDeletion", "%s", err)
+		return
+	}
+
+	account := models.FindAccountByID(db, id)
+
+	account.Delete(db)
 
 }
 
@@ -187,6 +289,9 @@ func main() {
 
 	r.HandleFunc("/accounts/", logging(handleAccountOverview))
 	r.HandleFunc("/accounts/create/", logging(handleAccountCreation))
+	r.HandleFunc("/accounts/edit/{id}", logging(handleAccountEditing))
+	// TODO: Will be replaced with API once its done
+	r.HandleFunc("/accounts/delete/{id}", logging(handleAccountDeletion))
 
 	r.HandleFunc("/login/", logging(handleLogin))
 
