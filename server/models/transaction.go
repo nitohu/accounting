@@ -29,15 +29,15 @@ WHERE t.user_id= *id*;
 
 // Transaction model
 type Transaction struct {
-	ID              int
+	ID              int64
 	Name            string
 	Active          bool
-	TransactionDate string
-	CreateDate      string
-	LastUpdate      string
+	TransactionDate time.Time
+	CreateDate      time.Time
+	LastUpdate      time.Time
 	Amount          float64
-	FromAccount     string
-	ToAccount       string
+	FromAccount     int64
+	ToAccount       int64
 	TransactionType string
 	UserID          int
 }
@@ -48,12 +48,12 @@ func EmptyTransaction() Transaction {
 		ID:              0,
 		Name:            "",
 		Active:          false,
-		TransactionDate: "",
-		CreateDate:      "",
-		LastUpdate:      "",
+		TransactionDate: time.Now().Local(),
+		CreateDate:      time.Now().Local(),
+		LastUpdate:      time.Now().Local(),
 		Amount:          0.0,
-		FromAccount:     "",
-		ToAccount:       "",
+		FromAccount:     0,
+		ToAccount:       0,
 		TransactionType: "",
 		UserID:          0,
 	}
@@ -102,7 +102,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		return errors.New("No rows affected. ID: " + fmt.Sprintf("%s", id))
 	}
 
-	a.ID = id
+	t.ID = id
 
 	return nil
 }
@@ -116,22 +116,21 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		return errors.New("The Amount of the transaction with the id " + fmt.Sprintf("%s", t.ID) + " is 0")
 	}
 
-	query := "UPDATE accounts SET name=$2, active=$3, balance=$4, balance_forecast=$5, iban=$6, account_holder=$7,"
-	query += " bank_code=$8, account_nr=$9, bank_name=$10, bank_type=$11, last_update=$12 WHERE id=$1"
+	query := "UPDATE accounts SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
+	query += " to_account=$8, transaction_type=$9 WHERE id=$1"
+
+	t.TransactionDate = time.Now().Local()
 
 	res, err := cr.Exec(query,
 		t.ID,
 		t.Name,
 		t.Active,
-		t.Balance,
-		t.BalanceForecast,
-		t.Iban,
-		t.Holder,
-		t.BankCode,
-		t.AccountNr,
-		t.BankName,
-		t.BankType,
-		time.Now().Local(),
+		t.TransactionDate,
+		t.LastUpdate,
+		t.Amount,
+		t.FromAccount,
+		t.ToAccount,
+		t.TransactionType,
 	)
 
 	if err != nil {
@@ -172,16 +171,13 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int) error {
 		&t.ID,
 		&t.Name,
 		&t.Active,
-		&t.Balance,
-		&t.BalanceForecast,
-		&t.Iban,
-		&t.Holder,
-		&t.BankCode,
-		&t.AccountNr,
-		&t.BankName,
-		&t.BankType,
-		&t.CreateDate,
+		&t.TransactionDate,
 		&t.LastUpdate,
+		&t.CreateDate,
+		&t.Amount,
+		&t.FromAccount,
+		&t.ToAccount,
+		&t.TransactionType,
 		&t.UserID,
 	)
 
