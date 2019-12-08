@@ -129,6 +129,8 @@ func (t *Transaction) Create(cr *sql.DB) error {
 
 	t.ID = id
 
+	// TODO: Affect account
+
 	return nil
 }
 
@@ -234,6 +236,8 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 		}
 
 		t.ToAccountName = toAccount.Name
+	} else {
+		t.ToAccountName = "External Account"
 	}
 
 	// Compute: TransactionDate
@@ -284,14 +288,14 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 }
 
 // FindTransactionByID is similar to FindByID but returns the transaction
-func FindTransactionByID(cr *sql.DB, transactionID int64) Transaction {
+func FindTransactionByID(cr *sql.DB, transactionID int64) (Transaction, error) {
 	t := EmptyTransaction()
 
 	err := t.FindByID(cr, transactionID)
 
 	if err != nil {
-		panic(err)
+		return t, err
 	}
 
-	return t
+	return t, nil
 }

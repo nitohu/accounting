@@ -285,6 +285,46 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/transactions/", http.StatusSeeOther)
 }
 
+// TODO: Replace w/ API
+func handleTransactionDeletion(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	_, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logError("handleTransactionDeletion", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		return
+	}
+
+	vars := mux.Vars(r)
+
+	id, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		logError("handleTransactionDeletion", "%s", err)
+		http.Error(w, "There was an error parsing the id", http.StatusInternalServerError)
+		return
+	}
+
+	t, err := models.FindTransactionByID(db, int64(id))
+
+	if err != nil {
+		logError("handleTransactionDeletion", "%s", err)
+		http.Error(w, "Model not found", http.StatusInternalServerError)
+		return
+	}
+
+	err = t.Delete(db)
+
+	if err != nil {
+		logError("handleTransactionDeletion", "%s", err)
+		http.Error(w, "Error while deleting", http.StatusInternalServerError)
+		return
+	}
+
+}
+
 /*
 	##############################
 	#                            #

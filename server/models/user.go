@@ -149,7 +149,11 @@ func (u *User) getTransactions(cr *sql.DB) error {
 			return err
 		}
 
-		transaction := FindTransactionByID(cr, id)
+		transaction, err := FindTransactionByID(cr, id)
+
+		if err != nil {
+			return err
+		}
 
 		u.TransactionIDs = append(u.TransactionIDs, transaction)
 	}

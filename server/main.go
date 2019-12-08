@@ -77,6 +77,7 @@ func main() {
 	r.HandleFunc("/transactions/", logging(handleTransactionOverview))
 	r.HandleFunc("/transactions/create/", logging(handleTransactionForm))
 	r.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
+	r.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
 
 	r.HandleFunc("/login/", logging(handleLogin))
 

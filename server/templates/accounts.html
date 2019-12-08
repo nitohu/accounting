@@ -38,7 +38,7 @@
                         <td>IBAN</td>
                         <td>Account Holder</td>
                         <td>Bank name</td>
-                        <td><i class="material-icons">delete</i></td>
+                        <td><i class="material-icons">X</i></td>
                     </tr>
                 </thead>
 
@@ -51,7 +51,7 @@
                             <td>{{ .Iban }}</td>
                             <td>{{ .Holder }}</td>
                             <td>{{ .BankName }}</td>
-                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">delete</i></td>
+                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>
                         </tr>
                     {{ end }}
                 </tbody>
