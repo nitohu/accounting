@@ -44,11 +44,6 @@ func main() {
 	db = dbInit("127.0.0.1", "nitohu", "123", "accounting", 5432)
 	defer db.Close()
 
-	// user := user.Query(db, []user.QueryArgument{
-	// 	{Connector: "", Field: "name", Op: "ilike", Value: "niklas%"},
-	// 	{Connector: "AND", Field: "id", Op: "=", Value: "1"},
-	// })
-
 	tmpl = template.Must(initTemplates(
 		"index.html",
 		"login.html",

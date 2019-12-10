@@ -32,6 +32,7 @@
 
                 <label for="fromAccount">From: </label>
                 <select name="fromAccount" id="fromAccount">
+                    <option id="from_0" value="0">External Account</option>
                     {{ range .User.AccountIDs }}
                         <option id="from_{{ .ID }}" value="{{ .ID }}">{{ .Name }}</option>
                     {{ end }}

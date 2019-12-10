@@ -56,14 +56,16 @@ func (a *Account) Create(cr *sql.DB) error {
 		return errors.New("No user is linked to the account")
 	}
 
+	var id int64
+
 	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban, account_holder,"
 	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update, user_id"
-	query += " ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);"
+	query += " ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id;"
 
 	a.CreateDate = time.Now().Local()
 	a.LastUpdate = time.Now().Local()
 
-	res, err := cr.Exec(query,
+	err := cr.QueryRow(query,
 		a.Name,
 		a.Active,
 		a.Balance,
@@ -77,16 +79,11 @@ func (a *Account) Create(cr *sql.DB) error {
 		a.CreateDate,
 		a.LastUpdate,
 		a.UserID,
-	)
+	).Scan(&id)
 
 	if err != nil {
+		fmt.Println("Origin: Account.Create")
 		return err
-	}
-
-	id, _ := res.LastInsertId()
-
-	if rowCount, err := res.RowsAffected(); err != nil || rowCount < 1 {
-		return errors.New("No rows affected. ID: " + fmt.Sprintf("%d", id))
 	}
 
 	a.ID = id
@@ -147,6 +144,72 @@ func (a *Account) Delete(cr *sql.DB) error {
 	}
 
 	return nil
+}
+
+// Book books a transaction in the account
+// Also saves the new balance to the database
+func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
+
+	fmt.Printf("Book function of account; %s (%d)\n", a.Name, a.ID)
+	fmt.Printf("Transaction; %s (%d) %s\n", t.Name, t.ID, t.Amount)
+
+	if t.Booked {
+		return nil
+	}
+
+	fmt.Println("Transaction is not booked")
+	fmt.Printf("Transaction Date: %s\n", t.TransactionDate)
+
+	// If the transaction is not forecasted yet
+	// book the transaction into BalanceForecast
+	if t.Forecasted == false {
+		fmt.Println("Transaction is not forecasted yet")
+
+		fmt.Printf("BalanceForecast before booking: %d\n", a.BalanceForecast)
+		fmt.Printf("t.Forecasted: %t\n", t.Forecasted)
+		if reverse {
+			a.BalanceForecast += (t.Amount * -1)
+			t.ForecastedReverse = true
+		} else {
+			a.BalanceForecast += t.Amount
+			t.Forecasted = true
+		}
+		fmt.Printf("BalanceForecast after booking: %d\n", a.BalanceForecast)
+		fmt.Printf("Forecasted: %t, Reverse: %t\n", t.Forecasted, t.ForecastedReverse)
+	}
+
+	currentTime := time.Now().Local()
+
+	fmt.Printf("Current time: %s, transaction date: %s\n", currentTime, t.TransactionDate)
+	fmt.Printf("Current Time is after transactiondate: %t\n", currentTime.After(t.TransactionDate))
+	fmt.Printf("Current Time is before transactiondate: %t\n", currentTime.Before(t.TransactionDate))
+
+	if currentTime.After(t.TransactionDate) {
+		fmt.Println("Book transaction")
+
+		fmt.Printf("Balance before: %d\n", a.Balance)
+		if reverse {
+			a.Balance += (t.Amount * -1)
+			t.BookedReverse = true
+		} else {
+			a.Balance += t.Amount
+			t.Booked = true
+		}
+
+		fmt.Printf("Booked: %t, Reverse: %t\n", t.Booked, t.BookedReverse)
+		fmt.Printf("Balance after: %d\n", a.Balance)
+	}
+
+	err := a.Save(cr)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Account saved")
+
+	return nil
+
 }
 
 // FindByID finds an account with it's id

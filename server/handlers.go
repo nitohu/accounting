@@ -259,7 +259,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	t.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
 	t.FromAccount, _ = strconv.ParseInt(r.FormValue("fromAccount"), 0, 64)
 	t.LastUpdate = time.Now().Local()
-	t.TransactionDDate = time.Now().Local()
+	t.TransactionDate = time.Now().Local()
 	t.UserID = ctx["User"].(models.User).ID
 	t.ToAccount = 0
 
@@ -372,7 +372,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	err = session.Save(r, w)
 
 	if err != nil {
-		panic(err)
+		logWarn("handleLogin", "%s", err)
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)

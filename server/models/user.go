@@ -83,20 +83,29 @@ func (u *User) FindByID(cr *sql.DB, uid int) error {
 		return err
 	}
 
-	u.getAccounts(cr)
-	u.getTransactions(cr)
+	err = u.getAccounts(cr)
+
+	if err != nil {
+		return err
+	}
+
+	err = u.getTransactions(cr)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (u *User) getAccounts(cr *sql.DB) {
+func (u *User) getAccounts(cr *sql.DB) error {
 	query := "SELECT id, name, active, balance, balance_forecast, iban, account_holder, bank_code, account_nr, "
 	query += "bank_name, bank_type, create_date, last_update FROM accounts WHERE user_id=$1"
 
 	rows, err := cr.Query(query, u.ID)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for rows.Next() {
@@ -119,11 +128,12 @@ func (u *User) getAccounts(cr *sql.DB) {
 		)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		u.AccountIDs = append(u.AccountIDs, a)
 	}
+	return nil
 }
 
 func (u *User) getTransactions(cr *sql.DB) error {
@@ -163,16 +173,16 @@ func (u *User) getTransactions(cr *sql.DB) error {
 }
 
 // FindUserByID ...
-func FindUserByID(cr *sql.DB, uid int) User {
+func FindUserByID(cr *sql.DB, uid int) (User, error) {
 	user := EmptyUser()
 
 	err := user.FindByID(cr, uid)
 
 	if err != nil {
-		panic(err)
+		return user, err
 	}
 
-	return user
+	return user, nil
 }
 
 // ToMap enables to save the User model into a session

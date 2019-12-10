@@ -46,7 +46,7 @@
                         <td><a href="/transactions/edit/{{ .ID }}">{{ .Name }}</a></td>
                         <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
                         <td>{{ .FromAccountName }}</td>
-                        <td>{{ .TransactionDate }}</td>
+                        <td>{{ .TransactionDateStr }}</td>
                         <td>{{ .ToAccountName }}</td>
                         <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>
                     </tr>

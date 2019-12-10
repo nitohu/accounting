@@ -58,7 +58,7 @@
                                 <td>{{ .Name }}</td>
                                 <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
                                 <td>{{ .FromAccountName }}</td>
-                                <td>{{ .TransactionDate }}</td>
+                                <td>{{ .TransactionDateStr }}</td>
                                 <td>{{ .ToAccountName }}</td>
                             </tr>
                         {{ end }}
