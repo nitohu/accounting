@@ -190,6 +190,14 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			fmt.Println("Hint: if t.FromAccount > 0 == true")
 			return err
 		}
+
+		err = t.Save(cr)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Create")
+			fmt.Println("Hint: if t.FromAccount > 0 == true, error saving transaction")
+			return err
+		}
 	}
 
 	// Book the transaction into ToAccount if it's given
@@ -206,9 +214,17 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		err = toAccount.Book(cr, t, false)
 
 		if err != nil {
-			return err
 			fmt.Println("Origin: Transaction.Create")
 			fmt.Println("Hint: if t.ToAccount > 0 == true")
+			return err
+		}
+
+		err = t.Save(cr)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Create")
+			fmt.Println("Hint: if t.ToAccount > 0 == true, error saving transaction")
+			return err
 		}
 	}
 
@@ -237,12 +253,14 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	err := row.Scan(&oldAmount, &TransactionDateStr, &accountID, &toAccountID)
 
 	if err != nil {
+		fmt.Println("Origin: Transaction.Save()")
+		fmt.Println("Hint: Receiving the old data")
 		return err
 	}
 
 	// Write values to database
 	query = "UPDATE transactions SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
-	query += "account_id=$8 to_account=$9 transaction_type=$10 WHERE id=$1"
+	query += "to_account=$8, transaction_type=$9 WHERE id=$1"
 
 	t.TransactionDate = time.Now().Local()
 
@@ -268,7 +286,6 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.Active,
 			t.TransactionDate,
 			t.LastUpdate,
-			t.CreateDate,
 			t.Amount,
 			t.FromAccount,
 			t.ToAccount,
@@ -281,7 +298,6 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.Active,
 			t.TransactionDate,
 			t.LastUpdate,
-			t.CreateDate,
 			t.Amount,
 			nil,
 			nil,
@@ -294,7 +310,6 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.Active,
 			t.TransactionDate,
 			t.LastUpdate,
-			t.CreateDate,
 			t.Amount,
 			nil,
 			t.ToAccount,
@@ -303,12 +318,16 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	}
 
 	if err != nil {
+		fmt.Println("Origin: Transaction.Save()")
+		fmt.Println("Hint: Writing the new data")
 		return err
 	}
 
 	_, err = res.RowsAffected()
 
 	if err != nil {
+		fmt.Println("Origin: Transaction.Save()")
+		fmt.Println("Hint: Getting number of affected rows")
 		return err
 	}
 
@@ -317,6 +336,8 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	tempTransaction := EmptyTransaction()
 
 	if err != nil {
+		fmt.Println("Origin: Transaction.Save()")
+		fmt.Println("Hint: Finding fromAccount")
 		return err
 	}
 
@@ -328,20 +349,24 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		tempTransaction.Amount += (diff * -1)
 	}
 
-	if accountID != t.FromAccount {
+	// Check if the origin account changed
+	// and make sure there was an origin account before
+	if accountID != t.FromAccount && accountID != 0 {
 		oldAccount, err := FindAccountByID(cr, accountID)
 
 		if err != nil {
+			fmt.Println("Origin: Transaction.Save()")
+			fmt.Println("Hint: Finding the old from account")
 			return err
 		}
 
 		err = oldAccount.Book(cr, t, true)
 
 		if err != nil {
+			fmt.Println("Origin: Transaction.Save()")
+			fmt.Println("Hint: Removing transaction from old account")
 			return err
 		}
-
-		tempTransaction.Amount += t.Amount
 	}
 
 	// TODO: Implement change in toAccount and TransactionDateStr

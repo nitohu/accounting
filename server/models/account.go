@@ -163,10 +163,6 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 	// If the transaction is not forecasted yet
 	// book the transaction into BalanceForecast
 	if t.Forecasted == false {
-		fmt.Println("Transaction is not forecasted yet")
-
-		fmt.Printf("BalanceForecast before booking: %d\n", a.BalanceForecast)
-		fmt.Printf("t.Forecasted: %t\n", t.Forecasted)
 		if reverse {
 			a.BalanceForecast += (t.Amount * -1)
 			t.ForecastedReverse = true
@@ -174,20 +170,11 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 			a.BalanceForecast += t.Amount
 			t.Forecasted = true
 		}
-		fmt.Printf("BalanceForecast after booking: %d\n", a.BalanceForecast)
-		fmt.Printf("Forecasted: %t, Reverse: %t\n", t.Forecasted, t.ForecastedReverse)
 	}
 
 	currentTime := time.Now().Local()
 
-	fmt.Printf("Current time: %s, transaction date: %s\n", currentTime, t.TransactionDate)
-	fmt.Printf("Current Time is after transactiondate: %t\n", currentTime.After(t.TransactionDate))
-	fmt.Printf("Current Time is before transactiondate: %t\n", currentTime.Before(t.TransactionDate))
-
 	if currentTime.After(t.TransactionDate) {
-		fmt.Println("Book transaction")
-
-		fmt.Printf("Balance before: %d\n", a.Balance)
 		if reverse {
 			a.Balance += (t.Amount * -1)
 			t.BookedReverse = true
@@ -195,9 +182,6 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 			a.Balance += t.Amount
 			t.Booked = true
 		}
-
-		fmt.Printf("Booked: %t, Reverse: %t\n", t.Booked, t.BookedReverse)
-		fmt.Printf("Balance after: %d\n", a.Balance)
 	}
 
 	err := a.Save(cr)
@@ -205,8 +189,6 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("Account saved")
 
 	return nil
 
