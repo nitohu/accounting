@@ -148,7 +148,8 @@ func (a *Account) Delete(cr *sql.DB) error {
 
 // Book books a transaction in the account
 // Also saves the new balance to the database
-func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
+// Reverse = true :
+func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
 
 	fmt.Printf("Book function of account; %s (%d)\n", a.Name, a.ID)
 	fmt.Printf("Transaction; %s (%d) %s\n", t.Name, t.ID, t.Amount)
@@ -163,7 +164,7 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 	// If the transaction is not forecasted yet
 	// book the transaction into BalanceForecast
 	if t.Forecasted == false {
-		if reverse {
+		if invert {
 			a.BalanceForecast += (t.Amount * -1)
 			t.ForecastedReverse = true
 		} else {
@@ -175,7 +176,7 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, reverse bool) error {
 	currentTime := time.Now().Local()
 
 	if currentTime.After(t.TransactionDate) {
-		if reverse {
+		if invert {
 			a.Balance += (t.Amount * -1)
 			t.BookedReverse = true
 		} else {
