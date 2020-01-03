@@ -163,14 +163,15 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
 	fmt.Printf("Transaction; %s (%d) %f\n", t.Name, t.ID, amount)
 
 	a.BalanceForecast += amount
+	a.Balance += amount
 
-	currentTime := time.Now().Local()
+	// currentTime := time.Now().Local()
 
 	// TODO: Unnecessary for now, will be more important for later
 	// features (forecasting and later booking)
-	if currentTime.After(t.TransactionDate) {
-		a.Balance += amount
-	}
+	// if currentTime.After(t.TransactionDate) {
+	// 	a.Balance += amount
+	// }
 
 	err := a.Save(cr)
 

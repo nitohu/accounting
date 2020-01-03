@@ -194,14 +194,6 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			fmt.Println("Hint: t.FromAccount > 0")
 			return err
 		}
-
-		err = t.Save(cr)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.ToAccount > 0 == true, error saving transaction")
-			return err
-		}
 	}
 
 	// Book the transaction into ToAccount if it's given
@@ -211,14 +203,6 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		if err != nil {
 			fmt.Println("Origin: Transaction.Create")
 			fmt.Println("Hint: if t.ToAccount > 0 == true")
-			return err
-		}
-
-		err = t.Save(cr)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.ToAccount > 0 == true, error saving transaction")
 			return err
 		}
 	}
@@ -434,43 +418,29 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	return nil
 }
 
-// Delete's the transtaction
+// Delete 's the transtaction
 func (t *Transaction) Delete(cr *sql.DB) error {
 	if t.ID == 0 {
 		return errors.New("The transaction you want to delete does not have an id")
 	}
 
 	if t.FromAccount > 0 {
-		fromAccount, err := FindAccountByID(cr, t.FromAccount)
+		fmt.Println("delete transaction fromAccount")
+		err := bookIntoAccount(cr, t.FromAccount, t, false)
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: if t.FromAccount > 0 == true, error finding account")
-			return err
-		}
-
-		err = fromAccount.Book(cr, t, false)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: if t.FromAccount > 0 == true, error booking transaction")
+			fmt.Println("Hint: booking into t.FromAccount")
 			return err
 		}
 	}
 	if t.ToAccount > 0 {
-		toAccount, err := FindAccountByID(cr, t.ToAccount)
+		fmt.Println("delete transaction toAccount")
+		err := bookIntoAccount(cr, t.ToAccount, t, true)
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: if t.ToAccount > 0 == true, error finding account")
-			return err
-		}
-
-		err = toAccount.Book(cr, t, true)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: if t.ToAccount > 0 == true, error booking transaction")
+			fmt.Println("Hint: booking into t.FromAccount")
 			return err
 		}
 	}
