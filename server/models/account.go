@@ -146,43 +146,30 @@ func (a *Account) Delete(cr *sql.DB) error {
 	return nil
 }
 
+// TODO: I fucked it up with replacing forecast with firstBooking
+// Make sure
+
 // Book books a transaction in the account
 // Also saves the new balance to the database
-// Reverse = true :
 func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
 
+	amount := t.Amount
+
+	if invert == true {
+		amount = amount * -1
+	}
+
 	fmt.Printf("Book function of account; %s (%d)\n", a.Name, a.ID)
-	fmt.Printf("Transaction; %s (%d) %s\n", t.Name, t.ID, t.Amount)
+	fmt.Printf("Transaction; %s (%d) %f\n", t.Name, t.ID, amount)
 
-	if t.Booked {
-		return nil
-	}
-
-	fmt.Println("Transaction is not booked")
-	fmt.Printf("Transaction Date: %s\n", t.TransactionDate)
-
-	// If the transaction is not forecasted yet
-	// book the transaction into BalanceForecast
-	if t.Forecasted == false {
-		if invert {
-			a.BalanceForecast += (t.Amount * -1)
-			t.ForecastedReverse = true
-		} else {
-			a.BalanceForecast += t.Amount
-			t.Forecasted = true
-		}
-	}
+	a.BalanceForecast += amount
 
 	currentTime := time.Now().Local()
 
+	// TODO: Unnecessary for now, will be more important for later
+	// features (forecasting and later booking)
 	if currentTime.After(t.TransactionDate) {
-		if invert {
-			a.Balance += (t.Amount * -1)
-			t.BookedReverse = true
-		} else {
-			a.Balance += t.Amount
-			t.Booked = true
-		}
+		a.Balance += amount
 	}
 
 	err := a.Save(cr)
@@ -192,7 +179,6 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
 	}
 
 	return nil
-
 }
 
 // FindByID finds an account with it's id

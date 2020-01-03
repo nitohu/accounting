@@ -32,21 +32,17 @@ WHERE t.user_id= *id*;
 // TODO: Implement Forecasted and Booked in database
 type Transaction struct {
 	// Database fields
-	ID                int64
-	Name              string
-	Active            bool
-	TransactionDate   time.Time
-	CreateDate        time.Time
-	LastUpdate        time.Time
-	Amount            float64
-	FromAccount       int64
-	ToAccount         int64
-	TransactionType   string
-	Forecasted        bool
-	ForecastedReverse bool
-	Booked            bool
-	BookedReverse     bool
-	UserID            int
+	ID              int64
+	Name            string
+	Active          bool
+	TransactionDate time.Time
+	CreateDate      time.Time
+	LastUpdate      time.Time
+	Amount          float64
+	FromAccount     int64
+	ToAccount       int64
+	TransactionType string
+	UserID          int
 
 	// Computed fields
 	FromAccountName    string
@@ -57,21 +53,17 @@ type Transaction struct {
 // EmptyTransaction ..
 func EmptyTransaction() Transaction {
 	t := Transaction{
-		ID:                0,
-		Name:              "",
-		Active:            false,
-		TransactionDate:   time.Now().Local(),
-		CreateDate:        time.Now().Local(),
-		LastUpdate:        time.Now().Local(),
-		Amount:            0.0,
-		FromAccount:       0,
-		ToAccount:         0,
-		TransactionType:   "",
-		Booked:            false,
-		BookedReverse:     false,
-		Forecasted:        false,
-		ForecastedReverse: false,
-		UserID:            0,
+		ID:              0,
+		Name:            "",
+		Active:          false,
+		TransactionDate: time.Now().Local(),
+		CreateDate:      time.Now().Local(),
+		LastUpdate:      time.Now().Local(),
+		Amount:          0.0,
+		FromAccount:     0,
+		ToAccount:       0,
+		TransactionType: "",
+		UserID:          0,
 	}
 
 	return t
@@ -115,8 +107,8 @@ func (t *Transaction) Create(cr *sql.DB) error {
 
 	// Initializing variables
 	query := "INSERT INTO transactions ( name, active, transaction_date, last_update, create_date, amount,"
-	query += " account_id, to_account, transaction_type, user_id, booked, forecasted, booked_reverse,"
-	query += " forecasted_reverse) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'f', 'f', 'f', 'f') RETURNING id;"
+	query += " account_id, to_account, transaction_type, user_id"
+	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;"
 
 	t.CreateDate = time.Now().Local()
 	t.LastUpdate = time.Now().Local()
@@ -150,6 +142,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			t.TransactionType,
 			t.UserID,
 		).Scan(&id)
+		// TODO: This should throw an error
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
 		err = cr.QueryRow(query,
 			t.Name,
@@ -194,20 +187,11 @@ func (t *Transaction) Create(cr *sql.DB) error {
 
 	// Book transaction into FromAccount if it's given
 	if t.FromAccount > 0 {
-		fromAccount, err := FindAccountByID(cr, t.FromAccount)
-		fmt.Printf("FromAccount given, ID: %d\n", fromAccount.ID)
+		err := bookIntoAccount(cr, t.FromAccount, t, true)
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.FromAccount > 0 == true")
-			return err
-		}
-
-		err = fromAccount.Book(cr, t, true)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.FromAccount > 0 == true")
+			fmt.Println("Hint: t.FromAccount > 0")
 			return err
 		}
 
@@ -215,23 +199,14 @@ func (t *Transaction) Create(cr *sql.DB) error {
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.FromAccount > 0 == true, error saving transaction")
+			fmt.Println("Hint: if t.ToAccount > 0 == true, error saving transaction")
 			return err
 		}
 	}
 
 	// Book the transaction into ToAccount if it's given
 	if t.ToAccount > 0 {
-		toAccount, err := FindAccountByID(cr, t.ToAccount)
-		fmt.Printf("ToAccount given, ID: %d\n", toAccount.ID)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Create")
-			fmt.Println("Hint: if t.ToAccount > 0 == true")
-			return err
-		}
-
-		err = toAccount.Book(cr, t, false)
+		err := bookIntoAccount(cr, t.ToAccount, t, false)
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Create")
@@ -256,7 +231,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	fmt.Println("Transaction.Save function")
 
 	if t.ID == 0 {
-		return errors.New("This account as no ID, maybe create it first?")
+		return errors.New("This transaction as no ID, maybe create it first?")
 	} else if t.Amount == 0.0 {
 		return errors.New("The Amount of the transaction with the id " + fmt.Sprintf("%d", t.ID) + " is 0")
 	}
@@ -355,92 +330,149 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		Change balance on accounts
 	*/
 
-	// Check if the new amount if different from the old one
-	// book into accounts if that is the case
+	// If the origin account changed: Remove balance from old origin
+	// If the destination account changed: Remove balance from old destination
+	// ==> Book both into new accounts
+	// If the origin not changed: book difference into account
+	// if the destination not changed: book difference into account
+
+	temp := EmptyTransaction()
+
+	temp.Name = t.Name
+	temp.Amount = oldAmount
+
+	originChanged := false
+	destinationChanged := false
+
+	// The origin account changed
+	if accountID != t.FromAccount {
+		// Remove booking from old account
+		// Amount needs to be inverted
+		// Make sure the old amount gets removed from the old account
+		if accountID != nil {
+			err := bookIntoAccount(cr, accountID.(int64), &temp, false)
+
+			if err != nil {
+				fmt.Println("Origin: Transaction.Save()")
+				fmt.Println("Hint: Redo booking from old origin account")
+				return err
+			}
+		}
+
+		// Book the amount into the new account
+		err = bookIntoAccount(cr, t.FromAccount, t, true)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Save()")
+			fmt.Println("Hint: Book to new origin account")
+			return err
+		}
+	}
+
+	// The destination account changed
+	if toAccountID != t.ToAccount {
+		// Remove booking from old destination account
+		// Make sure the old amount is used
+		if toAccountID != nil {
+			err := bookIntoAccount(cr, toAccountID.(int64), &temp, false)
+
+			if err != nil {
+				fmt.Println("Origin: Transaction.Save()")
+				fmt.Println("Hint: Removing transaction from the old receiving account")
+				return err
+			}
+		}
+
+		// Book into new account
+		err = bookIntoAccount(cr, t.ToAccount, t, true)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Save()")
+			fmt.Println("Hint: Book to new origin account")
+			return err
+		}
+	}
+
+	// The amount of the transaction changed
 	if t.Amount != oldAmount {
-		tempTransaction := EmptyTransaction()
-		// Calculating the difference
-		tempTransaction.Amount += t.Amount - oldAmount
+		// The origin did not change
+		// So book the difference into the origin account
+		// If the origin has changed we've already booked into the accounts
+		if !originChanged {
+			// Calculate difference and book the difference into the origin account
+			diff := t.Amount - oldAmount
 
-		// Book difference into old origin account
-		if accountID != nil && accountID.(int64) == t.FromAccount {
-			err = bookIntoAccount(cr, accountID.(int64), &tempTransaction, true)
+			temp.Amount = diff
+
+			err := bookIntoAccount(cr, t.FromAccount, &temp, true)
 
 			if err != nil {
 				fmt.Println("Origin: Transaction.Save()")
-				fmt.Println("Hint: The amount of the transaction changed")
-				fmt.Println("Hint: Error while booking into old origin account")
+				fmt.Println("Hint: Booking difference into origin account")
 				return err
 			}
 		}
 
-		// Book difference into old receiving account
-		if toAccountID != nil && toAccountID.(int64) == t.ToAccount {
-			err = bookIntoAccount(cr, toAccountID.(int64), &tempTransaction, false)
+		// The destination did not change
+		if !destinationChanged {
+			diff := t.Amount - oldAmount
+
+			temp.Amount = diff
+
+			err := bookIntoAccount(cr, t.ToAccount, &temp, false)
 
 			if err != nil {
 				fmt.Println("Origin: Transaction.Save()")
-				fmt.Println("Hint: The amount of the transaction changed")
-				fmt.Println("Hint: Error while booking into old receiving account")
+				fmt.Println("Hint: Booking difference into destination account")
 				return err
 			}
-		}
-	}
-
-	// Check if the origin account changed
-	// and make sure there was an origin account before
-	if accountID != t.FromAccount && accountID != nil {
-		err := bookIntoAccount(cr, accountID.(int64), t, false)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Save()")
-			fmt.Println("Hint: Redo booking from old origin account")
-			return err
-		}
-
-		err = bookIntoAccount(cr, t.FromAccount, t, false)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Save()")
-			fmt.Println("Hint: Book to new origin account")
-			return err
-		}
-
-	}
-
-	// Check if the receiving account changed
-	// make also sure there was a receiving account before
-	if toAccountID != t.ToAccount && toAccountID != nil {
-		err := bookIntoAccount(cr, toAccountID.(int64), t, true)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Save()")
-			fmt.Println("Hint: Removing transaction from the old receiving account")
-			return err
-		}
-
-		err = bookIntoAccount(cr, t.ToAccount, t, false)
-
-		if err != nil {
-			fmt.Println("Origin: Transaction.Save()")
-			fmt.Println("Hint: Book to new origin account")
-			return err
 		}
 	}
 
 	// TODO: Implement change for TransactionDateStr
 
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// Delete 's the transtaction
+// Delete's the transtaction
 func (t *Transaction) Delete(cr *sql.DB) error {
 	if t.ID == 0 {
-		return errors.New("The account you want to delete does not have an id")
+		return errors.New("The transaction you want to delete does not have an id")
+	}
+
+	if t.FromAccount > 0 {
+		fromAccount, err := FindAccountByID(cr, t.FromAccount)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Delete")
+			fmt.Println("Hint: if t.FromAccount > 0 == true, error finding account")
+			return err
+		}
+
+		err = fromAccount.Book(cr, t, false)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Delete")
+			fmt.Println("Hint: if t.FromAccount > 0 == true, error booking transaction")
+			return err
+		}
+	}
+	if t.ToAccount > 0 {
+		toAccount, err := FindAccountByID(cr, t.ToAccount)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Delete")
+			fmt.Println("Hint: if t.ToAccount > 0 == true, error finding account")
+			return err
+		}
+
+		err = toAccount.Book(cr, t, true)
+
+		if err != nil {
+			fmt.Println("Origin: Transaction.Delete")
+			fmt.Println("Hint: if t.ToAccount > 0 == true, error booking transaction")
+			return err
+		}
 	}
 
 	query := "DELETE FROM transactions WHERE id=$1"

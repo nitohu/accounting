@@ -34,7 +34,10 @@
                 <select name="fromAccount" id="fromAccount">
                     <option id="from_0" value="0">External Account</option>
                     {{ range .User.AccountIDs }}
-                        <option id="from_{{ .ID }}" value="{{ .ID }}">{{ .Name }}</option>
+                        
+                        <option id="from_{{ .ID }}" value="{{ .ID }}"
+                        {{ if eq .ID $.Transaction.FromAccount }}selected{{end}}>{{ .Name }}</option>
+                        
                     {{ end }}
                 </select>
 
@@ -42,7 +45,8 @@
                 <select name="toAccount" id="toAccount">
                     <option id="to_0" value="0">External Account</option>
                     {{ range .User.AccountIDs }}
-                        <option id="to_{{ .ID }}" value="{{ .ID }}">{{ .Name }}</option>
+                        <option id="to_{{ .ID }}" value="{{ .ID }}"
+                        {{ if eq .ID $.Transaction.ToAccount }}selected{{end}}>{{ .Name }}</option>
                     {{ end }}
                 </select>
 

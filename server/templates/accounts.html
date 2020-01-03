@@ -34,7 +34,6 @@
                     <tr>
                         <td>Name</td>
                         <td>Balance</td>
-                        <td>Forecasted Balance</td>
                         <td>IBAN</td>
                         <td>Account Holder</td>
                         <td>Bank name</td>
@@ -47,7 +46,6 @@
                         <tr>
                             <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
                             <td>{{ (call $.HumanReadable .Balance) }} €</td>
-                            <td>{{ (call $.HumanReadable .BalanceForecast) }} €</td>
                             <td>{{ .Iban }}</td>
                             <td>{{ .Holder }}</td>
                             <td>{{ .BankName }}</td>
