@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Accounting</title>
+
+        <link href="https://fonts.googleapis.com/css?family=Dosis|Quicksand|Raleway&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/static/css/style.css">
+        <link rel="stylesheet" href="/static/css/dashboard.css">
+    </head>
+
+    <body class="dashboard">
+        <nav>
+            <a href="#" class="title">Accounting</a>
+
+            <div class="placeholder"></div>
+
+            <a href="#" class="active">Home</a>
+            <a href="/accounts/">Accounts</a>
+            <a href="/transactions/">Transactions</a>
+            {{ if .Authenticated }}
+                <a href="/logout/">Logout</a>
+            {{ else }}
+                <a href="/login/">Login</a>
+            {{ end }}
+        </nav>
+
+        <div class="dashboard">
+            <div class="tile tile-full list-row accounts">
+                <div class="content account-list">
+                    {{ range .User.AccountIDs }}
+                        <div class="tile">
+                            <span class="name">{{ .Name }}</span><br />
+                            <span class="iban">{{ .Iban }}</span><br />
+                            <div class="balance">Balance: {{ ( call $.HumanReadable .Balance ) }} €</div>
+                        </div>
+                    {{ end }}
+                </div>
+            </div>
+    
+            <div class="tile transaction-list">
+                <table class="content widget_table">
+                    <thead>
+                        <tr>
+                            <td>Reference</td>
+                            <td>Amount</td>
+                            <td>From</td>
+                            <td>Date</td>
+                            <td>To</td>
+                        </tr>
+                    </thead>
+    
+                    <tbody>
+                        {{ range .User.TransactionIDs }}
+                            <tr>
+                                <td>{{ .Name }}</td>
+                                <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
+                                <td>{{ .FromAccountName }}</td>
+                                <td>{{ .TransactionDateStr }}</td>
+                                <td>{{ .ToAccountName }}</td>
+                            </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- <h1>Transactions</h1>
+
+        <div>{{ .User.TransactionIDs }}</div>
+
+        <div class="transaction-list">
+            {{ range .User.TransactionIDs }}
+                <p>{{ .Name }}, {{ ( call $.HumanReadable .Amount ) }}, {{ .FromAccount }}</p>
+            {{ end }}
+        </div> -->
+    </body>
+</html>

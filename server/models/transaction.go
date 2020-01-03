@@ -314,12 +314,6 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		Change balance on accounts
 	*/
 
-	// If the origin account changed: Remove balance from old origin
-	// If the destination account changed: Remove balance from old destination
-	// ==> Book both into new accounts
-	// If the origin not changed: book difference into account
-	// if the destination not changed: book difference into account
-
 	temp := EmptyTransaction()
 
 	temp.Name = t.Name
@@ -345,6 +339,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 		// Book the amount into the new account
 		err = bookIntoAccount(cr, t.FromAccount, t, true)
+		originChanged = true
 
 		if err != nil {
 			fmt.Println("Origin: Transaction.Save()")
@@ -357,6 +352,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	if toAccountID != t.ToAccount {
 		// Remove booking from old destination account
 		// Make sure the old amount is used
+		destinationChanged = true
 		if toAccountID != nil {
 			err := bookIntoAccount(cr, toAccountID.(int64), &temp, false)
 
@@ -413,7 +409,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		}
 	}
 
-	// TODO: Implement change for TransactionDateStr
+	// TODO: Implement change for TransactionDateStr (? wtf did i meant)
 
 	return nil
 }
