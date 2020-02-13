@@ -56,6 +56,7 @@ func main() {
 		"transactions.html",
 		"transaction_form.html",
 		"404.html",
+		"settings.html",
 	))
 
 	staticFiles := http.FileServer(http.Dir("static/"))
@@ -67,6 +68,7 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFiles))
 
 	r.HandleFunc("/", logging(handleRoot))
+	r.HandleFunc("/settings/", logging(handleSettings))
 
 	// Accounts
 	r.HandleFunc("/accounts/", logging(handleAccountOverview))

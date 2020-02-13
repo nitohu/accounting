@@ -10,11 +10,12 @@
 <!-- Favicon-->
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
-<!-- JQuery DataTable Css -->
-<link rel="stylesheet" href="/static/plugins/jquery-datatable/dataTables.bootstrap4.min.css">
+<!-- Bootstrap Material Datetime Picker Css -->
+<link href="/static/plugins/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css" rel="stylesheet" />
+<!-- Bootstrap Select Css -->
+<link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
-<link rel="stylesheet" href="/static/css/custom.css">
 </head>
 
 <body class="theme-blush">
@@ -38,7 +39,6 @@
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
 </div>
-
 
 <!-- Right Icon menu Sidebar -->
 <div class="navbar-right">
@@ -204,10 +204,10 @@
                     <li><a href="/transactions/create/">Create New</a></li>
                 </ul>
             </li>
-            <li class="active open"> <a href="javascript:void(0);" class="menu-toggle"><i
+            <li> <a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-assignment"></i><span>Accounts</span></a>
                 <ul class="ml-menu">
-                    <li class="active open"><a href="/accounts/">Overview</a></li>
+                    <li><a href="/accounts/">Overview</a></li>
                     <li><a href="/accounts/create/">Create New</a></li>
                 </ul>
             </li>
@@ -292,11 +292,10 @@
         <div class="block-header">
             <div class="row">
                 <div class="col-lg-7 col-md-6 col-sm-12">
-                    <h2>Transactions Overview</h2>
+                    <h2>Settings</h2>
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item"><a href="index.html"><i class="zmdi zmdi-home"></i> Accounting</a></li>
-                        <li class="breadcrumb-item active">Transactions</li>
-                        <li class="breadcrumb-item active">Overview</li>
+                        <li class="breadcrumb-item active">Settings</li>
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
                 </div>
@@ -305,93 +304,74 @@
                 </div>
             </div>
         </div>
-        <div class="row clearfix">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="header">
-                        <h2><strong>Latest</strong> Transactions </h2>
-                        <ul class="header-dropdown">
-                            <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>
-                                <ul class="dropdown-menu dropdown-menu-right slideUp">
-                                    <li><a href="/accounts/create/">Create</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped table-hover js-basic-example dataTable">
-                                <thead>
-                                    <tr>
-                                        <th>Reference</th>
-                                        <th>Amount</th>
-                                        <th>From</th>
-                                        <th>Date</th>
-                                        <th>To</th>
-                                        <th><i class="zmdi zmdi-close"></i></th>
-                                    </tr>
-                                </thead>
-                                <tfoot>
-                                    <tr>
-                                        <th>Reference</th>
-                                        <th>Amount</th>
-                                        <th>From</th>
-                                        <th>Date</th>
-                                        <th>To</th>
-                                        <th><i class="zmdi zmdi-close"></i></th>
-                                    </tr>
-                                </tfoot>
-                                <tbody>
-                                    {{ range .User.AccountIDs }}
-                                        <tr>
-                                            <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
-                                            <td>{{ (call $.HumanReadable .Balance) }} €</td>
-                                            <td>{{ .Iban }}</td>
-                                            <td>{{ .Holder }}</td>
-                                            <td>{{ .BankName }}</td>
-                                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>
-                                        </tr>
-                                    {{ end }}
-                                </tbody>
-                            </table>
+        <div class="container-fluid">
+            <div class="row clearfix">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>Settings</strong></h2>
                         </div>
+                        <div class="body">
+                            <form method="POST"></form>
+                                <h3>General Settings</h3>
+
+                                <!-- Name & E-Mail -->
+                                <div class="row clearfix">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="name">Your Name</label>
+                                            <input type="text" class="form-control" name="name" id="name" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="email">E-Mail</label>
+                                            <input type="email" id="email" class="form-control" name="email" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Master Password -->
+                                <div class="form-group">
+                                    <label for="password">Master Password</label>
+                                    <input type="password" id="password" class="form-control" name="password">
+                                </div>
+                                
+                                <h3>Statistics Settings</h3>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="zmdi zmdi-calendar"></i></span>
+                                    </div>
+                                    <input type="text" id="salary_date" class="form-control datepicker"
+                                        placeholder="Salary Receive Date" name="salary_date">
+                                </div>
+
+                                <!-- Buttons -->
+                                <br/>
+                                <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <input type="submit" class="btn btn-primary" value="Save">
+                                        <a href="/" class="btn btn-neutral">Cancel</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Jquery Core Js --> 
+<!-- jQuery Core -->
 <script src="/static/bundles/libscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 <script src="/static/bundles/vendorscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 
-<!-- Jquery datatable plugins -->
-<script src="/static/bundles/datatablescripts.bundle.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/buttons.colVis.min.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/buttons.flash.min.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/buttons.html5.min.js"></script>
-<script src="/static/plugins/jquery-datatable/buttons/buttons.print.min.js"></script>
-<script src="/static/js/pages/tables/jquery-datatable.js"></script>
+<script src="/static/plugins/momentjs/moment.js"></script> <!-- Moment Plugin Js --> 
+<!-- Bootstrap Material Datetime Picker Plugin Js -->
+<script src="/static/plugins/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js"></script> 
 
-<script src="/static/bundles/mainscripts.bundle.js"></script>
-
-<script>
-    let btns = document.getElementsByClassName("deleteEntry")
-
-    for (let i = 0; i < btns.length; i++) {
-        let btn = btns[i]
-        btn.addEventListener("click", function() {
-            let id = btn.id.split("_")[1]
-
-            console.warn("Deleting record with id ", id)
-            fetch("/accounts/delete/"+id).then(function() {
-                window.location.reload()
-            })
-
-        })
-    }
-</script>
+<script src="/static/bundles/mainscripts.bundle.js"></script><!-- Custom Js --> 
+<script src="/static/js/pages/forms/basic-form-elements.js"></script>
 </body>
 </html>

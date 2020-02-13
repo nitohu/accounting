@@ -194,14 +194,14 @@
                     </div>
                 </div>
             </li>
-            <li class="active open"><a href="/"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
+            <li><a href="/"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
             </li>
             <li><a href="#"><i class="zmdi zmdi-account"></i><span>Your Profile</span></a></li>
-            <li><a href="javascript:void(0);" class="menu-toggle"><i
+            <li class="active open"><a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-money-box"></i><span>Transactions</span></a>
                 <ul class="ml-menu">
                     <li><a href="/transactions/">Overview</a></li>
-                    <li><a href="/transactions/create/">Create New</a></li>
+                    <li class="active open"><a href="/transactions/create/">Create New</a></li>
                 </ul>
             </li>
             <li> <a href="javascript:void(0);" class="menu-toggle"><i
@@ -220,8 +220,6 @@
     <ul class="nav nav-tabs sm">
         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#setting"><i
                     class="zmdi zmdi-settings zmdi-hc-spin"></i></a></li>
-        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#chat"><i
-                    class="zmdi zmdi-comments"></i></a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="setting">
@@ -277,76 +275,9 @@
                                 <label for="checkbox2">Mini Sidebar</label>
                             </div>
                         </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="tab-pane right_chat" id="chat">
-            <div class="slim_scroll">
-                <div class="card">
-                    <ul class="list-unstyled">
-                        <li class="online">
-                            <a href="javascript:void(0);">
-                                <div class="media">
-                                    <img class="media-object " src="/static/images/xs/avatar4.jpg" alt="">
-                                    <div class="media-body">
-                                        <span class="name">Sophia <small class="float-right">11:00AM</small></span>
-                                        <span class="message">There are many variations of passages of Lorem Ipsum
-                                            available</span>
-                                        <span class="badge badge-outline status"></span>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="online">
-                            <a href="javascript:void(0);">
-                                <div class="media">
-                                    <img class="media-object " src="/static/images/xs/avatar5.jpg" alt="">
-                                    <div class="media-body">
-                                        <span class="name">Grayson <small class="float-right">11:30AM</small></span>
-                                        <span class="message">All the Lorem Ipsum generators on the</span>
-                                        <span class="badge badge-outline status"></span>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="offline">
-                            <a href="javascript:void(0);">
-                                <div class="media">
-                                    <img class="media-object " src="/static/images/xs/avatar2.jpg" alt="">
-                                    <div class="media-body">
-                                        <span class="name">Isabella <small
-                                                class="float-right">11:31AM</small></span>
-                                        <span class="message">Contrary to popular belief, Lorem Ipsum</span>
-                                        <span class="badge badge-outline status"></span>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="me">
-                            <a href="javascript:void(0);">
-                                <div class="media">
-                                    <img class="media-object " src="/static/images/xs/avatar1.jpg" alt="">
-                                    <div class="media-body">
-                                        <span class="name">John <small class="float-right">05:00PM</small></span>
-                                        <span class="message">It is a long established fact that a reader</span>
-                                        <span class="badge badge-outline status"></span>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                        <li class="online">
-                            <a href="javascript:void(0);">
-                                <div class="media">
-                                    <img class="media-object " src="/static/images/xs/avatar3.jpg" alt="">
-                                    <div class="media-body">
-                                        <span class="name">Alexander <small
-                                                class="float-right">06:08PM</small></span>
-                                        <span class="message">Richard McClintock, a Latin professor</span>
-                                        <span class="badge badge-outline status"></span>
-                                    </div>
-                                </div>
-                            </a>
+                        <li>
+                            <br/>
+                            <a href="/settings/">Advanced Settings</a>
                         </li>
                     </ul>
                 </div>

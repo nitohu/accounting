@@ -15,12 +15,31 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	ctx, err := createContextFromSession(db, session)
 
 	if err != nil {
-		fmt.Println(err)
+		logWarn("handleRoot", "%s", err)
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	err = tmpl.ExecuteTemplate(w, "index.html", ctx)
+
+	if err != nil {
+		logError("handleLogin", "%s", err)
+	}
+}
+
+// Settings
+func handleSettings(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	ctx, err := createContextFromSession(db, session)
+
+	if err != nil {
+		logWarn("handleSettings", "%s", err)
+		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	err = tmpl.ExecuteTemplate(w, "settings.html", ctx)
 
 	if err != nil {
 		logError("handleLogin", "%s", err)
