@@ -51,11 +51,14 @@ func main() {
 		"account_form.html",
 		"transactions.html",
 		"transaction_form.html",
+		"404.html",
 	))
 
 	staticFiles := http.FileServer(http.Dir("static/"))
 
 	r := mux.NewRouter()
+
+	r.NotFoundHandler = pageNotFoundHandler()
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFiles))
 

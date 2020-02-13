@@ -21,12 +21,35 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	err = tmpl.ExecuteTemplate(w, "index.html", ctx)
 
 	if err != nil {
 		logError("handleLogin", "%s", err)
 	}
+}
+
+// 404 Page
+func pageNotFoundHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := store.Get(r, "session")
+
+		ctx, err := createContextFromSession(db, session)
+
+		if err != nil {
+			logError("handlePageNotFound", "%s", err)
+			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		err = tmpl.ExecuteTemplate(w, "404.html", ctx)
+
+		if err != nil {
+			logError("handlePageNotFound", "%s", err)
+		}
+	})
 }
 
 /*
@@ -47,6 +70,8 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	ctx["Title"] = "All Accounts"
 
 	err = tmpl.ExecuteTemplate(w, "accounts.html", ctx)
@@ -65,6 +90,8 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 		logError("handleAccountCreation", "%s", err)
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Create Account"
 	ctx["Header"] = "Create a new account"
@@ -112,6 +139,8 @@ func handleAccountEditing(w http.ResponseWriter, r *http.Request) {
 		logError("handleAccountEditing", "%s", err)
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	vars := mux.Vars(r)
 	accountID, _ := strconv.Atoi(vars["id"])
@@ -175,6 +204,8 @@ func handleAccountDeletion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	vars := mux.Vars(r)
 
 	id, err := strconv.Atoi(vars["id"])
@@ -214,6 +245,8 @@ func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	ctx["Title"] = "Transactions"
 
 	if r.Method != http.MethodPost {
@@ -235,6 +268,8 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	vars := mux.Vars(r)
 	t := models.EmptyTransaction()
@@ -297,6 +332,8 @@ func handleTransactionDeletion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
 	vars := mux.Vars(r)
 
 	id, err := strconv.Atoi(vars["id"])
@@ -340,6 +377,8 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		logInfo(r.URL.Path, "User is already logged in")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if r.Method != http.MethodPost {
 		tmpl.ExecuteTemplate(w, "login.html", nil)
