@@ -17,6 +17,10 @@ var tmpl *template.Template
 var (
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
 	store = sessions.NewCookieStore(key)
+
+	// layout for parsing the datetime from the form
+	dtFormLayout = "Monday 02 January 2006 - 15:04"
+	dbTimeLayout = "2006-01-02 15:04:00"
 )
 
 func logInfo(funcName, msg string, args ...interface{}) {

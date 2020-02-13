@@ -288,13 +288,23 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	fmt.Println(r.FormValue("datetime"))
+
+	// Format the time received from the form
+	tDate := r.FormValue("datetime")
+	transactionDate, err := time.Parse(dtFormLayout, tDate)
+
+	if err != nil {
+		transactionDate = time.Now().Local()
+		logWarn("handleTransactionForm", "Error while parsing the transaction date:\n%s", err)
+	}
 
 	t.Name = r.FormValue("name")
 	// TODO: Handle error
 	t.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
 	t.FromAccount, _ = strconv.ParseInt(r.FormValue("fromAccount"), 0, 64)
 	t.LastUpdate = time.Now().Local()
-	t.TransactionDate = time.Now().Local()
+	t.TransactionDate = transactionDate
 	t.UserID = ctx["User"].(models.User).ID
 	t.ToAccount = 0
 

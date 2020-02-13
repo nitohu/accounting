@@ -10,6 +10,8 @@
 <!-- Favicon-->
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
+<!-- JQuery DataTable Css -->
+<link rel="stylesheet" href="/static/plugins/jquery-datatable/dataTables.bootstrap4.min.css">
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
 <link rel="stylesheet" href="/static/css/custom.css">
@@ -192,9 +194,9 @@
                     </div>
                 </div>
             </li>
-            <li class="active open"><a href="index.html"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
+            <li class="active open"><a href="/"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
             </li>
-            <li><a href="my-profile.html"><i class="zmdi zmdi-account"></i><span>Your Profile</span></a></li>
+            <li><a href="#"><i class="zmdi zmdi-account"></i><span>Your Profile</span></a></li>
             <li><a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-money-box"></i><span>Transactions</span></a>
                 <ul class="ml-menu">
@@ -205,8 +207,8 @@
             <li> <a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-assignment"></i><span>Accounts</span></a>
                 <ul class="ml-menu">
-                    <li><a href="project-list.html">Overview</a></li>
-                    <li><a href="taskboard.html">Create New</a></li>
+                    <li><a href="/accounts/">Overview</a></li>
+                    <li><a href="/accounts/create/">Create New</a></li>
                 </ul>
             </li>
         </ul>
@@ -361,8 +363,9 @@
                 <div class="col-lg-7 col-md-6 col-sm-12">
                     <h2>Transactions Overview</h2>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html"><i class="zmdi zmdi-home"></i> Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="index.html"><i class="zmdi zmdi-home"></i> Accounting</a></li>
                         <li class="breadcrumb-item active">Transactions</li>
+                        <li class="breadcrumb-item active">Overview</li>
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
                 </div>
@@ -379,7 +382,7 @@
                         <ul class="header-dropdown">
                             <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>
                                 <ul class="dropdown-menu dropdown-menu-right slideUp">
-                                    <li><a href="javascript:void(0);">Create</a></li>
+                                    <li><a href="/transactions/create/">Create</a></li>
                                 </ul>
                             </li>
                         </ul>
@@ -432,14 +435,14 @@
 <script src="/static/bundles/vendorscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 
 <!-- Jquery datatable plugins -->
-<script src="assets/bundles/datatablescripts.bundle.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/buttons.colVis.min.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/buttons.flash.min.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/buttons.html5.min.js"></script>
-<script src="assets/plugins/jquery-datatable/buttons/buttons.print.min.js"></script>
-<script src="assets/js/pages/tables/jquery-datatable.js"></script>
+<script src="/static/bundles/datatablescripts.bundle.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/buttons.flash.min.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/buttons.html5.min.js"></script>
+<script src="/static/plugins/jquery-datatable/buttons/buttons.print.min.js"></script>
+<script src="/static/js/pages/tables/jquery-datatable.js"></script>
 
 <script src="/static/bundles/mainscripts.bundle.js"></script>
 
