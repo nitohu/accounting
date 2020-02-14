@@ -16,6 +16,7 @@
 <link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
+<link rel="stylesheet" href="/static/css/custom.css">
 </head>
 
 <body class="theme-blush">
@@ -189,7 +190,7 @@
                     <!-- <a class="image" href="profile.html"><img src="/static/images/profile_av.jpg" alt="User"></a> -->
                     <div class="detail">
                         <br>
-                        <h4>{{ .User.Name }}</h4>
+                        <h4>{{ .Settings.Name }}</h4>
                         <br>
                     </div>
                 </div>
@@ -312,7 +313,7 @@
                             <h2><strong>Settings</strong></h2>
                         </div>
                         <div class="body">
-                            <form method="POST"></form>
+                            <form method="POST">
                                 <h3>General Settings</h3>
 
                                 <!-- Name & E-Mail -->
@@ -320,31 +321,70 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="name">Your Name</label>
-                                            <input type="text" class="form-control" name="name" id="name" />
+                                            <input type="text" class="form-control" name="name"
+                                                value="{{ .Settings.Name }}" id="name" />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="email">E-Mail</label>
-                                            <input type="email" id="email" class="form-control" name="email" />
+                                            <input type="email" id="email" class="form-control"
+                                                value="{{ .Settings.Email }}" name="email" />
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Master Password -->
                                 <div class="form-group">
-                                    <label for="password">Master Password</label>
-                                    <input type="password" id="password" class="form-control" name="password">
+                                    <label for="password">Master Password (only placeholder for now)</label>
+                                    <input type="password" id="password" class="form-control">
                                 </div>
                                 
                                 <h3>Statistics Settings</h3>
 
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="zmdi zmdi-calendar"></i></span>
+                                <div class="row clearfix">
+                                    <!-- Currency Symbol -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="currency">Currency Symbol</label>
+                                            <input type="text" class="form-control" name="currency"
+                                                id="currency" value="{{ .Settings.Currency }}">
+                                        </div>
                                     </div>
-                                    <input type="text" id="salary_date" class="form-control datepicker"
-                                        placeholder="Salary Receive Date" name="salary_date">
+                                    <!-- Beginning of the month -->
+                                    <div class="col-md-6">
+                                        <div class="labelBuffer"></div>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="zmdi zmdi-calendar"></i></span>
+                                            </div>
+                                            <input type="text" id="start_date" class="form-control datepicker" name="start_date"
+                                                placeholder="Beginning of the month" value="{{ .Settings.StartDateForm }}" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row clearfix">
+                                    <!-- Statistics Calculation Interval -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="calc_interval">Statistics Calculation Interval</label>
+                                            <input type="number" name="calc_interval" class="form-control"
+                                                id="calc_interval" value="{{ .Settings.CalcInterval}}" />
+                                        </div>
+                                    </div>
+                                    <!-- Calculation UoM -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="calc_uom">Calculation Unit of Measure</label>
+                                            <select name="calc_uom" id="calc_uom" class="form-control">
+                                                <option {{ if eq .Settings.CalcUoM "minutes" }}selected{{end}} value="minutes">minutes</option>
+                                                <option {{ if eq .Settings.CalcUoM "hours" }}selected{{end}} value="hours">hours</option>
+                                                <option {{ if eq .Settings.CalcUoM "days" }}selected{{end}} value="days">days</option>
+                                                <option {{ if eq .Settings.CalcUoM "weeks" }}selected{{end}} value="weeks">weeks</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Buttons -->
@@ -373,5 +413,6 @@
 
 <script src="/static/bundles/mainscripts.bundle.js"></script><!-- Custom Js --> 
 <script src="/static/js/pages/forms/basic-form-elements.js"></script>
+<!-- <script src="/static/js/pages/forms/advanced-form-elements.js"></script> -->
 </body>
 </html>

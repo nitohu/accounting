@@ -35,11 +35,16 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 		return EmptyContext(), errors.New(err)
 	}
 
-	var err error
+	settings, err := models.InitializeSettings(cr)
+
+	if err != nil {
+		return ctx, err
+	}
 
 	ctx["HumanReadable"] = HumanReadable
 	ctx["Authenticated"] = authenticated
 	ctx["User"], err = models.FindUserByID(cr, uid)
+	ctx["Settings"] = settings
 
 	if err != nil {
 		return ctx, err

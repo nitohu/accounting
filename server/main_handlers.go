@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"./models"
@@ -37,12 +38,61 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 		logWarn("handleSettings", "%s", err)
 		http.Redirect(w, r, "/login/", http.StatusSeeOther)
 	}
+
+	settings := ctx["Settings"].(models.Settings)
+
+	fmt.Println(settings.StartDate)
+	fmt.Println(settings.StartDateForm)
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if r.Method != http.MethodPost {
+		err = tmpl.ExecuteTemplate(w, "settings.html", ctx)
+
+		if err != nil {
+			logError("handleSettings", "Error while executing the template:\n%s", err)
+		}
+		return
+	}
+
+	// Receive data from from
+	settings.Name = r.FormValue("name")
+	settings.Email = r.FormValue("email")
+	// pw := sha256.Sum256([]byte(r.FormValue("password")))
+
+	settings.Currency = r.FormValue("currency")
+	sdate := r.FormValue("start_date")
+	interval := r.FormValue("calc_interval")
+	settings.CalcUoM = r.FormValue("calc_uom")
+
+	// Converting the hashed password to a string
+	// password := fmt.Sprintf("%X", pw)
+	startDate, err := time.Parse(dateFormLayout, sdate)
+
+	settings.CalcInterval, _ = strconv.ParseInt(interval, 10, 64)
+
+	if err != nil {
+		logWarn("handleSettings", "Error while parsing the start_date:\n%s", err)
+		startDate = time.Now()
+	}
+
+	settings.StartDate = startDate
+
+	// err = settings.Save(db, password)
+	err = settings.Save(db)
+
+	ctx["Settings"] = settings
+
+	if err != nil {
+		logError("handleSettings", "Error while saving the settings:\n%s", err)
+	}
+
+	ctx["SaveSuccess"] = true
 
 	err = tmpl.ExecuteTemplate(w, "settings.html", ctx)
 
 	if err != nil {
-		logError("handleLogin", "%s", err)
+		logError("handleLogin()", "Error while rendering the template:\n%s", err)
 	}
 }
 
