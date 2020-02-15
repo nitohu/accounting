@@ -33,6 +33,7 @@ type Transaction struct {
 	// Database fields
 	ID              int64
 	Name            string
+	Description     string
 	Active          bool
 	TransactionDate time.Time
 	CreateDate      time.Time
@@ -53,6 +54,7 @@ func EmptyTransaction() Transaction {
 	t := Transaction{
 		ID:              0,
 		Name:            "",
+		Description:     "",
 		Active:          false,
 		TransactionDate: time.Now().Local(),
 		CreateDate:      time.Now().Local(),
@@ -99,8 +101,8 @@ func (t *Transaction) Create(cr *sql.DB) error {
 
 	// Initializing variables
 	query := "INSERT INTO transactions ( name, active, transaction_date, last_update, create_date, amount,"
-	query += " account_id, to_account, transaction_type"
-	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;"
+	query += " account_id, to_account, transaction_type, description"
+	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;"
 
 	t.CreateDate = time.Now().Local()
 	t.LastUpdate = time.Now().Local()
@@ -119,6 +121,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			t.FromAccount,
 			nil,
 			t.TransactionType,
+			t.Description,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
 		err = cr.QueryRow(query,
@@ -131,6 +134,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			t.FromAccount,
 			t.ToAccount,
 			t.TransactionType,
+			t.Description,
 		).Scan(&id)
 		// TODO: This should throw an error
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
@@ -144,6 +148,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			nil,
 			nil,
 			t.TransactionType,
+			t.Description,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
 		err = cr.QueryRow(query,
@@ -156,6 +161,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			nil,
 			t.ToAccount,
 			t.TransactionType,
+			t.Description,
 		).Scan(&id)
 	}
 
@@ -218,7 +224,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 	// Write values to database
 	query = "UPDATE transactions SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
-	query += "to_account=$8, transaction_type=$9 WHERE id=$1"
+	query += "to_account=$8, transaction_type=$9, description=$10 WHERE id=$1"
 
 	t.TransactionDate = time.Now().Local()
 
@@ -233,6 +239,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.FromAccount,
 			nil,
 			t.TransactionType,
+			t.Description,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
 		_, err = cr.Exec(query,
@@ -245,6 +252,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.FromAccount,
 			t.ToAccount,
 			t.TransactionType,
+			t.Description,
 		)
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
 		// TODO: This case shouldn't be allowed
@@ -258,6 +266,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			nil,
 			nil,
 			t.TransactionType,
+			t.Description,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
 		_, err = cr.Exec(query,
@@ -270,6 +279,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			nil,
 			t.ToAccount,
 			t.TransactionType,
+			t.Description,
 		)
 	}
 
@@ -450,7 +460,7 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 // FindByID finds a transaction with it's id
 func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 	query := "SELECT id, name, active, transaction_date, last_update, create_date, "
-	query += "amount, account_id, to_account, transaction_type "
+	query += "amount, account_id, to_account, transaction_type, description "
 	query += "FROM transactions WHERE id=$1 "
 	// query += "forecasted, booked_reverse, forecasted_reverse FROM transactions WHERE id=$1 "
 	query += "ORDER BY transaction_date"
@@ -468,10 +478,7 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 		&fromAccountID,
 		&toAccountID,
 		&t.TransactionType,
-		// &t.Booked,
-		// &t.Forecasted,
-		// &t.BookedReverse,
-		// &t.ForecastedReverse,
+		&t.Description,
 	)
 
 	if fromAccountID != nil {

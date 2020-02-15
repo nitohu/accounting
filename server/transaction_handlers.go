@@ -60,14 +60,24 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	vars := mux.Vars(r)
+
+	// Get the current transaction
 	t := models.EmptyTransaction()
 
 	transactionID := vars["id"]
 	id, _ := strconv.ParseInt(transactionID, 10, 64)
 	t.FindByID(db, id)
 
+	// Get the accounts
+	accounts, err := models.GetAllAccounts(db)
+
+	if err != nil {
+		logWarn("handleTransactionForm", "Error while getting the accounts:\n%s", err)
+	}
+
 	ctx["Title"] = "Edit Transaction"
 	ctx["Transaction"] = t
+	ctx["Accounts"] = accounts
 
 	if r.Method != http.MethodPost {
 		err = tmpl.ExecuteTemplate(w, "transaction_form.html", ctx)
@@ -94,6 +104,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	t.LastUpdate = time.Now().Local()
 	t.TransactionDate = transactionDate
 	t.ToAccount = 0
+	t.Description = r.FormValue("description")
 
 	toAccount, err := strconv.ParseInt(r.FormValue("toAccount"), 0, 64)
 

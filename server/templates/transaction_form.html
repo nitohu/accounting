@@ -16,6 +16,7 @@
 <link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
+<link rel="stylesheet" href="/static/css/custom.css">
 </head>
 
 <body class="theme-blush">
@@ -321,7 +322,7 @@
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label for="transactionName">Name of the Transaction</label>
-                                            <input type="text" name="name" class="form-control" value="{{ .Transaction.Amount }}"
+                                            <input type="text" name="name" class="form-control" value="{{ .Transaction.Name }}"
                                                 id="transactionName" placeholder="E.g. Weekly shopping" />
                                         </div>
                                     </div>
@@ -356,7 +357,7 @@
                                         <label for="fromAccount">From: </label>
                                         <select name="fromAccount" id="fromAccount" class="form-control show-tick">
                                             <option id="from_0" value="0">External Account</option>
-                                            {{ range .User.AccountIDs }}
+                                            {{ range .Accounts }}
                                                 
                                                 <option id="from_{{ .ID }}" value="{{ .ID }}"
                                                 {{ if eq .ID $.Transaction.FromAccount }}selected{{end}}>{{ .Name }}</option>
@@ -368,11 +369,21 @@
                                         <label for="toAccount">To: </label>
                                         <select name="toAccount" id="toAccount" class="form-control show-tick">
                                             <option id="to_0" value="0">External Account</option>
-                                            {{ range .User.AccountIDs }}
+                                            {{ range .Accounts }}
                                                 <option id="to_{{ .ID }}" value="{{ .ID }}"
                                                 {{ if eq .ID $.Transaction.ToAccount }}selected{{end}}>{{ .Name }}</option>
                                             {{ end }}
                                         </select>
+                                    </div>
+                                </div>
+
+                                <div class="row clearfix">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <br>
+                                            <label for="description">Description</label>
+                                            <textarea name="description" id="description" rows="4" class="form-control">{{ .Transaction.Description }}</textarea>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Buttons -->
