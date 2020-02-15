@@ -22,7 +22,6 @@ type Account struct {
 	BankType        string
 	CreateDate      time.Time
 	LastUpdate      time.Time
-	UserID          int
 }
 
 // EmptyAccount ...
@@ -41,7 +40,6 @@ func EmptyAccount() Account {
 		BankType:        "",
 		CreateDate:      time.Now().Local(),
 		LastUpdate:      time.Now().Local(),
-		UserID:          0,
 	}
 
 	return a
@@ -51,16 +49,14 @@ func EmptyAccount() Account {
 func (a *Account) Create(cr *sql.DB) error {
 
 	if a.ID != 0 {
-		return errors.New("This object already has a user id")
-	} else if a.UserID == 0 {
-		return errors.New("No user is linked to the account")
+		return errors.New("This object already has an id")
 	}
 
 	var id int64
 
 	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban, account_holder,"
-	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update, user_id"
-	query += " ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id;"
+	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update"
+	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id;"
 
 	a.CreateDate = time.Now().Local()
 	a.LastUpdate = time.Now().Local()
@@ -78,7 +74,6 @@ func (a *Account) Create(cr *sql.DB) error {
 		a.BankType,
 		a.CreateDate,
 		a.LastUpdate,
-		a.UserID,
 	).Scan(&id)
 
 	if err != nil {
@@ -200,10 +195,10 @@ func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 		&a.BankType,
 		&a.CreateDate,
 		&a.LastUpdate,
-		&a.UserID,
 	)
 
 	if err != nil {
+		fmt.Println("Traceback: Account.FindById()")
 		return err
 	}
 
@@ -221,4 +216,37 @@ func FindAccountByID(cr *sql.DB, accountID int64) (Account, error) {
 	}
 
 	return a, nil
+}
+
+// GetAllAccounts does that what you expect
+func GetAllAccounts(cr *sql.DB) ([]Account, error) {
+	var accounts []Account
+	query := "SELECT id FROM accounts"
+
+	idRows, err := cr.Query(query)
+
+	if err != nil {
+		return accounts, err
+	}
+
+	for idRows.Next() {
+		var id int64
+		err := idRows.Scan(&id)
+
+		if err != nil {
+			fmt.Printf("[WARN] %s GetAllAccounts():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+		} else {
+			a := EmptyAccount()
+			err = a.FindByID(cr, id)
+
+			if err != nil {
+				fmt.Printf("[WARN] %s GetAllAccounts():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+			} else {
+				accounts = append(accounts, a)
+			}
+		}
+
+	}
+
+	return accounts, nil
 }

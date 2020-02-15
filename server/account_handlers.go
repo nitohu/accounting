@@ -30,6 +30,9 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "All Accounts"
+	if ctx["Accounts"], err = models.GetAllAccounts(db); err != nil {
+		logWarn("handleAccountOverView", "Error while getting accounts:\n%s", err)
+	}
 
 	err = tmpl.ExecuteTemplate(w, "accounts.html", ctx)
 
@@ -73,7 +76,6 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 	account.AccountNr = r.FormValue("accountNumber")
 	account.BankName = r.FormValue("bankName")
 	account.BankType = r.FormValue("accountType")
-	account.UserID = ctx["User"].(models.User).ID
 
 	err = account.Create(db)
 

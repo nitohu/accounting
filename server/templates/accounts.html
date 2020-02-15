@@ -342,7 +342,7 @@
                                     </tr>
                                 </tfoot>
                                 <tbody>
-                                    {{ range .User.AccountIDs }}
+                                    {{ range .Accounts }}
                                         <tr>
                                             <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ (call $.HumanReadable .Balance) }} €</td>
