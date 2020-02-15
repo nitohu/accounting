@@ -28,7 +28,6 @@ WHERE t.user_id= *id*;
 */
 
 // Transaction model
-// TODO: Replace TransactionDate with better naming
 // TODO: Implement Forecasted and Booked in database
 type Transaction struct {
 	// Database fields
@@ -443,7 +442,7 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 	}
 
 	// Compute: TransactionDateStr
-	t.TransactionDateStr = t.TransactionDate.String()
+	t.TransactionDateStr = t.TransactionDate.Format("Monday 02 January 2006 - 15:04")
 
 	return nil
 }
