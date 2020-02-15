@@ -19,7 +19,12 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		logWarn("handleRoot", "%s", err)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); err != nil {
+		logWarn("handleLogin", "Error while getting transactions: %s", err)
+	}
 
 	err = tmpl.ExecuteTemplate(w, "index.html", ctx)
 

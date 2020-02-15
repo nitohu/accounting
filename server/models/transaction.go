@@ -522,21 +522,54 @@ func GetAllTransactions(cr *sql.DB) ([]Transaction, error) {
 
 	for idRows.Next() {
 		var id int64
-		err := idRows.Scan(&id)
 
-		if err != nil {
-			fmt.Printf("[WARN] %s GetAllTransactions():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+		if err = idRows.Scan(&id); err != nil {
+			fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetAllTransactions():\n%s", time.Now().Local(), err)
 		} else {
 			t := EmptyTransaction()
-			err = t.FindByID(cr, id)
 
-			if err != nil {
-				fmt.Printf("[WARN] %s GetAllTransactions():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+			if err = t.FindByID(cr, id); err != nil {
+				fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetAllTransactions():\n%s", time.Now().Local(), err)
 			} else {
 				transactions = append(transactions, t)
 			}
 		}
 
+	}
+
+	return transactions, nil
+}
+
+// GetLatestransactions returns a limited number of the latest transactions
+// latest transactions are sorted by their transaction_date
+func GetLatestTransactions(cr *sql.DB, amount int) ([]Transaction, error) {
+	var transactions []Transaction
+	query := "SELECT id FROM transactions ORDER BY transaction_date DESC LIMIT $1"
+
+	rows, err := cr.Query(query, amount)
+
+	if err != nil {
+		fmt.Printf("[WARN] %s GetLatestTransactions(): Traceback: Error while running the query:\n%s", time.Now().Local(), err)
+		return transactions, err
+	}
+
+	for rows.Next() {
+		var id int64
+
+		if err = rows.Scan(&id); err != nil {
+			fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetLatestTransactions():\n%s", time.Now().Local(), err)
+		} else {
+			t := EmptyTransaction()
+
+			if err = t.FindByID(cr, id); err != nil {
+
+				fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetLatestTransactions(): Error while finding transaction by id:\n%s",
+					time.Now().Local(), err)
+
+			} else {
+				transactions = append(transactions, t)
+			}
+		}
 	}
 
 	return transactions, nil
