@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 )
 
@@ -33,15 +32,11 @@ func InitializeSettings(cr *sql.DB) (Settings, error) {
 		StartDateForm: "",
 	}
 
-	fmt.Println("Empty settings object created")
-
 	err := s.Init(cr)
 
 	if err != nil {
 		return s, err
 	}
-
-	fmt.Printf("object initialized, %s\n", s.Name)
 
 	return s, nil
 }

@@ -342,7 +342,7 @@
                                     </tr>
                                 </tfoot>
                                 <tbody>
-                                    {{ range .User.TransactionIDs }}
+                                    {{ range .Transactions }}
                                         <tr>
                                             <td><a href="/transactions/edit/{{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ ( call $.HumanReadable .Amount ) }} €</td>

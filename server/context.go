@@ -21,6 +21,7 @@ func EmptyContext() Context {
 func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, error) {
 	ctx := EmptyContext()
 
+	// Make sure authenticated flag in session is true
 	authenticated, ok := session.Values["authenticated"].(bool)
 
 	if !ok {
@@ -28,27 +29,42 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 		return EmptyContext(), errors.New(err)
 	}
 
-	uid, ok := session.Values["uid"].(int)
+	// Check the session key with the one from the database
+	var dbSessionKey string
+	query := "SELECT session_key FROM settings LIMIT 1;"
+
+	err := db.QueryRow(query).Scan(&dbSessionKey)
+
+	if err != nil {
+		logError("createContextFromSession", "Traceback #1")
+		return EmptyContext(), err
+	}
+
+	sessionKey, ok := session.Values["key"].(string)
 
 	if !ok {
-		err := "UserID not present in session"
+		logWarn("createContextFromSession", "Traceback: Getting session key from session")
+		err := "Session key not present in session"
 		return EmptyContext(), errors.New(err)
 	}
 
+	if sessionKey != dbSessionKey {
+		err := "Session key is not equivalent to the one in the database."
+		return EmptyContext(), errors.New(err)
+	}
+
+	// Get the settings from the database
 	settings, err := models.InitializeSettings(cr)
 
 	if err != nil {
+		logWarn("createContextFromSession", "Traceback: Initializing settings")
 		return ctx, err
 	}
 
+	// Add the variables to the context
 	ctx["HumanReadable"] = HumanReadable
 	ctx["Authenticated"] = authenticated
-	ctx["User"], err = models.FindUserByID(cr, uid)
 	ctx["Settings"] = settings
-
-	if err != nil {
-		return ctx, err
-	}
 
 	return ctx, nil
 }

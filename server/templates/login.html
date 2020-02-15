@@ -1,35 +1,60 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="UTF-8">
-        <title>Log In - Accounting</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <meta name="description" content="Responsive Bootstrap 4 and web Application ui kit.">
+        <title>:: Home :: Accounting</title>
+        <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Favicon-->
+        <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/plugins/jvectormap/jquery-jvectormap-2.0.3.min.css" />
+        <link rel="stylesheet" href="/static/plugins/charts-c3/plugin.css" />
 
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-        <link rel="stylesheet" href="/static/css/with_bootstrap.css">
+        <link rel="stylesheet" href="/static/plugins/morrisjs/morris.min.css" />
+
+        <!-- Data Tables -->
+        <link rel="stylesheet" href="/static/plugins/jquery-datatable/dataTables.bootstrap4.min.css">
+
+        <!-- Custom Css -->
+        <link rel="stylesheet" href="/static/css/style.min.css">
+
+        <link rel="stylesheet" href="/static/css/custom.css">
     </head>
 
     <body>
-        <div class="container">
-            <h1>Login</h1>
-
-            <p>To continue, please log in.</p>
-
-            {{if .err}}
-            <div class="alert alert-danger">
-                {{.err}}
+        <!-- Main Content -->
+        <section class="content">
+            <div class="body_scroll">
+                <div class="row clearfix">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="header">
+                                <h2><strong>Login</strong> </h2>
+                            </div>
+                            <div class="body">
+                                <h1>Enter master password</h1>
+                                {{ if .Error }}
+                                    <div class="alert alert-danger">
+                                        {{ .Error }}
+                                    </div>
+                                {{ end }}
+                                <form method="post">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="zmdi zmdi-lock"></i></span>
+                                        </div>
+                                        <input type="password" class="form-control" placeholder="•••••••••••••" name="password">
+                                    </div>
+                                    <br>
+                                    <input type="submit" class="btn btn-primary btn-lg" value="Login">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {{end}}
+        </section>
 
-            <form method="POST">
-                <label for="email">E-Mail:</label>
-                <input type="email" name="email" class="form-control" />
-                <label for="password">Password:</label>
-                <input type="password" name="password" class="form-control" />
-
-                <br><br>
-
-                <input type="submit" class="btn btn-success" />
-            </form>
-        </div>
     </body>
 </html>

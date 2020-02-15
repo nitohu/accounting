@@ -26,21 +26,24 @@ func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleTransactionOverview", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Transactions"
+	ctx["Transactions"], err = models.GetAllTransactions(db)
 
-	if r.Method != http.MethodPost {
-		err := tmpl.ExecuteTemplate(w, "transactions.html", ctx)
-		if err != nil {
-			logError("handleTransactionOverview", "%s", err)
-		}
-		return
+	if err != nil {
+		logWarn("handleTransactionsOverview", "Error while getting all transactions:\n%s", err)
 	}
+
+	err = tmpl.ExecuteTemplate(w, "transactions.html", ctx)
+	if err != nil {
+		logError("handleTransactionOverview", "%s", err)
+	}
+	return
 }
 
 func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +53,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleTransactionForm", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
 	}
 
@@ -90,7 +93,6 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	t.FromAccount, _ = strconv.ParseInt(r.FormValue("fromAccount"), 0, 64)
 	t.LastUpdate = time.Now().Local()
 	t.TransactionDate = transactionDate
-	t.UserID = ctx["User"].(models.User).ID
 	t.ToAccount = 0
 
 	toAccount, err := strconv.ParseInt(r.FormValue("toAccount"), 0, 64)
@@ -123,7 +125,7 @@ func handleTransactionDeletion(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleTransactionDeletion", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
 	}
 

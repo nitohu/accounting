@@ -24,7 +24,7 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleAccountOverview", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -45,7 +45,7 @@ func handleAccountCreation(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleAccountCreation", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -94,7 +94,7 @@ func handleAccountEditing(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleAccountEditing", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -157,7 +157,7 @@ func handleAccountDeletion(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleAccountDeletion", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
 	}
 

@@ -17,7 +17,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logWarn("handleRoot", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
@@ -36,7 +36,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logWarn("handleSettings", "%s", err)
-		http.Redirect(w, r, "/login/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
 	settings := ctx["Settings"].(models.Settings)
@@ -105,7 +105,7 @@ func pageNotFoundHandler() http.Handler {
 
 		if err != nil {
 			logError("handlePageNotFound", "%s", err)
-			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+			http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -140,29 +140,44 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		tmpl.ExecuteTemplate(w, "login.html", nil)
 		return
 	}
-	u := models.EmptyUser()
 
-	mail := r.FormValue("email")
 	pw := r.FormValue("password")
 
-	logInfo("handleLogin()", "Login try %s", mail)
-
-	err := u.Login(db, mail, pw)
+	// Authenticate
+	success, err := Authenticate(pw)
 
 	if err != nil {
-		fmt.Printf("[ERROR] %s %s", time.Now().Local(), err)
-		tmpl.ExecuteTemplate(w, "login.html", map[string]string{"err": "Wrong credentials."})
+		logWarn("handleLogin", "Error while authenticating:\n%s", err)
+		tmpl.ExecuteTemplate(w, "login.html", nil)
 		return
 	}
 
-	logInfo("handleLogin()", "Login try of %s was successful", mail)
+	if success == false {
+		msg := make(map[string]string)
+		msg["Error"] = "The authentication was not successful."
+		tmpl.ExecuteTemplate(w, "login.html", msg)
+		return
+	}
 
-	logInfo("handleLogin()", "UID: %d\n", u.ID)
+	// Authentication was successful
+	// Generate and save session key
+	sessionKey := GenerateSessionKey()
+
+	query := "UPDATE settings SET session_key=$1;"
+
+	_, err = db.Exec(query, sessionKey)
+
+	if err != nil {
+		logError("handleLogin", "Error while saving session key:%s", err)
+		msg := make(map[string]string)
+		msg["Error"] = "There was an error while saving your session key. Please try again."
+		tmpl.ExecuteTemplate(w, "login.html", msg)
+		return
+	}
 
 	// Successfully logged in
 	session.Values["authenticated"] = true
-	session.Values["email"] = u.Email
-	session.Values["uid"] = u.ID
+	session.Values["key"] = sessionKey
 
 	err = session.Save(r, w)
 
@@ -177,9 +192,9 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 
 	session.Values["authenticated"] = false
-	session.Values["user"] = models.EmptyUser()
+	session.Values["key"] = ""
 
 	session.Save(r, w)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/login/", http.StatusSeeOther)
 }

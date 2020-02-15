@@ -3,9 +3,26 @@ package main
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 )
+
+// GenerateSessionKey generates a unique key for each session
+func GenerateSessionKey() string {
+	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	charset += "0123456789?.,-_*?:;#+"
+
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	key := make([]byte, 32)
+
+	for i := range key {
+		key[i] = charset[seed.Intn(len(charset))]
+	}
+
+	return string(key)
+}
 
 // HumanReadable takes a long number and converts
 // it to a human readable string
