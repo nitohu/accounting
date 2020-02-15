@@ -58,6 +58,7 @@ func main() {
 		"transaction_form.html",
 		"404.html",
 		"settings.html",
+		"categories.html",
 	))
 
 	staticFiles := http.FileServer(http.Dir("static/"))
@@ -83,6 +84,9 @@ func main() {
 	r.HandleFunc("/transactions/create/", logging(handleTransactionForm))
 	r.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
 	r.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
+
+	// Categories
+	r.HandleFunc("/categories/", logging(handleCategoryOverview))
 
 	r.HandleFunc("/login/", logging(handleLogin))
 
