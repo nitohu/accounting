@@ -42,6 +42,7 @@ type Transaction struct {
 	FromAccount     int64
 	ToAccount       int64
 	TransactionType string
+	CategoryID      int64
 
 	// Computed fields
 	FromAccountName    string
@@ -63,6 +64,7 @@ func EmptyTransaction() Transaction {
 		FromAccount:     0,
 		ToAccount:       0,
 		TransactionType: "",
+		CategoryID:      0,
 	}
 
 	return t
@@ -98,14 +100,21 @@ func (t *Transaction) Create(cr *sql.DB) error {
 	}
 
 	var id int64
+	var categID interface{}
 
 	// Initializing variables
 	query := "INSERT INTO transactions ( name, active, transaction_date, last_update, create_date, amount,"
-	query += " account_id, to_account, transaction_type, description"
-	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id;"
+	query += " account_id, to_account, transaction_type, description, category_id"
+	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;"
 
 	t.CreateDate = time.Now().Local()
 	t.LastUpdate = time.Now().Local()
+
+	categID = t.CategoryID
+
+	if t.CategoryID == 0 {
+		categID = nil
+	}
 
 	var err error
 
@@ -122,6 +131,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			nil,
 			t.TransactionType,
 			t.Description,
+			categID,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
 		err = cr.QueryRow(query,
@@ -135,6 +145,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			t.ToAccount,
 			t.TransactionType,
 			t.Description,
+			categID,
 		).Scan(&id)
 		// TODO: This should throw an error
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
@@ -149,6 +160,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			nil,
 			t.TransactionType,
 			t.Description,
+			categID,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
 		err = cr.QueryRow(query,
@@ -162,6 +174,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			t.ToAccount,
 			t.TransactionType,
 			t.Description,
+			categID,
 		).Scan(&id)
 	}
 
@@ -224,7 +237,15 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 	// Write values to database
 	query = "UPDATE transactions SET name=$2, active=$3, transaction_date=$4, last_update=$5, amount=$6, account_id=$7,"
-	query += "to_account=$8, transaction_type=$9, description=$10 WHERE id=$1"
+	query += "to_account=$8, transaction_type=$9, description=$10, category_id=$11 WHERE id=$1"
+
+	var categID interface{}
+
+	categID = t.CategoryID
+
+	if t.CategoryID == 0 {
+		categID = nil
+	}
 
 	t.TransactionDate = time.Now().Local()
 
@@ -240,6 +261,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			nil,
 			t.TransactionType,
 			t.Description,
+			categID,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
 		_, err = cr.Exec(query,
@@ -253,6 +275,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.ToAccount,
 			t.TransactionType,
 			t.Description,
+			categID,
 		)
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
 		// TODO: This case shouldn't be allowed
@@ -267,6 +290,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			nil,
 			t.TransactionType,
 			t.Description,
+			categID,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
 		_, err = cr.Exec(query,
@@ -280,6 +304,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			t.ToAccount,
 			t.TransactionType,
 			t.Description,
+			categID,
 		)
 	}
 
@@ -460,12 +485,11 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 // FindByID finds a transaction with it's id
 func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 	query := "SELECT id, name, active, transaction_date, last_update, create_date, "
-	query += "amount, account_id, to_account, transaction_type, description "
+	query += "amount, account_id, to_account, transaction_type, description, category_id "
 	query += "FROM transactions WHERE id=$1 "
-	// query += "forecasted, booked_reverse, forecasted_reverse FROM transactions WHERE id=$1 "
 	query += "ORDER BY transaction_date"
 
-	var fromAccountID, toAccountID interface{}
+	var fromAccountID, toAccountID, categID interface{}
 
 	err := cr.QueryRow(query, transactionID).Scan(
 		&t.ID,
@@ -479,6 +503,7 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 		&toAccountID,
 		&t.TransactionType,
 		&t.Description,
+		&categID,
 	)
 
 	if fromAccountID != nil {
@@ -487,6 +512,10 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 
 	if toAccountID != nil {
 		t.ToAccount = toAccountID.(int64)
+	}
+
+	if categID != nil {
+		t.CategoryID = categID.(int64)
 	}
 
 	if err != nil {

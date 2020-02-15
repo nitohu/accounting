@@ -68,16 +68,18 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.ParseInt(transactionID, 10, 64)
 	t.FindByID(db, id)
 
-	// Get the accounts
-	accounts, err := models.GetAllAccounts(db)
+	ctx["Title"] = "Edit Transaction"
+	ctx["Transaction"] = t
 
-	if err != nil {
+	// Get the accounts
+	if ctx["Accounts"], err = models.GetAllAccounts(db); err != nil {
 		logWarn("handleTransactionForm", "Error while getting the accounts:\n%s", err)
 	}
 
-	ctx["Title"] = "Edit Transaction"
-	ctx["Transaction"] = t
-	ctx["Accounts"] = accounts
+	// Get Categories
+	if ctx["Categories"], err = models.GetAllCategories(db); err != nil {
+		logWarn("handleTransactionForm", "Error while getting the categories:\n%s", err)
+	}
 
 	if r.Method != http.MethodPost {
 		err = tmpl.ExecuteTemplate(w, "transaction_form.html", ctx)
@@ -98,21 +100,27 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t.Name = r.FormValue("name")
-	// TODO: Handle error
-	t.Amount, _ = strconv.ParseFloat(r.FormValue("amount"), 64)
-	t.FromAccount, _ = strconv.ParseInt(r.FormValue("fromAccount"), 0, 64)
+
+	if t.Amount, err = strconv.ParseFloat(r.FormValue("amount"), 64); err != nil {
+		logWarn("handleTransactionsForm", "Error parsing the Amount:\n%s", err)
+		t.Amount = 0
+	}
+	if t.FromAccount, err = strconv.ParseInt(r.FormValue("fromAccount"), 0, 64); err != nil {
+		logWarn("handleTransactionsForm", "Error parsing the FromAccount ID:\n%s", err)
+		t.FromAccount = 0
+	}
+	if t.ToAccount, err = strconv.ParseInt(r.FormValue("toAccount"), 0, 64); err != nil {
+		logWarn("handleTransactionsForm", "Error parsing the ToAccount ID:\n%s", err)
+		t.ToAccount = 0
+	}
+	if t.CategoryID, err = strconv.ParseInt(r.FormValue("category"), 0, 64); err != nil {
+		logWarn("handleTransactionsForm", "Error parsing the Category ID:\n%s", err)
+		t.CategoryID = 0
+	}
 	t.LastUpdate = time.Now().Local()
 	t.TransactionDate = transactionDate
 	t.ToAccount = 0
 	t.Description = r.FormValue("description")
-
-	toAccount, err := strconv.ParseInt(r.FormValue("toAccount"), 0, 64)
-
-	if err != nil {
-		logError("handleTransactionForm", "%s", err)
-	} else if toAccount != 0 {
-		t.ToAccount = toAccount
-	}
 
 	if t.ID == 0 {
 		t.Active = true

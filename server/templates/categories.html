@@ -343,7 +343,7 @@
                                 </tfoot>
                                 <tbody>
                                     {{ range .Categories }}
-                                        <tr>
+                                    <tr style="background-color: {{.Hex}}">
                                             <td><a>{{ .Hex }}</a></td>
                                             <td>{{ .Name }}</td>
                                             <td>{{ .CreateDate }}</td>

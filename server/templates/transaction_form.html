@@ -353,8 +353,8 @@
 
                                 <!-- From Account, To Account -->
                                 <div class="row clearfix">
-                                    <div class="col-sm-6">
-                                        <label for="fromAccount">From: </label>
+                                    <div class="col-sm-4">
+                                        <label for="fromAccount">From</label>
                                         <select name="fromAccount" id="fromAccount" class="form-control show-tick">
                                             <option id="from_0" value="0">External Account</option>
                                             {{ range .Accounts }}
@@ -365,8 +365,8 @@
                                             {{ end }}
                                         </select>
                                     </div>
-                                    <div class="col-sm-6">
-                                        <label for="toAccount">To: </label>
+                                    <div class="col-sm-4">
+                                        <label for="toAccount">To</label>
                                         <select name="toAccount" id="toAccount" class="form-control show-tick">
                                             <option id="to_0" value="0">External Account</option>
                                             {{ range .Accounts }}
@@ -374,6 +374,18 @@
                                                 {{ if eq .ID $.Transaction.ToAccount }}selected{{end}}>{{ .Name }}</option>
                                             {{ end }}
                                         </select>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label for="category">Category</label>
+                                            <select name="category" id="category" class="form-control select2">
+                                                <option value="0" id="cat_0" style="background-color:#000;">No Category</option>
+                                                {{ range .Categories }}
+                                                    <option id="cat_{{.ID}}" name="{{.ID}}" value="{{.ID}}" style="background-color:{{.Hex}};"
+                                                    {{ if eq .ID $.Transaction.CategoryID }}selected{{end}}>{{ .Name }}</option>
+                                                {{ end }}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
 
