@@ -1,26 +1,13 @@
-CREATE TABLE users (
-    id serial,
-    primary key(id),
+CREATE TABLE settings (
     name text,
-    email text,
     password text,
-    total_balance float,
-    create_date timestamp,
-    last_update timestamp
-);
-
-CREATE TABLE categories (
-    id serial,
-    primary key(id),
-    name text,
-    red smallint,
-    green smallint,
-    blue smallint,
-    create_date timestamp,
+    email text,
     last_update timestamp,
-    active boolean,
-    inner_transaction boolean,
-    user_id int references users(id)
+    start_date timestamp,
+    calc_interval int,
+    calc_uom text,
+    currency text,
+    session_key text,
 );
 
 CREATE TABLE accounts (
@@ -37,8 +24,31 @@ CREATE TABLE accounts (
     bank_name text,
     bank_type text,
     create_date timestamp,
+    last_update timestamp
+);
+
+CREATE TABLE categories (
+    id serial,
+    primary key(id),
+    name text,
+    create_date timestamp,
     last_update timestamp,
-    user_id int references users(id)
+    hex text
+);
+
+CREATE TABLE statistics (
+    id serial,
+    primary key(id),
+    active boolean,
+    name text,
+    compute_query text,
+    create_date timestamp,
+    last_update timestamp,
+    description text,
+    chart_data text,
+    keys text,
+    value float,
+    execution_date timestamp
 );
 
 CREATE TABLE transactions (
@@ -53,5 +63,8 @@ CREATE TABLE transactions (
     account_id int references accounts(id),
     to_account int references accounts(id),
     transaction_type text,
-    user_id int references users(id)
+    dest_booked boolean,
+    origin_booked boolean,
+    description text,
+    category_id references categories(id)
 );
