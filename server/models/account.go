@@ -15,7 +15,6 @@ type Account struct {
 	Balance         float64
 	BalanceForecast float64
 	Iban            string
-	Holder          string
 	BankCode        string
 	AccountNr       string
 	BankName        string
@@ -33,7 +32,6 @@ func EmptyAccount() Account {
 		Balance:         0.0,
 		BalanceForecast: 0.0,
 		Iban:            "",
-		Holder:          "",
 		BankCode:        "",
 		AccountNr:       "",
 		BankName:        "",
@@ -54,7 +52,7 @@ func (a *Account) Create(cr *sql.DB) error {
 
 	var id int64
 
-	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban, account_holder,"
+	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban,"
 	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update"
 	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id;"
 
@@ -67,7 +65,6 @@ func (a *Account) Create(cr *sql.DB) error {
 		a.Balance,
 		a.BalanceForecast,
 		a.Iban,
-		a.Holder,
 		a.BankCode,
 		a.AccountNr,
 		a.BankName,
@@ -93,7 +90,7 @@ func (a *Account) Save(cr *sql.DB) error {
 		return errors.New("This account as now id, maybe create it first?")
 	}
 
-	query := "UPDATE accounts SET name=$2, active=$3, balance=$4, balance_forecast=$5, iban=$6, account_holder=$7,"
+	query := "UPDATE accounts SET name=$2, active=$3, balance=$4, balance_forecast=$5, iban=$6,"
 	query += " bank_code=$8, account_nr=$9, bank_name=$10, bank_type=$11, last_update=$12 WHERE id=$1"
 
 	res, err := cr.Exec(query,
@@ -103,7 +100,6 @@ func (a *Account) Save(cr *sql.DB) error {
 		a.Balance,
 		a.BalanceForecast,
 		a.Iban,
-		a.Holder,
 		a.BankCode,
 		a.AccountNr,
 		a.BankName,
@@ -185,7 +181,6 @@ func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 		&a.Balance,
 		&a.BalanceForecast,
 		&a.Iban,
-		&a.Holder,
 		&a.BankCode,
 		&a.AccountNr,
 		&a.BankName,

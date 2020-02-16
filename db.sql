@@ -18,7 +18,6 @@ CREATE TABLE accounts (
     balance float,
     balance_forecast float,
     iban text,
-    account_holder text,
     bank_code text,
     account_nr text,
     bank_name text,

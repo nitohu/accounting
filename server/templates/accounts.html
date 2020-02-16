@@ -323,21 +323,19 @@
                             <table class="table table-bordered table-striped table-hover js-basic-example dataTable">
                                 <thead>
                                     <tr>
-                                        <th>Reference</th>
-                                        <th>Amount</th>
-                                        <th>From</th>
-                                        <th>Date</th>
-                                        <th>To</th>
+                                        <th>Name</th>
+                                        <th>Balance</th>
+                                        <th>Name of the Bank</th>
+                                        <th>Iban</th>
                                         <th><i class="zmdi zmdi-close"></i></th>
                                     </tr>
                                 </thead>
                                 <tfoot>
                                     <tr>
-                                        <th>Reference</th>
-                                        <th>Amount</th>
-                                        <th>From</th>
-                                        <th>Date</th>
-                                        <th>To</th>
+                                        <th>Name</th>
+                                        <th>Balance</th>
+                                        <th>Name of the Bank</th>
+                                        <th>Iban</th>
                                         <th><i class="zmdi zmdi-close"></i></th>
                                     </tr>
                                 </tfoot>
@@ -346,9 +344,8 @@
                                         <tr>
                                             <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ (call $.HumanReadable .Balance) }} {{ $.Settings.Currency }}</td>
-                                            <td>{{ .Iban }}</td>
-                                            <td>{{ .Holder }}</td>
                                             <td>{{ .BankName }}</td>
+                                            <td>{{ .Iban }}</td>
                                             <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>
                                         </tr>
                                     {{ end }}

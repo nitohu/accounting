@@ -369,7 +369,7 @@
                                     </div>
                                 </div>
 
-                                <div id="bankFields">
+                                <div class="bankFields">
                                     <div class="row clearfix">
                                         <!-- IBAN -->
                                         <div class="col-md-12">
@@ -444,7 +444,7 @@
                     bankFields[i].hidden = true;
                 }
                 
-                onlineFields = document.getElementById("onlineFields");
+                onlineFields = document.getElementsByClassName("onlineFields");
 
                 for (let i = 0; i < onlineFields.length; i++) {
                     onlineFields[i].hidden = false;
@@ -458,7 +458,7 @@
                     bankFields[i].hidden = false;
                 }
                 
-                onlineFields = document.getElementById("onlineFields");
+                onlineFields = document.getElementsByClassName("onlineFields");
 
                 for (let i = 0; i < onlineFields.length; i++) {
                     onlineFields[i].hidden = true;
