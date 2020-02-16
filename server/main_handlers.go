@@ -38,6 +38,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
+	ctx["Title"] = "Settings"
 
 	if err != nil {
 		logWarn("handleSettings", "%s", err)

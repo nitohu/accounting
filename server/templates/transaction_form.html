@@ -197,7 +197,7 @@
             </li>
             <li><a href="/"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
             </li>
-            <li><a href="#"><i class="zmdi zmdi-account"></i><span>Your Profile</span></a></li>
+            <li><a href="/categories/"><i class="zmdi zmdi-collection-item"></i><span>Categories</span></a></li>
             <li class="active open"><a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-money-box"></i><span>Transactions</span></a>
                 <ul class="ml-menu">
@@ -346,7 +346,7 @@
                                                 <span class="input-group-text"><i class="zmdi zmdi-calendar"></i></span>
                                             </div>
                                             <input type="text" id="datetime" class="form-control datetimepicker"
-                                                placeholder="Please choose date & time..." name="datetime">
+                                                placeholder="Please choose date & time..." name="datetime" value="{{ .Transaction.TransactionDateStr }}">
                                         </div>
                                     </div>
                                 </div>
