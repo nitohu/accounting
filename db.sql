@@ -66,5 +66,5 @@ CREATE TABLE transactions (
     dest_booked boolean,
     origin_booked boolean,
     description text,
-    category_id references categories(id)
+    category_id int references categories(id)
 );
