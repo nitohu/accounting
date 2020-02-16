@@ -10,6 +10,7 @@
 <!-- Favicon-->
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/plugins/bootstrap-colorpicker/css/bootstrap-colorpicker.css" />
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
 <link rel="stylesheet" href="/static/css/custom.css">
@@ -178,7 +179,7 @@
 <aside id="leftsidebar" class="sidebar">
 <div class="navbar-brand">
     <button class="btn-menu ls-toggle-btn" type="button"><i class="zmdi zmdi-menu"></i></button>
-    <a href="index.html"><img src="/static/images/logo.svg" width="25" alt="Aero"><span
+    <a href="/"><img src="/static/images/logo.svg" width="25" alt="Aero"><span
             class="m-l-10">Accounting</span></a>
 </div>
 <div class="menu">
@@ -293,7 +294,7 @@
                 <div class="col-lg-7 col-md-6 col-sm-12">
                     <h2>Categories</h2>
                     <ul class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="index.html"><i class="zmdi zmdi-home"></i> Accounting</a></li>
+                        <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
                         <li class="breadcrumb-item active">Categories</li>
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
@@ -343,7 +344,9 @@
                                     {{ range .Categories }}
                                     <tr style="background-color: {{.Hex}}">
                                             <td><a>{{ .Hex }}</a></td>
-                                            <td>{{ .Name }}</td>
+                                            <td>
+                                                <a href="#" data-toggle="modal" data-target="#formModal">{{ .Name }}</a>
+                                            </td>
                                             <td>{{ .CreateDate }}</td>
                                             <td>{{ .LastUpdate }}</td>
                                             <td>#</td>
@@ -362,10 +365,42 @@
         </div>
     </div>
 </section>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="title" id="formTitle">Edit Category</h4>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="name">Category Name</label>
+                        <input type="text" class="form-control" name="name" id="name">
+                    </div>
+                    <div class="input-group colorpicker">
+                        <input type="text" name="hex" class="form-control" value="#00AABB">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><span class="input-group-addon"> <i></i> </span></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-round waves-effect">SAVE CHANGES</button>
+                <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Jquery Core Js --> 
 <script src="/static/bundles/libscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 <script src="/static/bundles/vendorscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 <script src="/static/bundles/mainscripts.bundle.js"></script> <!-- Main Script Bundle Js --> 
+
+<script src="/static/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
 
 <script>
 
