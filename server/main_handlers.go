@@ -23,7 +23,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); err != nil {
-		logWarn("handleLogin", "Error while getting transactions: %s", err)
+		logWarn("handleRoot", "Error while getting transactions:\n%s", err)
+	}
+	if ctx["Accounts"], err = models.GetLimitAccounts(db, 4); err != nil {
+		logWarn("handleRoot", "Error while gettings Accounts:\n%s", err)
 	}
 
 	err = tmpl.ExecuteTemplate(w, "index.html", ctx)

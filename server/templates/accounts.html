@@ -345,7 +345,7 @@
                                     {{ range .Accounts }}
                                         <tr>
                                             <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
-                                            <td>{{ (call $.HumanReadable .Balance) }} €</td>
+                                            <td>{{ (call $.HumanReadable .Balance) }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .Iban }}</td>
                                             <td>{{ .Holder }}</td>
                                             <td>{{ .BankName }}</td>

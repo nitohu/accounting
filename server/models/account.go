@@ -141,9 +141,6 @@ func (a *Account) Delete(cr *sql.DB) error {
 	return nil
 }
 
-// TODO: I fucked it up with replacing forecast with firstBooking
-// Make sure
-
 // Book books a transaction in the account
 // Also saves the new balance to the database
 func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
@@ -249,4 +246,37 @@ func GetAllAccounts(cr *sql.DB) ([]Account, error) {
 	}
 
 	return accounts, nil
+}
+
+// GetLimitAccounts returns a limited number of accounts
+func GetLimitAccounts(cr *sql.DB, number int) ([]Account, error) {
+	var result []Account
+
+	if number <= 0 {
+		err := "The number of the accounts must be bigger than 0."
+		return result, errors.New(err)
+	}
+
+	query := "SELECT id FROM accounts LIMIT $1"
+
+	res, err := cr.Query(query, number)
+
+	if err != nil {
+		fmt.Printf("[INFO] %s Account.GetLimitAccount(): Traceback: Error executing query.\n", time.Now())
+		return nil, err
+	}
+
+	for res.Next() {
+		var id int64
+		if err = res.Scan(&id); err != nil {
+			return nil, err
+		}
+		acc := EmptyAccount()
+		if err = acc.FindByID(cr, id); err != nil {
+			return nil, err
+		}
+		result = append(result, acc)
+	}
+
+	return result, nil
 }
