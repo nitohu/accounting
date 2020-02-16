@@ -7,7 +7,7 @@ CREATE TABLE settings (
     calc_interval int,
     calc_uom text,
     currency text,
-    session_key text,
+    session_key text
 );
 
 CREATE TABLE accounts (
