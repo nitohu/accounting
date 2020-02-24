@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,13 @@ import (
 type API struct {
 	id  int64
 	obj interface{}
+}
+
+type APIAccount struct {
+	models.Account
+
+	Balance string
+	Active  string
 }
 
 const (
@@ -36,6 +44,8 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if _, err := io.ReadFull(b, body); err != nil {
 			fmt.Println("[ERROR] API.ServeHTTP():", err)
 		}
+
+		// body = api.replaceBodyJSON(body)
 	}
 
 	api.obj = nil
@@ -110,10 +120,30 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.getAccounts(w, r)
+	case "/accounts/create":
+		a := APIAccount{
+			Account: models.EmptyAccount(),
+		}
+		if err := json.Unmarshal(body, &a); err != nil {
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+			return
+		}
+		a.ID = 0
+		api.obj = a
+		api.updateAccount(w, r)
 	default:
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
 	}
 }
+
+// func (api API) replaceBodyJSON(body []byte) []byte {
+// 	bodyStr := string(body)
+
+// 	bodyStr = strings.Replace(bodyStr, "Balance", "apiBalance", -1)
+// 	bodyStr = strings.Replace(bodyStr, "Active", "apiActive", -1)
+
+// 	return []byte(bodyStr)
+// }
 
 func (api API) sendResult(w http.ResponseWriter, data interface{}) {
 	d, err := json.Marshal(data)
@@ -289,6 +319,7 @@ func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 	api.sendResult(w, acc)
 }
 
+// Returns a specific account with the given id
 func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
@@ -306,4 +337,105 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.sendResult(w, acc)
+}
+
+func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
+		return
+	}
+
+	acc := APIAccount{
+		Account: models.EmptyAccount(),
+	}
+
+	if api.id > 0 {
+		if err := acc.Account.FindByID(db, api.id); err != nil {
+			log.Println("[WARN] API.updateCategory():", err)
+			fmt.Fprint(w, errorGetID)
+			return
+		}
+	} else {
+		acc.Account.CreateDate = time.Now()
+		acc.Account.Active = true
+	}
+
+	reqData := api.obj.(APIAccount)
+
+	fmt.Println(reqData)
+
+	if acc.ID == 0 && reqData.Name == "" && reqData.Balance == "" {
+		fmt.Fprint(w, "{'error': 'Please provide a name and balance for creating a category.'}")
+		return
+	}
+
+	active := acc.Account.Active
+	name := acc.Account.Name
+	balance := acc.Account.Balance
+	iban := acc.Account.Iban
+	bankCode := acc.Account.BankCode
+	accountNr := acc.Account.AccountNr
+	bankName := acc.Account.BankName
+	bankType := acc.Account.BankType
+
+	if reqData.Name != "" {
+		name = reqData.Name
+	}
+	if reqData.Balance != "" {
+		b, err := strconv.ParseFloat(reqData.Balance, 64)
+		if err != nil {
+			log.Printf("[WARN] API.updateAccount(): Balance will keep the old value:\n%s\n", err)
+		} else {
+			balance = b
+		}
+	}
+	if reqData.Active != "" {
+		a, err := strconv.ParseBool(reqData.Active)
+		if err != nil {
+			log.Printf("[WARN] API.updateAccount(): Active will keep the old value:\n%s\n", err)
+		} else {
+			active = a
+		}
+	}
+	if reqData.Iban != "" {
+		iban = reqData.Iban
+	}
+	if reqData.BankCode != "" {
+		bankCode = reqData.BankCode
+	}
+	if reqData.AccountNr != "" {
+		accountNr = reqData.AccountNr
+	}
+	if reqData.BankName != "" {
+		bankName = reqData.BankName
+	}
+	if reqData.BankType != "" {
+		bankType = reqData.BankType
+	}
+	// if reqData.Balance
+
+	acc.Account.Active = active
+	acc.Account.Name = name
+	acc.Account.Balance = balance
+	acc.Account.Iban = iban
+	acc.Account.BankCode = bankCode
+	acc.Account.AccountNr = accountNr
+	acc.Account.BankName = bankName
+	acc.Account.BankType = bankType
+	acc.Account.LastUpdate = time.Now()
+
+	fmt.Println(acc.Account)
+
+	var err error
+	if acc.ID <= 0 {
+		err = acc.Account.Create(db)
+	} else {
+		err = acc.Account.Save(db)
+	}
+	if err != nil {
+		log.Println("[ERROR] API.updateAccount():", err)
+		return
+	}
+
+	api.sendResult(w, acc.Account)
 }
