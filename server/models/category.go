@@ -17,7 +17,8 @@ type Category struct {
 	Active     bool
 
 	// Computed fields
-	TransactionIDs []int64
+	TransactionIDs   []int64
+	TransactionCount int64
 }
 
 // EmptyCategory returns an empty category
@@ -69,6 +70,8 @@ func (c *Category) Create(cr *sql.DB) error {
 		return err
 	}
 
+	c.computeFields(cr)
+
 	return nil
 }
 
@@ -99,6 +102,27 @@ func (c *Category) Save(cr *sql.DB) error {
 	if err != nil {
 		fmt.Println("Category.Save(): Traceback: Error while saving the category to the database.")
 		return err
+	}
+
+	c.computeFields(cr)
+
+	return nil
+}
+
+func (c *Category) computeFields(cr *sql.DB) error {
+	transQuery := "SELECT id FROM transactions where category_id=$1;"
+	res, err := cr.Query(transQuery, c.ID)
+	if err != nil {
+		fmt.Println("[ERROR] Category.Save(): Error executing query f")
+	}
+
+	for res.Next() {
+		var id int64
+		if err = res.Scan(&id); err != nil {
+			fmt.Println("[WARN] Category.computeFields(): Could not scan ID, skipping row")
+			continue
+		}
+		c.TransactionIDs = append(c.TransactionIDs, id)
 	}
 
 	return nil
