@@ -54,7 +54,7 @@ func (a *Account) Create(cr *sql.DB) error {
 
 	query := "INSERT INTO accounts ( name, active, balance, balance_forecast, iban,"
 	query += " bank_code, account_nr, bank_name, bank_type, create_date, last_update"
-	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id;"
+	query += ") VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;"
 
 	a.CreateDate = time.Now().Local()
 	a.LastUpdate = time.Now().Local()
@@ -91,7 +91,7 @@ func (a *Account) Save(cr *sql.DB) error {
 	}
 
 	query := "UPDATE accounts SET name=$2, active=$3, balance=$4, balance_forecast=$5, iban=$6,"
-	query += " bank_code=$8, account_nr=$9, bank_name=$10, bank_type=$11, last_update=$12 WHERE id=$1"
+	query += " bank_code=$7, account_nr=$8, bank_name=$9, bank_type=$10, last_update=$11 WHERE id=$1"
 
 	res, err := cr.Exec(query,
 		a.ID,

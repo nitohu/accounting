@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/sessions"
 
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -61,36 +60,38 @@ func main() {
 		"categories.html",
 	))
 
-	staticFiles := http.FileServer(http.Dir("static/"))
+	// r := mux.NewRouter()
 
-	r := mux.NewRouter()
+	// http.NotFoundHandler = pageNotFoundHandler
 
-	r.NotFoundHandler = pageNotFoundHandler()
+	// r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFiles))
+	http.Handle(
+		"/static/", http.StripPrefix("/static",
+			http.FileServer(http.Dir("./static/")),
+		),
+	)
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFiles))
-
-	r.HandleFunc("/", logging(handleRoot))
-	r.HandleFunc("/settings/", logging(handleSettings))
+	http.HandleFunc("/", logging(handleRoot))
+	http.HandleFunc("/settings/", logging(handleSettings))
 
 	// Accounts
-	r.HandleFunc("/accounts/", logging(handleAccountOverview))
-	r.HandleFunc("/accounts/create/", logging(handleAccountCreation))
-	r.HandleFunc("/accounts/edit/{id}", logging(handleAccountEditing))
+	http.HandleFunc("/accounts", logging(handleAccountOverview))
+	http.HandleFunc("/accounts/form", logging(handleAccountForm))
 	// TODO: Will be replaced with API once its done
-	r.HandleFunc("/accounts/delete/{id}", logging(handleAccountDeletion))
+	http.HandleFunc("/accounts/delete/{id}", logging(handleAccountDeletion))
 
 	// Transactions
-	r.HandleFunc("/transactions/", logging(handleTransactionOverview))
-	r.HandleFunc("/transactions/create/", logging(handleTransactionForm))
-	r.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
-	r.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
+	http.HandleFunc("/transactions/", logging(handleTransactionOverview))
+	http.HandleFunc("/transactions/create/", logging(handleTransactionForm))
+	http.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
+	http.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
 
 	// Categories
-	r.HandleFunc("/categories/", logging(handleCategoryOverview))
+	http.HandleFunc("/categories/", logging(handleCategoryOverview))
 
-	r.HandleFunc("/login/", logging(handleLogin))
+	http.HandleFunc("/login/", logging(handleLogin))
 
-	r.HandleFunc("/logout/", logging(handleLogout))
+	http.HandleFunc("/logout/", logging(handleLogout))
 
-	http.ListenAndServe(":80", r)
+	http.ListenAndServe(":80", nil)
 }

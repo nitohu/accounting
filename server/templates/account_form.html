@@ -313,7 +313,7 @@
                             <h2><strong>Create</strong> a new Account</h2>
                         </div>
                         <div class="body">
-                            <h5>Create a new Account</h5>
+                            <h5>{{ .Header }}</h5>
 
                             <form method="POST">
                                 <!-- Name of the Account -->
@@ -402,7 +402,7 @@
                                 <!-- Buttons -->
                                 <div class="row clearfix">
                                     <div class="col-sm-12">
-                                        <input type="submit" class="btn btn-primary" value="Save">
+                                        <input type="submit" class="btn btn-primary" value="{{ .Btn }}">
                                         <a href="/" class="btn btn-neutral">Cancel</a>
                                     </div>
                                 </div>
