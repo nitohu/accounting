@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"text/template"
 	"time"
@@ -37,42 +38,27 @@ func logError(funcName, msg string, args ...interface{}) {
 
 func logging(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		t := time.Now()
-		fmt.Printf("[INFO] %s %s: %s\n", t.Local(), r.URL.Path, r.Method)
+		log.Printf("[INFO] %s: %s\n", r.URL.Path, r.Method)
 
 		f(w, r)
 	}
 }
 
-func main() {
+func init() {
 	db = dbInit("127.0.0.1", "nitohu", "123", "accounting", 5432)
+	tmpl = template.Must(template.ParseGlob("./templates/*"))
+}
+
+func main() {
 	defer db.Close()
-
-	tmpl = template.Must(initTemplates(
-		"index.html",
-		"login.html",
-		"accounts.html",
-		"account_form.html",
-		"transactions.html",
-		"transaction_form.html",
-		"404.html",
-		"settings.html",
-		"categories.html",
-	))
-
-	// r := mux.NewRouter()
-
-	// http.NotFoundHandler = pageNotFoundHandler
-
-	// r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFiles))
 	http.Handle(
-		"/static/", http.StripPrefix("/static",
+		"/static/", http.StripPrefix("/static/",
 			http.FileServer(http.Dir("./static/")),
 		),
 	)
 
 	http.HandleFunc("/", logging(handleRoot))
-	http.HandleFunc("/settings/", logging(handleSettings))
+	http.HandleFunc("/settings", logging(handleSettings))
 
 	// Accounts
 	http.HandleFunc("/accounts", logging(handleAccountOverview))
@@ -81,17 +67,17 @@ func main() {
 	http.HandleFunc("/accounts/delete/{id}", logging(handleAccountDeletion))
 
 	// Transactions
-	http.HandleFunc("/transactions/", logging(handleTransactionOverview))
-	http.HandleFunc("/transactions/create/", logging(handleTransactionForm))
+	http.HandleFunc("/transactions", logging(handleTransactionOverview))
+	http.HandleFunc("/transactions/create", logging(handleTransactionForm))
 	http.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
 	http.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
 
 	// Categories
-	http.HandleFunc("/categories/", logging(handleCategoryOverview))
+	http.HandleFunc("/categories", logging(handleCategoryOverview))
 
-	http.HandleFunc("/login/", logging(handleLogin))
+	http.HandleFunc("/login", logging(handleLogin))
 
-	http.HandleFunc("/logout/", logging(handleLogout))
+	http.HandleFunc("/logout", logging(handleLogout))
 
 	http.ListenAndServe(":80", nil)
 }
