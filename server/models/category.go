@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -100,6 +101,25 @@ func (c *Category) Save(cr *sql.DB) error {
 	}
 
 	c.computeFields(cr)
+
+	return nil
+}
+
+// Delete the current category from the database
+func (c *Category) Delete(cr *sql.DB) error {
+	if c.ID <= 0 {
+		return errors.New("Category.Delete(): ID must be bigger than 0")
+	}
+	query := "DELETE FROM categories WHERE id=$1"
+
+	if _, err := cr.Exec(query, c.ID); err != nil {
+		log.Println("[ERROR] Category.Delete():", err)
+	}
+
+	c.ID = 0
+	c.Name = ""
+	c.Hex = ""
+	c.Active = false
 
 	return nil
 }

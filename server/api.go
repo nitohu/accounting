@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -37,17 +36,26 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	api.obj = nil
 	api.id = 0
 
-	switch {
-	case path == "/categories" || path == "/categories/":
+	api.multiplexer(w, r, path, body)
+}
+
+func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
+	switch path {
+	case "/categories":
 		// Check if the db attribute is appended to the url
 		// If yes, return only that one record
-		api.getIDFromURL(r)
+		api.id = 0
+		c := models.EmptyCategory()
+		if err := json.Unmarshal(body, &c); err != nil {
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+		}
+		api.id = c.ID
 		if api.id > 0 {
 			api.getCategoryByID(w, r)
 			return
 		}
 		api.getCategories(w, r)
-	case path == "/categories/create" || path == "/categories/create/":
+	case "/categories/create":
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -56,7 +64,7 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.ID = 0
 		api.obj = c
 		api.updateCategory(w, r)
-	case path == "/categories/update":
+	case "/categories/update":
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -70,19 +78,14 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		api.id = c.ID
 		api.updateCategory(w, r)
-	}
-}
-
-func (api *API) getIDFromURL(r *http.Request) {
-	api.id = 0
-	idStr := r.FormValue("id")
-	if idStr != "" {
-		id, err := strconv.Atoi(idStr)
-		if err != nil {
-			log.Println("[ERROR] API.getIDFromURL():", err)
+	case "/categories/delete":
+		c := models.EmptyCategory()
+		if err := json.Unmarshal(body, &c); err != nil {
+			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
-		api.id = int64(id)
+		api.id = c.ID
+		api.deleteCategory(w, r)
 	}
 }
 
@@ -222,4 +225,27 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Write data to the client
 	fmt.Fprint(w, string(data))
+}
+
+func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		fmt.Fprint(w, "{'error': '/categories/delete: Method must be DELETE.'}")
+		return
+	}
+	if api.id <= 0 {
+		fmt.Fprintln(w, "{'error': 'Please provide a valid ID.'}")
+		return
+	}
+
+	c := models.Category{
+		ID: api.id,
+	}
+
+	if err := c.Delete(db); err != nil {
+		log.Println("[WARN] API.deleteCategory():", err)
+		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
+		return
+	}
+
+	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
 }
