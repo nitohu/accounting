@@ -57,6 +57,10 @@ func main() {
 		),
 	)
 
+	var api API
+
+	http.Handle("/api/", api)
+
 	http.HandleFunc("/", logging(handleRoot))
 	http.HandleFunc("/settings", logging(handleSettings))
 

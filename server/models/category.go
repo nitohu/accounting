@@ -37,7 +37,7 @@ func EmptyCategory() Category {
 
 // Create a new category in the database
 func (c *Category) Create(cr *sql.DB) error {
-	if c.ID >= 0 {
+	if c.ID > 0 {
 		err := "This category already has an ID. Maybe try saving it?"
 		return errors.New(err)
 	} else if c.Name == "" {
@@ -46,27 +46,22 @@ func (c *Category) Create(cr *sql.DB) error {
 	}
 
 	query := "INSERT INTO categories (name, create_date, last_update, active, hex) "
-	query += "VALUES ($1, $2, $2, $4, $5);"
+	query += "VALUES ($1, $2, $3, $4, $5) RETURNING id;"
 
 	if c.Hex == "" {
 		c.Hex = "#ffffff"
 	}
 
-	res, err := cr.Exec(query,
+	err := cr.QueryRow(query,
 		c.Name,
 		time.Now(),
 		time.Now(),
 		true,
 		c.Hex,
-	)
+	).Scan(&c.ID)
 
 	if err != nil {
 		fmt.Println("Category.Create(): Traceback: Error while executing query")
-		return err
-	}
-
-	if c.ID, err = res.LastInsertId(); err != nil {
-		fmt.Println("Category.Create(): Traceback: Error while getting last insert ID")
 		return err
 	}
 
@@ -116,6 +111,8 @@ func (c *Category) computeFields(cr *sql.DB) error {
 		fmt.Println("[ERROR] Category.Save(): Error executing query f")
 	}
 
+	c.TransactionIDs = nil
+
 	for res.Next() {
 		var id int64
 		if err = res.Scan(&id); err != nil {
@@ -151,6 +148,8 @@ func (c *Category) FindByID(cr *sql.DB, id int64) error {
 		return err
 	}
 
+	c.computeFields(cr)
+
 	return nil
 }
 
@@ -179,6 +178,7 @@ func GetAllCategories(cr *sql.DB) ([]Category, error) {
 				fmt.Println("[INFO] Skipping Record")
 				fmt.Printf("[WARN] GetAllCategories: %s\n", err)
 			} else {
+				cat.computeFields(cr)
 				categories = append(categories, cat)
 			}
 		}
