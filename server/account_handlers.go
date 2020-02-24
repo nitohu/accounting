@@ -77,12 +77,13 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 		if err := account.FindByID(db, int64(accountID)); err != nil {
 			log.Println("[WARN] handleAccountForm():", err)
 			account.ID = 0
+		} else {
+			ctx["Title"] = "Edit Account"
+			ctx["Header"] = "Edit " + account.Name
+			ctx["Btn"] = "Save Account"
 		}
 	}
 
-	ctx["Title"] = "Edit " + account.Name
-	ctx["Header"] = "Edit " + account.Name
-	ctx["Btn"] = "Save Account"
 	ctx["Account"] = account
 
 	// Method is GET

@@ -21,18 +21,32 @@
             <li {{ if eq .Title "Dashboard" }}class="active open"{{end}}><a href="/"><i class="zmdi zmdi-home"></i><span>Dashboard</span></a>
             </li>
             <li {{ if eq .Title "Categories" }}class="active open"{{end}}><a href="/categories"><i class="zmdi zmdi-collection-item"></i><span>Categories</span></a></li>
-            <li {{ if eq .Title "Transactions" }}class="active open"{{end}}><a href="javascript:void(0);" class="menu-toggle"><i
+            <li
+            {{ if or (eq .Title "Transactions") (or (eq .Title "Create Transaction") (eq .Title "Edit Transaction")) }}
+                class="active open"
+            {{end}}
+            ><a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-money-box"></i><span>Transactions</span></a>
                 <ul class="ml-menu">
                     <li {{ if eq .Title "Transactions" }}class="active open"{{end}}><a href="/transactions">Overview</a></li>
-                    <li><a href="/transactions/create/">Create New</a></li>
+                    <li
+                    {{ if or (eq .Title "Create Transaction") (eq .Title "Edit Transaction") }}
+                        class="active open"
+                    {{end}}
+                    ><a href="/transactions/form">Create New</a></li>
                 </ul>
             </li>
-            <li {{ if eq .Title "Accounts" }}class="active open"{{end}}> <a href="javascript:void(0);" class="menu-toggle"><i
+            <li
+            {{ if or (eq .Title "Accounts") (or (eq .Title "Create Account") (eq .Title "Edit Account")) }}
+                class="active open"
+            {{end}}
+            > <a href="javascript:void(0);" class="menu-toggle"><i
                         class="zmdi zmdi-assignment"></i><span>Accounts</span></a>
                 <ul class="ml-menu">
                     <li {{ if eq .Title "Accounts" }}class="active open"{{end}}><a href="/accounts">Overview</a></li>
-                    <li><a href="/accounts/form">Create New</a></li>
+                    <li {{ if eq .Title "Create Account" }}class="active open"{{ end }}>
+                        <a href="/accounts/form">Create New</a>
+                    </li>
                 </ul>
             </li>
         </ul>

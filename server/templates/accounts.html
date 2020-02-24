@@ -99,7 +99,7 @@
                                 <tbody>
                                     {{ range .Accounts }}
                                         <tr>
-                                            <td><a href="/accounts/edit/{{ .ID }}">{{ .Name }}</a></td>
+                                            <td><a href="/accounts/form?id={{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ (call $.HumanReadable .Balance) }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .BankName }}</td>
                                             <td>{{ .Iban }}</td>
