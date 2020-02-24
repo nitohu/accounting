@@ -31,7 +31,7 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	ctx["Title"] = "All Accounts"
+	ctx["Title"] = "Accounts"
 	if ctx["Accounts"], err = models.GetAllAccounts(db); err != nil {
 		logWarn("handleAccountOverView", "Error while getting accounts:\n%s", err)
 	}
@@ -140,7 +140,7 @@ func handleAccountDeletion(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logError("handleAccountDeletion", "%s", err)
-		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		http.Redirect(w, r, "/logout", http.StatusSeeOther)
 		return
 	}
 

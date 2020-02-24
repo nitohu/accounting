@@ -18,6 +18,7 @@ func handleCategoryOverview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; chartset=utf-8")
+	ctx["Title"] = "Categories"
 
 	var categories []models.Category
 

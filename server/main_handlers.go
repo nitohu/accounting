@@ -22,6 +22,8 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
+	ctx["Title"] = "Dashboard"
+
 	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); err != nil {
 		logWarn("handleRoot", "Error while getting transactions:\n%s", err)
 	}
@@ -118,6 +120,8 @@ func pageNotFoundHandler() http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		ctx["Title"] = "404 - Not Found"
 
 		err = tmpl.ExecuteTemplate(w, "404.html", ctx)
 
