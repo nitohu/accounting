@@ -111,7 +111,7 @@
                                         </tr>
                                     {{ end }}
                                     <tr>
-                                        <td colspan="6" style="text-align: center;"><a href="#">Add a line... (placeholder)</a></td>
+                                        <td colspan="6" style="text-align: center;"><a data-toggle="modal" data-target="#formModal" id="addLineBtn" href="#">Add a line... (placeholder)</a></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -137,7 +137,7 @@
                         <input type="text" class="form-control" name="name" id="name">
                     </div>
                     <div class="input-group colorpicker">
-                        <input type="text" name="hex" class="form-control" value="#00AABB">
+                        <input type="text" name="hex" id="hex" class="form-control" value="#00AABB">
                         <div class="input-group-append">
                             <span class="input-group-text"><span class="input-group-addon"> <i></i> </span></span>
                         </div>
@@ -145,7 +145,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default btn-round waves-effect">SAVE CHANGES</button>
+                <button type="button" id="formBtn" class="btn btn-default btn-round waves-effect">SAVE</button>
                 <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">CLOSE</button>
             </div>
         </div>
@@ -161,20 +161,47 @@
 
 <script>
 
-    let btns = document.getElementsByClassName("deleteEntry")
+    var categoryID = 0
 
-    for (let i = 0; i < btns.length; i++) {
-        let btn = btns[i]
-        btn.addEventListener("click", function() {
-            let id = btn.id.split("_")[1]
+    let addLineBtn = document.getElementById("addLineBtn")
+    addLineBtn.addEventListener("click", function() {
+        categoryID = 0
+        console.log("Add a line")
+    })
 
-            console.warn("Deleting record with id ", id)
-            fetch("/categories/delete/"+id).then(function() {
-                window.location.reload()
-            })
+    let formBtn = document.getElementById("formBtn")
+    formBtn.addEventListener("click", function() {
 
-        })
-    }
+        let name = document.getElementById("name").value
+        let hex  = document.getElementById("hex").value
+        console.log("Submit form: " + name + hex)
+
+        let xhr = new XMLHttpRequest()
+        let url = "/api/categories/create"
+        xhr.open("POST", url)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        let data = {
+            "ID": categoryID,
+            "Name": String(name),
+            "Hex": String(hex),
+        }
+        xhr.send(JSON.stringify(data))
+    })
+
+    // let btns = document.getElementsByClassName("deleteEntry")
+
+    // for (let i = 0; i < btns.length; i++) {
+    //     let btn = btns[i]
+    //     btn.addEventListener("click", function() {
+    //         let id = btn.id.split("_")[1]
+
+    //         console.warn("Deleting record with id ", id)
+    //         fetch("/categories/delete/"+id).then(function() {
+    //             window.location.reload()
+    //         })
+
+    //     })
+    // }
 </script>
 </body>
 </html>

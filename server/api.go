@@ -19,6 +19,8 @@ type API struct {
 	obj interface{}
 }
 
+// APIAccount holds the account type and additional fields for parsing
+// from JSON
 type APIAccount struct {
 	models.Account
 
@@ -237,9 +239,6 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "{'error': 'Please provide a name for creating a category.'}")
 		return
 	}
-
-	fmt.Println("Name:", reqData.Name)
-	fmt.Println("Hex:", reqData.Hex)
 
 	// Update data only if it is given
 	if reqData.Name != "" {
