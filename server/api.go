@@ -18,6 +18,11 @@ type API struct {
 	obj interface{}
 }
 
+const (
+	errorID    = "{'error': 'Please provide a valid ID.'}"
+	errorGetID = "{'error': 'There was an unexpected error while getting the record by ID.'}"
+)
+
 func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.Split(r.URL.Path, "/api")[1]
 	var body []byte
@@ -41,6 +46,9 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
 	switch path {
+	//
+	// Categories
+	//
 	case "/categories":
 		// Check if the db attribute is appended to the url
 		// If yes, return only that one record
@@ -86,7 +94,36 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.id = c.ID
 		api.deleteCategory(w, r)
+
+	//
+	// Accounts
+	//
+	case "/accounts":
+		api.id = 0
+		a := models.EmptyAccount()
+		if err := json.Unmarshal(body, &a); err != nil {
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+		}
+		api.id = a.ID
+		if api.id > 0 {
+			api.getAccountByID(w, r)
+			return
+		}
+		api.getAccounts(w, r)
+	default:
+		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
 	}
+}
+
+func (api API) sendResult(w http.ResponseWriter, data interface{}) {
+	d, err := json.Marshal(data)
+	if err != nil {
+		log.Println("[ERROR] API.sendResult():", err)
+		fmt.Fprint(w, "{'error': 'Server error while parsing data into JSON.'}")
+		return
+	}
+
+	fmt.Fprint(w, string(d))
 }
 
 /*
@@ -97,60 +134,45 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	##############################
 */
 
-// Getters
-
 // getCategories gets all Categories
 // Also handles if
 func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		fmt.Fprint(w, "{'error': '/categories/: Method must be GET.'}")
+		fmt.Fprint(w, "{'error': '/api/categories/: Method must be GET.'}")
 		return
 	}
 
 	c, err := models.GetAllCategories(db)
 	if err != nil {
+		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
 		log.Printf("[ERROR] API.getCategories(): Error getting Categories.\n%s\n", err)
 		return
 	}
-	d, err := json.Marshal(c)
-	if err != nil {
-		log.Printf("[ERROR] API.getCategories(): Error parsing JSON.\n%s\n", err)
-		return
-	}
-	data := string(d)
-	fmt.Fprint(w, data)
+
+	api.sendResult(w, c)
 }
 
 // getCategoryByID gets a category by it's ID
 func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		fmt.Fprint(w, "{'error': '/categories/: Method must be GET.'}")
+		fmt.Fprint(w, "{'error': '/api/categories/: Method must be GET.'}")
 		return
 	}
 	if api.id <= 0 {
-		fmt.Fprintln(w, "{'error': 'Please provide a valid ID.'}")
+		fmt.Fprintln(w, errorID)
 		return
 	}
 
 	c := models.EmptyCategory()
 
 	if err := c.FindByID(db, int64(api.id)); err != nil {
-		log.Println("API.getCategoryByID():", err)
-		fmt.Fprintln(w, "{'error': 'There was an unexpected error while searching the record by ID.'}")
+		log.Println("[ERROR] API.getCategoryByID():", err)
+		fmt.Fprintln(w, errorGetID)
 		return
 	}
 
-	d, err := json.Marshal(c)
-	if err != nil {
-		log.Println("API.getCategoryByID():", err)
-		fmt.Fprintln(w, "{'error': 'There was an unexpected error while converting the data to JSON.'}")
-		return
-	}
-	data := string(d)
-	fmt.Fprintln(w, data)
+	api.sendResult(w, c)
 }
-
-// Setter
 
 // getCategoryByID write to a category
 // if this category does not exist or has no ID, create one
@@ -158,7 +180,7 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 // Returns the data written to the database
 func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		fmt.Fprint(w, "{'error': '/categories/create: Method must be POST.'}")
+		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
 
@@ -168,7 +190,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	if api.id > 0 {
 		if err := c.FindByID(db, api.id); err != nil {
 			log.Println("[WARN] API.updateCategory():", err)
-			fmt.Fprint(w, "{'error': 'Error getting your ID.'}")
+			fmt.Fprint(w, errorGetID)
 			return
 		}
 	} else {
@@ -215,25 +237,17 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create return data
-	data, err := json.Marshal(c)
-	if err != nil {
-		log.Println("[WARN] API.updateCategory()", err)
-		fmt.Fprint(w, "{'error': 'Error converting object to JSON.'}")
-		return
-	}
-
-	// Write data to the client
-	fmt.Fprint(w, string(data))
+	api.sendResult(w, c)
 }
 
+// deletes a category with an ID
 func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		fmt.Fprint(w, "{'error': '/categories/delete: Method must be DELETE.'}")
+		fmt.Fprint(w, "{'error': '/api/categories/delete: Method must be DELETE.'}")
 		return
 	}
 	if api.id <= 0 {
-		fmt.Fprintln(w, "{'error': 'Please provide a valid ID.'}")
+		fmt.Fprintln(w, errorID)
 		return
 	}
 
@@ -248,4 +262,48 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
+}
+
+/*
+	##############################
+	#                            #
+	#          Accounts          #
+	#                            #
+	##############################
+*/
+
+// Gives back all accounts
+func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
+		return
+	}
+
+	acc, err := models.GetAllAccounts(db)
+	if err != nil {
+		log.Println("[ERROR] API.getAccounts():", err)
+		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
+		return
+	}
+
+	api.sendResult(w, acc)
+}
+
+func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
+		return
+	}
+	if api.id <= 0 {
+		fmt.Fprint(w, errorID)
+		return
+	}
+
+	acc := models.EmptyAccount()
+	if err := acc.FindByID(db, api.id); err != nil {
+		fmt.Fprint(w, errorGetID)
+		return
+	}
+
+	api.sendResult(w, acc)
 }
