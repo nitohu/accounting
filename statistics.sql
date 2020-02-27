@@ -2,7 +2,7 @@
 -- first day = $1 (ex: 2020-01-01)
 -- last day = $1 (ex: 2020-02-16)
 SELECT COUNT(*) FROM transactions WHERE transaction_date >= '2020-01-01'
-AND transaction_date <= '2020-02-16' AND active='t';
+AND transaction_date <= '2020-02-27' AND active='t';
 
 -- Total balance
 SELECT SUM(a.balance) FROM (
@@ -35,3 +35,13 @@ JOIN (
     FROM settings LIMIT 1
 ) AS b ON 1=1
 WHERE acc.active=True;
+
+-- Total value moved
+SELECT SUM(amount) FROM transactions WHERE transaction_date >= '2020-01-01'
+AND transaction_date <= '2020-02-27' AND active='t';
+
+-- Average value moved per account
+SELECT 
+    SUM(amount) / COUNT(account_id)
+FROM transactions WHERE transaction_date >= '2020-01-01'
+AND transaction_date <= '2020-02-27' AND active='t';

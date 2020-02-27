@@ -29,6 +29,7 @@ CREATE TABLE accounts (
 CREATE TABLE categories (
     id serial,
     primary key(id),
+    active boolean,
     name text,
     create_date timestamp,
     last_update timestamp,
