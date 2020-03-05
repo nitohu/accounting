@@ -5,6 +5,10 @@ import (
 )
 
 func handleCategoryOverview(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/categories/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)

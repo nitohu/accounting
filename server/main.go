@@ -62,26 +62,24 @@ func main() {
 	http.Handle("/api/", api)
 
 	http.HandleFunc("/", logging(handleRoot))
-	http.HandleFunc("/settings", logging(handleSettings))
+	http.HandleFunc("/settings/", logging(handleSettings))
 
 	// Accounts
-	http.HandleFunc("/accounts", logging(handleAccountOverview))
-	http.HandleFunc("/accounts/form", logging(handleAccountForm))
-	// TODO: Will be replaced with API once its done
-	http.HandleFunc("/accounts/delete/{id}", logging(handleAccountDeletion))
+	http.HandleFunc("/accounts/", logging(handleAccountOverview))
+	http.HandleFunc("/accounts/form/", logging(handleAccountForm))
 
 	// Transactions
-	http.HandleFunc("/transactions", logging(handleTransactionOverview))
-	http.HandleFunc("/transactions/create", logging(handleTransactionForm))
+	http.HandleFunc("/transactions/", logging(handleTransactionOverview))
+	http.HandleFunc("/transactions/create/", logging(handleTransactionForm))
 	http.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
 	http.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
 
 	// Categories
-	http.HandleFunc("/categories", logging(handleCategoryOverview))
+	http.HandleFunc("/categories/", logging(handleCategoryOverview))
 
-	http.HandleFunc("/login", logging(handleLogin))
+	http.HandleFunc("/login/", logging(handleLogin))
 
-	http.HandleFunc("/logout", logging(handleLogout))
+	http.HandleFunc("/logout/", logging(handleLogout))
 
 	log.Fatalln(http.ListenAndServe(":8080", nil))
 }

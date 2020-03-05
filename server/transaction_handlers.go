@@ -20,6 +20,10 @@ import (
 */
 
 func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/transactions/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
@@ -47,6 +51,10 @@ func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/transactions/form/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)

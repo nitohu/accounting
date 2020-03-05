@@ -11,6 +11,10 @@ import (
 
 // Root
 func handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
@@ -40,6 +44,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 // Settings
 func handleSettings(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/settings/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
@@ -108,27 +116,26 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 // 404 Page
-func pageNotFoundHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "session")
+func handleNotFound(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
 
-		ctx, err := createContextFromSession(db, session)
+	ctx, err := createContextFromSession(db, session)
 
-		if err != nil {
-			logError("handlePageNotFound", "%s", err)
-			http.Redirect(w, r, "/logout/", http.StatusSeeOther)
-		}
+	if err != nil {
+		logError("handlePageNotFound", "%s", err)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+	}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(404)
 
-		ctx["Title"] = "404 - Not Found"
+	ctx["Title"] = "404 - Not Found"
 
-		err = tmpl.ExecuteTemplate(w, "404.html", ctx)
+	err = tmpl.ExecuteTemplate(w, "404.html", ctx)
 
-		if err != nil {
-			logError("handlePageNotFound", "%s", err)
-		}
-	})
+	if err != nil {
+		logError("handlePageNotFound", "%s", err)
+	}
 }
 
 /*
@@ -140,6 +147,10 @@ func pageNotFoundHandler() http.Handler {
 */
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/login/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
@@ -202,6 +213,10 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/logout/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	session.Values["authenticated"] = false

@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"./models"
-
-	"github.com/gorilla/mux"
 )
 
 /*
@@ -20,6 +18,10 @@ import (
 */
 
 func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/accounts/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
@@ -44,6 +46,10 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleAccountForm(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/accounts/form/" {
+		handleNotFound(w, r)
+		return
+	}
 	session, _ := store.Get(r, "session")
 
 	ctx, err := createContextFromSession(db, session)
@@ -132,37 +138,4 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/accounts", http.StatusSeeOther)
-}
-
-func handleAccountDeletion(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session")
-
-	_, err := createContextFromSession(db, session)
-
-	if err != nil {
-		logError("handleAccountDeletion", "%s", err)
-		http.Redirect(w, r, "/logout", http.StatusSeeOther)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	vars := mux.Vars(r)
-
-	id, err := strconv.Atoi(vars["id"])
-
-	if err != nil {
-		logError("handleAccountDeletion", "%s", err)
-		return
-	}
-
-	account, err := models.FindAccountByID(db, int64(id))
-
-	if err != nil {
-		logError("handleAccountDeletion", "%s", err)
-		return
-	}
-
-	account.Delete(db)
-
 }
