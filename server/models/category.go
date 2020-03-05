@@ -19,7 +19,7 @@ type Category struct {
 
 	// Computed fields
 	TransactionIDs   []int64
-	TransactionCount int64
+	TransactionCount int
 }
 
 // EmptyCategory returns an empty category
@@ -141,6 +141,8 @@ func (c *Category) computeFields(cr *sql.DB) error {
 		}
 		c.TransactionIDs = append(c.TransactionIDs, id)
 	}
+
+	c.TransactionCount = len(c.TransactionIDs)
 
 	return nil
 }

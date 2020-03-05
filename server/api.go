@@ -39,6 +39,9 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset: utf-8")
 
+	// Logging
+	log.Printf("[INFO] %s: %s\n", r.URL.Path, r.Method)
+
 	// Parse a body if there is one
 	if r.ContentLength > 0 {
 		b := r.Body
@@ -62,12 +65,13 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	// Categories
 	//
 	case "/categories":
-		// Check if the db attribute is appended to the url
-		// If yes, return only that one record
-		api.id = 0
 		c := models.EmptyCategory()
-		if err := json.Unmarshal(body, &c); err != nil {
-			fmt.Fprintf(w, "{'error': '%s'}", err)
+		if len(body) > 0 {
+			if err := json.Unmarshal(body, &c); err != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", err)
+				return
+			}
 		}
 		api.id = c.ID
 		if api.id > 0 {
@@ -78,6 +82,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	case "/categories/create":
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
+			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
@@ -87,12 +92,14 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	case "/categories/update":
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
+			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
 		api.obj = c
 		// Validate if the ID is existing
 		if err := c.FindByID(db, c.ID); err != nil {
+			w.WriteHeader(500)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
@@ -101,6 +108,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	case "/categories/delete":
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
+			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
@@ -113,8 +121,12 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	case "/accounts":
 		api.id = 0
 		a := models.EmptyAccount()
-		if err := json.Unmarshal(body, &a); err != nil {
-			fmt.Fprintf(w, "{'error': '%s'}", err)
+		if len(body) > 0 {
+			if err := json.Unmarshal(body, &a); err != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", err)
+				return
+			}
 		}
 		api.id = a.ID
 		if api.id > 0 {
@@ -127,6 +139,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			Account: models.EmptyAccount(),
 		}
 		if err := json.Unmarshal(body, &a); err != nil {
+			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
 		}
@@ -134,6 +147,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.obj = a
 		api.updateAccount(w, r)
 	default:
+		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
 	}
 }

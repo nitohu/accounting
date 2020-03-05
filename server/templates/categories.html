@@ -97,20 +97,9 @@
                                         <th><i class="zmdi zmdi-close"></i></th>
                                     </tr>
                                 </tfoot>
+                                <tbody id="categoryTable"></tbody>
                                 <tbody>
-                                    {{ range .Categories }}
-                                    <tr style="background-color: {{.Hex}}">
-                                            <td><a>{{ .Hex }}</a></td>
-                                            <td>
-                                                <a href="#" data-toggle="modal" data-target="#formModal">{{ .Name }}</a>
-                                            </td>
-                                            <td>{{ .CreateDate }}</td>
-                                            <td>{{ .LastUpdate }}</td>
-                                            <td>#</td>
-                                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="zmdi zmdi-close"></i></td>
-                                        </tr>
-                                    {{ end }}
-                                    <tr>
+                                    <tr id="addLineRow">
                                         <td colspan="6" style="text-align: center;"><a data-toggle="modal" data-target="#formModal" id="addLineBtn" href="#">Add a line... (placeholder)</a></td>
                                     </tr>
                                 </tbody>
@@ -159,49 +148,6 @@
 
 <script src="/static/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
 
-<script>
-
-    var categoryID = 0
-
-    let addLineBtn = document.getElementById("addLineBtn")
-    addLineBtn.addEventListener("click", function() {
-        categoryID = 0
-        console.log("Add a line")
-    })
-
-    let formBtn = document.getElementById("formBtn")
-    formBtn.addEventListener("click", function() {
-
-        let name = document.getElementById("name").value
-        let hex  = document.getElementById("hex").value
-        console.log("Submit form: " + name + hex)
-
-        let xhr = new XMLHttpRequest()
-        let url = "/api/categories/create"
-        xhr.open("POST", url)
-        xhr.setRequestHeader("Content-Type", "application/json")
-        let data = {
-            "ID": categoryID,
-            "Name": String(name),
-            "Hex": String(hex),
-        }
-        xhr.send(JSON.stringify(data))
-    })
-
-    // let btns = document.getElementsByClassName("deleteEntry")
-
-    // for (let i = 0; i < btns.length; i++) {
-    //     let btn = btns[i]
-    //     btn.addEventListener("click", function() {
-    //         let id = btn.id.split("_")[1]
-
-    //         console.warn("Deleting record with id ", id)
-    //         fetch("/categories/delete/"+id).then(function() {
-    //             window.location.reload()
-    //         })
-
-    //     })
-    // }
-</script>
+<script src="/static/js/custom/category_page.js"></script>
 </body>
 </html>
