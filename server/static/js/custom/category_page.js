@@ -1,9 +1,7 @@
 $("document").ready(function() {
     var categoryID = 0
     var tbody = document.getElementById("categoryTable")
-    var deleteBtns = document.getElementsByClassName("deleteEntry")
 
-    // debounce(getCategories, 200, false)()
     getCategories()
     let addLineBtn = document.getElementById("addLineBtn")
     addLineBtn.addEventListener("click", function() {
@@ -36,8 +34,6 @@ $("document").ready(function() {
     };
 
     function saveCategories() {
-        console.log("saveCategories()")
-
         let name = document.getElementById("name").value
         let hex  = document.getElementById("hex").value
 
@@ -55,7 +51,6 @@ $("document").ready(function() {
             console.log(xhr.status)
             console.log(xhr.response)
         }
-        console.log(data)
         xhr.send(JSON.stringify(data))
     }
 
@@ -76,7 +71,6 @@ $("document").ready(function() {
                 let categories = JSON.parse(this.responseText)
                 for(let i in categories) {
                     let category = categories[i]
-                    console.log(category["Name"])
                     let content = document.createElement("tr")
                     content.setAttribute("style", 'background-color: '+category["Hex"])
                     content.setAttribute("class", "categoryItem")
@@ -119,17 +113,12 @@ $("document").ready(function() {
                     // tbody.insertBefore(content, row)
                     tbody.appendChild(content)
                 }
-            } else {
-                console.warn(this.status)
-                console.warn(this.readyState)
-                console.log(this.response)
             }
         }
         xhr.send(JSON.stringify(data))
     }
 
     function deleteCategory(e) {
-        console.log(this)
         data = {
             "ID": Number.parseInt(e.path[2].id)
         }

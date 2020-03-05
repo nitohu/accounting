@@ -10,7 +10,6 @@
 <!-- Favicon-->
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
-<link rel="stylesheet" href="/static/plugins/bootstrap-colorpicker/css/bootstrap-colorpicker.css" />
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
 <link rel="stylesheet" href="/static/css/custom.css">
@@ -125,11 +124,10 @@
                         <label for="name">Category Name</label>
                         <input type="text" class="form-control" name="name" id="name">
                     </div>
-                    <div class="input-group colorpicker">
+                    
+                    <div class="form-group">
+                        <label for="hex">Color (Hex)</label>
                         <input type="text" name="hex" id="hex" class="form-control" value="#00AABB">
-                        <div class="input-group-append">
-                            <span class="input-group-text"><span class="input-group-addon"> <i></i> </span></span>
-                        </div>
                     </div>
                 </form>
             </div>
@@ -145,8 +143,6 @@
 <script src="/static/bundles/libscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 <script src="/static/bundles/vendorscripts.bundle.js"></script> <!-- Lib Scripts Plugin Js --> 
 <script src="/static/bundles/mainscripts.bundle.js"></script> <!-- Main Script Bundle Js --> 
-
-<script src="/static/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.js"></script>
 
 <script src="/static/js/custom/category_page.js"></script>
 </body>
