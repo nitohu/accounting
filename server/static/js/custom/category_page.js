@@ -1,13 +1,13 @@
 $("document").ready(function() {
     var categoryID = 0
     var tbody = document.getElementById("categoryTable")
+    var deleteBtns = document.getElementsByClassName("deleteEntry")
 
     // debounce(getCategories, 200, false)()
     getCategories()
     let addLineBtn = document.getElementById("addLineBtn")
     addLineBtn.addEventListener("click", function() {
         categoryID = 0
-        console.log("Add a line")
     })
 
     let formBtn = document.getElementById("formBtn")
@@ -60,8 +60,6 @@ $("document").ready(function() {
     }
 
     function getCategories() {
-        console.log("getCategories()")
-    
         let data = {
             "ID": 0,
         }
@@ -69,12 +67,12 @@ $("document").ready(function() {
         xhr.open("GET", "/api/categories", true)
         xhr.setRequestHeader("Content-Type", "application/json")
         xhr.onreadystatechange = function() {
-            // Remove current categories in DOM
-            while (tbody.lastElementChild) {
-                tbody.removeChild(tbody.lastElementChild)
-            }
-            // Append new categories
             if (this.readyState == 4 && this.status == 200) {
+                // Remove current categories in DOM
+                while (tbody.lastElementChild) {
+                    tbody.removeChild(tbody.lastElementChild)
+                }
+                // Append new categories
                 let categories = JSON.parse(this.responseText)
                 for(let i in categories) {
                     let category = categories[i]
@@ -82,6 +80,7 @@ $("document").ready(function() {
                     let content = document.createElement("tr")
                     content.setAttribute("style", 'background-color: '+category["Hex"])
                     content.setAttribute("class", "categoryItem")
+                    content.setAttribute("id", category["ID"])
 
                     let td = document.createElement("td")
                     td.innerHTML = category["Hex"]
@@ -112,6 +111,7 @@ $("document").ready(function() {
                     td.setAttribute("class", "deleteEntry")
                     a = document.createElement("i")
                     a.setAttribute("class", "zmdi zmdi-close")
+                    a.addEventListener("click", deleteCategory)
                     td.appendChild(a)
                     content.appendChild(td)
                     
@@ -128,7 +128,22 @@ $("document").ready(function() {
         xhr.send(JSON.stringify(data))
     }
 
-    // let btns = document.getElementsByClassName("deleteEntry")
+    function deleteCategory(e) {
+        console.log(this)
+        data = {
+            "ID": Number.parseInt(e.path[2].id)
+        }
+        tbody.removeChild(e.path[2])
+        let xhr = new XMLHttpRequest()
+        xhr.open("DELETE", "/api/categories/delete", true)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 400) {
+                console.error(this.response)
+            }
+        }
+        xhr.send(JSON.stringify(data))
+    }
 
     // for (let i = 0; i < btns.length; i++) {
     //     let btn = btns[i]
