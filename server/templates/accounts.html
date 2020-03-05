@@ -98,7 +98,7 @@
                                 </tfoot>
                                 <tbody>
                                     {{ range .Accounts }}
-                                        <tr>
+                                        <tr id="{{ .ID }}">
                                             <td><a href="/accounts/form?id={{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ (call $.HumanReadable .Balance) }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .BankName }}</td>
@@ -131,21 +131,6 @@
 
 <script src="/static/bundles/mainscripts.bundle.js"></script>
 
-<script>
-    let btns = document.getElementsByClassName("deleteEntry")
-
-    for (let i = 0; i < btns.length; i++) {
-        let btn = btns[i]
-        btn.addEventListener("click", function() {
-            let id = btn.id.split("_")[1]
-
-            console.warn("Deleting record with id ", id)
-            fetch("/accounts/delete/"+id).then(function() {
-                window.location.reload()
-            })
-
-        })
-    }
-</script>
+<script src="/static/js/custom/account_page.js"></script>
 </body>
 </html>

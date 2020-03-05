@@ -21,23 +21,27 @@ type Account struct {
 	BankType        string
 	CreateDate      time.Time
 	LastUpdate      time.Time
+
+	// Computed Fields
+	TransactionCount int64
 }
 
 // EmptyAccount ...
 func EmptyAccount() Account {
 	a := Account{
-		ID:              0,
-		Name:            "",
-		Active:          false,
-		Balance:         0.0,
-		BalanceForecast: 0.0,
-		Iban:            "",
-		BankCode:        "",
-		AccountNr:       "",
-		BankName:        "",
-		BankType:        "",
-		CreateDate:      time.Now().Local(),
-		LastUpdate:      time.Now().Local(),
+		ID:               0,
+		Name:             "",
+		Active:           false,
+		Balance:          0.0,
+		BalanceForecast:  0.0,
+		Iban:             "",
+		BankCode:         "",
+		AccountNr:        "",
+		BankName:         "",
+		BankType:         "",
+		CreateDate:       time.Now().Local(),
+		LastUpdate:       time.Now().Local(),
+		TransactionCount: 0,
 	}
 
 	return a
@@ -85,7 +89,6 @@ func (a *Account) Create(cr *sql.DB) error {
 
 // Save 's the current values of the object to the database
 func (a *Account) Save(cr *sql.DB) error {
-
 	if a.ID == 0 {
 		return errors.New("This account as now id, maybe create it first?")
 	}
@@ -106,14 +109,14 @@ func (a *Account) Save(cr *sql.DB) error {
 		a.BankType,
 		time.Now().Local(),
 	)
-
 	if err != nil {
 		return err
 	}
+	if _, err = res.RowsAffected(); err != nil {
+		return err
 
-	_, err = res.RowsAffected()
-
-	if err != nil {
+	}
+	if err = a.ComputeFields(cr); err != nil {
 		return err
 	}
 
@@ -130,6 +133,25 @@ func (a *Account) Delete(cr *sql.DB) error {
 
 	_, err := cr.Exec(query, a.ID)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ComputeFields computes the fields for this model
+// Gets automatically called in Account.Save() and Account.FindByID()
+func (a *Account) ComputeFields(cr *sql.DB) error {
+	if a.ID <= 0 {
+		return errors.New("This account has no ID")
+	}
+
+	query := "SELECT COUNT(*) FROM transactions WHERE account_id=$1;"
+
+	err := cr.QueryRow(query, a.ID).Scan(
+		&a.TransactionCount,
+	)
 	if err != nil {
 		return err
 	}
@@ -191,6 +213,10 @@ func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 
 	if err != nil {
 		fmt.Println("Traceback: Account.FindById()")
+		return err
+	}
+
+	if err = a.ComputeFields(cr); err != nil {
 		return err
 	}
 

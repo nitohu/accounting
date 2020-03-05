@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -146,6 +145,31 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		a.ID = 0
 		api.obj = a
 		api.updateAccount(w, r)
+	case "/accounts/update":
+		a := models.EmptyAccount()
+		if err := json.Unmarshal(body, &a); err != nil {
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+			return
+		}
+		api.obj = a
+		// Validate if the ID is existing
+		if err := a.FindByID(db, a.ID); err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+			return
+		}
+		api.id = a.ID
+		api.updateAccount(w, r)
+	case "/accounts/delete":
+		a := models.EmptyAccount()
+		if err := json.Unmarshal(body, &a); err != nil {
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "{'error': '%s'}", err)
+			return
+		}
+		api.id = a.ID
+		api.deleteAccount(w, r)
 	default:
 		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
@@ -354,6 +378,7 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 
 func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
@@ -364,6 +389,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 
 	if api.id > 0 {
 		if err := acc.Account.FindByID(db, api.id); err != nil {
+			w.WriteHeader(400)
 			log.Println("[WARN] API.updateCategory():", err)
 			fmt.Fprint(w, errorGetID)
 			return
@@ -373,71 +399,37 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 		acc.Account.Active = true
 	}
 
-	reqData := api.obj.(APIAccount)
+	reqData := api.obj.(models.Account)
 
-	fmt.Println(reqData)
-
-	if acc.ID == 0 && reqData.Name == "" && reqData.Balance == "" {
+	if acc.ID == 0 && reqData.Name == "" && reqData.Balance == 0.0 {
+		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': 'Please provide a name and balance for creating a category.'}")
 		return
 	}
 
-	active := acc.Account.Active
-	name := acc.Account.Name
-	balance := acc.Account.Balance
-	iban := acc.Account.Iban
-	bankCode := acc.Account.BankCode
-	accountNr := acc.Account.AccountNr
-	bankName := acc.Account.BankName
-	bankType := acc.Account.BankType
-
 	if reqData.Name != "" {
-		name = reqData.Name
+		acc.Account.Name = reqData.Name
 	}
-	if reqData.Balance != "" {
-		b, err := strconv.ParseFloat(reqData.Balance, 64)
-		if err != nil {
-			log.Printf("[WARN] API.updateAccount(): Balance will keep the old value:\n%s\n", err)
-		} else {
-			balance = b
-		}
-	}
-	if reqData.Active != "" {
-		a, err := strconv.ParseBool(reqData.Active)
-		if err != nil {
-			log.Printf("[WARN] API.updateAccount(): Active will keep the old value:\n%s\n", err)
-		} else {
-			active = a
-		}
+	if reqData.Balance != 0.0 {
+		acc.Account.Balance = reqData.Balance
 	}
 	if reqData.Iban != "" {
-		iban = reqData.Iban
+		acc.Account.Iban = reqData.Iban
 	}
 	if reqData.BankCode != "" {
-		bankCode = reqData.BankCode
+		acc.Account.BankCode = reqData.BankCode
 	}
 	if reqData.AccountNr != "" {
-		accountNr = reqData.AccountNr
+		acc.Account.AccountNr = reqData.AccountNr
 	}
 	if reqData.BankName != "" {
-		bankName = reqData.BankName
+		acc.Account.BankName = reqData.BankName
 	}
 	if reqData.BankType != "" {
-		bankType = reqData.BankType
+		acc.Account.BankType = reqData.BankType
 	}
-	// if reqData.Balance
 
-	acc.Account.Active = active
-	acc.Account.Name = name
-	acc.Account.Balance = balance
-	acc.Account.Iban = iban
-	acc.Account.BankCode = bankCode
-	acc.Account.AccountNr = accountNr
-	acc.Account.BankName = bankName
-	acc.Account.BankType = bankType
 	acc.Account.LastUpdate = time.Now()
-
-	fmt.Println(acc.Account)
 
 	var err error
 	if acc.ID <= 0 {
@@ -451,4 +443,40 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.sendResult(w, acc.Account)
+}
+
+// deletes an account with an ID
+func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(400)
+		fmt.Fprint(w, "{'error': '/api/accounts/delete: Method must be DELETE.'}")
+		return
+	}
+	if api.id <= 0 {
+		fmt.Fprintln(w, errorID)
+		return
+	}
+
+	a, err := models.FindAccountByID(db, api.id)
+	if err != nil {
+		w.WriteHeader(400)
+		log.Println("[WARN] API.deleteAccount():", err)
+		fmt.Fprintln(w, "{'error', 'There was an error finding the record in the database.'}")
+		return
+	}
+
+	if a.TransactionCount > 0 {
+		w.WriteHeader(403)
+		fmt.Println(w, "{'error', 'You cannot delete this record because it has transactions referenced to it'}")
+		return
+	}
+
+	if err := a.Delete(db); err != nil {
+		w.WriteHeader(500)
+		log.Println("[WARN] API.deleteAccount():", err)
+		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
+		return
+	}
+
+	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
 }
