@@ -30,9 +30,15 @@ func HumanReadable(num float64) string {
 	signs := []string{"k", "m", "b", "t", "q", "Q", "s", "S"}
 	number := fmt.Sprintf("%f", num)
 	number = strings.Split(number, ".")[0]
+	negative := false
+
+	if number[0] == '-' {
+		negative = true
+		number = number[1:]
+	}
 
 	for i := 1; i < len(signs)+1; i++ {
-		if len(number) > (i*3) && len(number) < (i*3+3) {
+		if len(number) > (i*3) && len(number) <= (i*3+3) {
 			// Calculate the indexes for cutting the number at the correct places
 			firstCut := len(number) - (i * 3) - 1
 			secondCut := firstCut + 1
@@ -70,6 +76,10 @@ func HumanReadable(num float64) string {
 			number += signs[i-1]
 			break
 		}
+	}
+
+	if negative {
+		number = "-" + number
 	}
 
 	return number
