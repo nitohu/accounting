@@ -337,7 +337,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		// Make sure the old amount is used
 		destinationChanged = true
 		if toAccountID != nil {
-			err := bookIntoAccount(cr, toAccountID.(int64), &temp, false)
+			err := bookIntoAccount(cr, toAccountID.(int64), &temp, true)
 
 			if err != nil {
 				fmt.Println("Traceback: models.Transaction.Create(): Removing transaction from the old receiving account.")
@@ -346,7 +346,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		}
 
 		// Book into new account
-		err = bookIntoAccount(cr, t.ToAccount, t, true)
+		err = bookIntoAccount(cr, t.ToAccount, t, false)
 
 		if err != nil {
 			fmt.Println("Traceback: models.Transaction.Create(): Book transaction into new receiving account.")
@@ -356,6 +356,9 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 	// The amount of the transaction changed
 	if t.Amount != oldAmount {
+		diff := t.Amount - oldAmount
+
+		temp.Amount = diff
 		// The origin did not change
 		// So book the difference into the origin account
 		// If the origin has changed we've already booked into the accounts
@@ -375,9 +378,6 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 		// The destination did not change
 		if !destinationChanged {
-			diff := t.Amount - oldAmount
-
-			temp.Amount = diff
 
 			err := bookIntoAccount(cr, t.ToAccount, &temp, false)
 
