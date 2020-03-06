@@ -175,6 +175,20 @@ func (c *Category) FindByID(cr *sql.DB, id int64) error {
 	return nil
 }
 
+// FindCategoryByID is similar to FindByID but returns the category
+func FindCategoryByID(cr *sql.DB, categoryID int64) (Category, error) {
+	t := EmptyCategory()
+
+	err := t.FindByID(cr, categoryID)
+
+	if err != nil {
+		return t, err
+	}
+
+	return t, nil
+}
+
+
 // GetAllCategories returns all categories
 func GetAllCategories(cr *sql.DB) ([]Category, error) {
 	var categories []Category

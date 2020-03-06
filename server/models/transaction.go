@@ -4,28 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 )
-
-/*
-Query:
-
-SELECT
-    t.id,
-    t.name,
-    t.active,
-    t.transaction_date,
-    t.create_date,
-    t.last_update,
-    t.amount,
-    t.transaction_type,
-    u.name,
-    a.name
-FROM transactions AS t
-JOIN users AS u ON t.user_id=u.id
-JOIN accounts AS a ON t.account_id=a.id
-WHERE t.user_id= *id*;
-*/
 
 // Transaction model
 // TODO: Implement Forecasted and Booked in database
@@ -48,6 +29,7 @@ type Transaction struct {
 	FromAccountName    string
 	ToAccountName      string
 	TransactionDateStr string
+	Category Category
 }
 
 // EmptyTransaction ..
@@ -478,6 +460,14 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 
 	// Compute: TransactionDateStr
 	t.TransactionDateStr = t.TransactionDate.Format("Monday 02 January 2006 - 15:04")
+
+	// Compute: Category
+	var err error
+	if t.Category, err = FindCategoryByID(cr, t.CategoryID); err != nil {
+		log.Println("[ERROR] Transaction.ComputeFields: Error while finding category by ID.")
+		return err
+	}
+	fmt.Println(t.Category)
 
 	return nil
 }

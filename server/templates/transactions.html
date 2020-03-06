@@ -83,6 +83,7 @@
                                         <th>Reference</th>
                                         <th>Amount</th>
                                         <th>From</th>
+                                        <th>Category</th>
                                         <th>Date</th>
                                         <th>To</th>
                                         <th><i class="zmdi zmdi-close"></i></th>
@@ -93,6 +94,7 @@
                                         <th>Reference</th>
                                         <th>Amount</th>
                                         <th>From</th>
+                                        <th>Category</th>
                                         <th>Date</th>
                                         <th>To</th>
                                         <th><i class="zmdi zmdi-close"></i></th>
@@ -104,6 +106,9 @@
                                             <td><a href="/transactions/edit/{{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ ( call $.HumanReadable .Amount ) }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .FromAccountName }}</td>
+                                            <td>
+                                                <div class="category_card" style="background-color: {{ .Category.Hex }};">{{ .Category.Name }}</div>
+                                            </td>
                                             <td>{{ .TransactionDateStr }}</td>
                                             <td>{{ .ToAccountName }}</td>
                                             <td class="deleteEntry" id="delete_{{ .ID }}"><i class="zmdi zmdi-close"></i></td>

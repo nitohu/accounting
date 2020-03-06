@@ -6,3 +6,10 @@
 .labelBuffer {
     height: 29px;
 }
+
+.category_card {
+    padding: 2px;
+    border: 1px solid gray;
+    border-radius: 2px;
+    text-align: center;
+}
