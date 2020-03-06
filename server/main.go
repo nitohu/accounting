@@ -61,8 +61,11 @@ func main() {
 
 	http.Handle("/api/", api)
 
+	// General
 	http.HandleFunc("/", logging(handleRoot))
 	http.HandleFunc("/settings/", logging(handleSettings))
+	http.HandleFunc("/login/", logging(handleLogin))
+	http.HandleFunc("/logout/", logging(handleLogout))
 
 	// Accounts
 	http.HandleFunc("/accounts/", logging(handleAccountOverview))
@@ -76,10 +79,6 @@ func main() {
 
 	// Categories
 	http.HandleFunc("/categories/", logging(handleCategoryOverview))
-
-	http.HandleFunc("/login/", logging(handleLogin))
-
-	http.HandleFunc("/logout/", logging(handleLogout))
 
 	log.Fatalln(http.ListenAndServe(":8080", nil))
 }

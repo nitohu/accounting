@@ -467,7 +467,6 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 		log.Println("[ERROR] Transaction.ComputeFields: Error while finding category by ID.")
 		return err
 	}
-	fmt.Println(t.Category)
 
 	return nil
 }
