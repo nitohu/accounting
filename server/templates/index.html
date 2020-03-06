@@ -57,7 +57,8 @@
             <h2>Dashboard</h2>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Home</a></li>
-                <li class="breadcrumb-item active">Main Dashboard</li>
+                <!-- <li class="breadcrumb-item active">Main Dashboard</li> -->
+                <li class="breadcrumb-item active">Coming Soon</li>
             </ul>
             <button class="btn btn-primary btn-icon mobile_menu" type="button"><i
                     class="zmdi zmdi-sort-amount-desc"></i></button>
@@ -154,6 +155,7 @@
                                     <th>Name</th>
                                     <th>Amount</th>
                                     <th>Origin</th>
+                                    <td>Category</td>
                                     <th>Date</th>
                                     <th>Destination</th>
                                 </tr>
@@ -163,6 +165,7 @@
                                     <th>Name</th>
                                     <th>Amount</th>
                                     <th>Origin</th>
+                                    <th>Category</th>
                                     <th>Date</th>
                                     <th>Destination</th>
                                 </tr>
@@ -173,6 +176,7 @@
                                         <td>{{ .Name }}</td>
                                         <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
                                         <td>{{ .FromAccountName }}</td>
+                                        <td><p style="color: {{ .Category.Hex }};">{{ .Category.Name }}</p></td>
                                         <td>{{ .TransactionDateStr }}</td>
                                         <td>{{ .ToAccountName }}</td>
                                     </tr>

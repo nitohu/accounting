@@ -52,6 +52,7 @@ $("document").ready(function() {
             console.log(xhr.response)
         }
         xhr.send(JSON.stringify(data))
+        $("#formModal").modal('hide')
     }
 
     function getCategories() {
