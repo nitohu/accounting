@@ -103,7 +103,7 @@
                                 <tbody>
                                     {{ range .Transactions }}
                                         <tr>
-                                            <td><a href="/transactions/edit/{{ .ID }}">{{ .Name }}</a></td>
+                                            <td><a href="/transactions/form?id={{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ ( call $.HumanReadable .Amount ) }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .FromAccountName }}</td>
                                             <td>

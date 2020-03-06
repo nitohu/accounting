@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -67,16 +68,30 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	vars := mux.Vars(r)
+	ctx["Title"] = "Edit Transaction"
+	ctx["Btn"] = "Create Transaction"
+
+	vars := r.URL.Query()
 
 	// Get the current transaction
 	t := models.EmptyTransaction()
 
-	transactionID := vars["id"]
-	id, _ := strconv.ParseInt(transactionID, 10, 64)
-	t.FindByID(db, id)
+	if transactionID, ok := vars["id"]; ok {
+		var id int
+		if id, err = strconv.Atoi(transactionID[0]); err != nil {
+			log.Printf("[WARN] handleTransactionForm %s\n", err)
+		}
 
-	ctx["Title"] = "Edit Transaction"
+		if err = t.FindByID(db, int64(id)); err != nil {
+			log.Println("[WARN] handleTransactionForm():", err)
+			t.ID = 0
+		} else {
+			ctx["Title"] = "Edit " + t.Name
+			ctx["Header"] = "Edit " + t.Name
+			ctx["Btn"] = "Save Transaction"
+		}
+	}
+
 	ctx["Transaction"] = t
 
 	// Get the accounts

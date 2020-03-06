@@ -73,7 +73,6 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	ctx["Account"] = account
 
 	if idStr, ok := vars["id"]; ok {
-		fmt.Println(idStr)
 		if accountID, err = strconv.Atoi(idStr[0]); err != nil {
 			log.Printf("[WARN] handleAccountForm(): %s\n", err)
 		}

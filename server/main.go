@@ -73,8 +73,7 @@ func main() {
 
 	// Transactions
 	http.HandleFunc("/transactions/", logging(handleTransactionOverview))
-	http.HandleFunc("/transactions/create/", logging(handleTransactionForm))
-	http.HandleFunc("/transactions/edit/{id}", logging(handleTransactionForm))
+	http.HandleFunc("/transactions/form/", logging(handleTransactionForm))
 	http.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
 
 	// Categories
