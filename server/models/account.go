@@ -212,7 +212,7 @@ func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 	)
 
 	if err != nil {
-		fmt.Println("Traceback: Account.FindById()")
+		fmt.Println("Traceback: Account.FindById():", a.ID)
 		return err
 	}
 

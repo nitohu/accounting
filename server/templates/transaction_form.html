@@ -116,10 +116,8 @@
                                         <select name="fromAccount" id="fromAccount" class="form-control show-tick">
                                             <option id="from_0" value="0">External Account</option>
                                             {{ range .Accounts }}
-                                                
                                                 <option id="from_{{ .ID }}" value="{{ .ID }}"
                                                 {{ if eq .ID $.Transaction.FromAccount }}selected{{end}}>{{ .Name }}</option>
-                                                
                                             {{ end }}
                                         </select>
                                     </div>

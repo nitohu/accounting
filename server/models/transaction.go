@@ -29,7 +29,7 @@ type Transaction struct {
 	FromAccountName    string
 	ToAccountName      string
 	TransactionDateStr string
-	Category Category
+	Category           Category
 }
 
 // EmptyTransaction ..
@@ -462,10 +462,11 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 	t.TransactionDateStr = t.TransactionDate.Format("Monday 02 January 2006 - 15:04")
 
 	// Compute: Category
-	var err error
-	if t.Category, err = FindCategoryByID(cr, t.CategoryID); err != nil {
-		log.Println("[ERROR] Transaction.ComputeFields: Error while finding category by ID.")
-		return err
+	if t.CategoryID > 0 {
+		var err error
+		if t.Category, err = FindCategoryByID(cr, t.CategoryID); err != nil {
+			log.Printf("[WARN] Transaction.ComputeFields: Error while finding category by ID: %d (Transaction: %d)\n", t.CategoryID, t.ID)
+		}
 	}
 
 	return nil

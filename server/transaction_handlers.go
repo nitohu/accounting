@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -68,7 +67,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	ctx["Title"] = "Edit Transaction"
+	ctx["Title"] = "Create Transaction"
 	ctx["Btn"] = "Create Transaction"
 
 	vars := r.URL.Query()
@@ -87,7 +86,6 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 			t.ID = 0
 		} else {
 			ctx["Title"] = "Edit " + t.Name
-			ctx["Header"] = "Edit " + t.Name
 			ctx["Btn"] = "Save Transaction"
 		}
 	}
@@ -111,7 +109,6 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Println(r.FormValue("datetime"))
 
 	// Format the time received from the form
 	tDate := r.FormValue("datetime")
@@ -142,7 +139,6 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	}
 	t.LastUpdate = time.Now().Local()
 	t.TransactionDate = transactionDate
-	t.ToAccount = 0
 	t.Description = r.FormValue("description")
 
 	if t.ID == 0 {
