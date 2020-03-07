@@ -227,8 +227,8 @@ func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 
 // getCategoryByID gets a category by it's ID
 func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		fmt.Fprint(w, "{'error': '/api/categories/: Method must be GET.'}")
+	if r.Method != http.MethodPost {
+		fmt.Fprint(w, "{'error': '/api/categories/: Method must be POST for getting categories by ID.'}")
 		return
 	}
 	if api.id <= 0 {
@@ -297,16 +297,17 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	c.LastUpdate = time.Now()
 
 	// Save the object to the database
-	var e error
+	var e err.Error
 	if c.ID == 0 {
 		e = c.Create(db)
 	} else {
 		e = c.Save(db)
 	}
-	if e != nil {
+	if !e.Empty() {
 		var err err.Error
-		err.Init("API.updateCategory()", e.Error())
+		err.AddTraceback("API.updateCategory()", "Error creating/saving the category.")
 		log.Println("[WARN]", err)
+		w.WriteHeader(500)
 		fmt.Fprint(w, "{'error': 'Error creating/saving the category.'}")
 		return
 	}

@@ -55,6 +55,23 @@ $("document").ready(function() {
         $("#formModal").modal('hide')
     }
 
+    function getCategoryInformation(id) {
+        let xhr = new XMLHttpRequest()
+        xhr.open("POST", "/api/categories", true)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                res = JSON.parse(this.responseText)
+                document.getElementById("name").value = res["Name"]
+                document.getElementById("hex").value = res["Hex"]
+            } else if (this.readyState == 4) {
+                console.error(JSON.parse(this.responseText))
+            }
+        }
+        d = {"ID": Number.parseInt(id)}
+        xhr.send(JSON.stringify(d))
+    }
+
     function getCategories() {
         let data = {
             "ID": 0,
@@ -87,6 +104,10 @@ $("document").ready(function() {
                     a.setAttribute("data-toggle", "modal")
                     a.setAttribute("data-target", "#formModal")
                     a.innerHTML=category["Name"]
+                    a.addEventListener("click", function() {
+                        let id = this.parentElement.parentElement.id
+                        c = getCategoryInformation(id)
+                    })
                     td.appendChild(a)
                     content.appendChild(td)
 
@@ -132,19 +153,8 @@ $("document").ready(function() {
                 console.error(this.response)
             }
         }
+        console.log(JSON.stringify(data))
         xhr.send(JSON.stringify(data))
+        console.log(xhr)
     }
-
-    // for (let i = 0; i < btns.length; i++) {
-    //     let btn = btns[i]
-    //     btn.addEventListener("click", function() {
-    //         let id = btn.id.split("_")[1]
-
-    //         console.warn("Deleting record with id ", id)
-    //         fetch("/categories/delete/"+id).then(function() {
-    //             window.location.reload()
-    //         })
-
-    //     })
-    // }
 })
