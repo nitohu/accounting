@@ -2,10 +2,10 @@ package models
 
 import (
 	"database/sql"
-	"errors"
-	"fmt"
 	"log"
 	"time"
+
+	"github.com/nitohu/err"
 )
 
 // Category ...
@@ -39,11 +39,13 @@ func EmptyCategory() Category {
 // Create a new category in the database
 func (c *Category) Create(cr *sql.DB) error {
 	if c.ID > 0 {
-		err := "This category already has an ID. Maybe try saving it?"
-		return errors.New(err)
+		var err err.Error
+		err.Init("Category.Create()", "This category already has an ID. Maybe try saving it?")
+		return err
 	} else if c.Name == "" {
-		err := "This category has no name. Please set a name before creating a category."
-		return errors.New(err)
+		var err err.Error
+		err.Init("Category.Create()", "This category has no name. Please set a name before creating a category.")
+		return err
 	}
 
 	query := "INSERT INTO categories (name, create_date, last_update, active, hex) "
@@ -53,7 +55,7 @@ func (c *Category) Create(cr *sql.DB) error {
 		c.Hex = "#ffffff"
 	}
 
-	err := cr.QueryRow(query,
+	e := cr.QueryRow(query,
 		c.Name,
 		time.Now(),
 		time.Now(),
@@ -61,8 +63,9 @@ func (c *Category) Create(cr *sql.DB) error {
 		c.Hex,
 	).Scan(&c.ID)
 
-	if err != nil {
-		fmt.Println("Category.Create(): Traceback: Error while executing query")
+	if e != nil {
+		var err err.Error
+		err.Init("Category.Create()", e.Error())
 		return err
 	}
 
@@ -74,11 +77,13 @@ func (c *Category) Create(cr *sql.DB) error {
 // Save the current category to the database
 func (c *Category) Save(cr *sql.DB) error {
 	if c.ID <= 0 {
-		err := "This category has no ID. Maybe create it first?"
-		return errors.New(err)
+		var err err.Error
+		err.Init("Category.Save()", "This category has no ID. Maybe create it first?")
+		return err
 	} else if c.Name == "" {
-		err := "This category has no name. Please set a name before saving it."
-		return errors.New(err)
+		var err err.Error
+		err.Init("Category.Save()", "This category has no name. Please set a name before saving it.")
+		return err
 	}
 
 	query := "UPDATE categories SET name=$1, hex=$2, last_update=$3, active=$4 WHERE id=$5"
@@ -87,7 +92,7 @@ func (c *Category) Save(cr *sql.DB) error {
 		c.Hex = "#ffffff"
 	}
 
-	_, err := cr.Exec(query,
+	_, e := cr.Exec(query,
 		c.Name,
 		c.Hex,
 		time.Now(),
@@ -95,8 +100,9 @@ func (c *Category) Save(cr *sql.DB) error {
 		c.ID,
 	)
 
-	if err != nil {
-		fmt.Println("Category.Save(): Traceback: Error while saving the category to the database.")
+	if e != nil {
+		var err err.Error
+		err.Init("Category.Save()", e.Error())
 		return err
 	}
 
@@ -108,12 +114,16 @@ func (c *Category) Save(cr *sql.DB) error {
 // Delete the current category from the database
 func (c *Category) Delete(cr *sql.DB) error {
 	if c.ID <= 0 {
-		return errors.New("Category.Delete(): ID must be bigger than 0")
+		var err err.Error
+		err.Init("Category.Delete()", "ID must be bigger than 0")
+		return err
 	}
 	query := "DELETE FROM categories WHERE id=$1"
 
-	if _, err := cr.Exec(query, c.ID); err != nil {
-		log.Println("[ERROR] Category.Delete():", err)
+	if _, e := cr.Exec(query, c.ID); e != nil {
+		var err err.Error
+		err.Init("Category.Delete()", e.Error())
+		return err
 	}
 
 	c.ID = 0
@@ -124,39 +134,38 @@ func (c *Category) Delete(cr *sql.DB) error {
 	return nil
 }
 
-func (c *Category) computeFields(cr *sql.DB) error {
+func (c *Category) computeFields(cr *sql.DB) {
 	transQuery := "SELECT id FROM transactions where category_id=$1;"
-	res, err := cr.Query(transQuery, c.ID)
-	if err != nil {
-		fmt.Println("[ERROR] Category.Save(): Error executing query f")
+	res, e := cr.Query(transQuery, c.ID)
+	if e != nil {
+		log.Printf("[ERROR] Category.computeFields(): Error getting transaction IDs\n%s\n", e)
 	}
 
 	c.TransactionIDs = nil
 
 	for res.Next() {
 		var id int64
-		if err = res.Scan(&id); err != nil {
-			fmt.Println("[WARN] Category.computeFields(): Could not scan ID, skipping row")
+		if e = res.Scan(&id); e != nil {
+			log.Println("[WARN] Category.computeFields(): Could not scan ID, skipping row")
 			continue
 		}
 		c.TransactionIDs = append(c.TransactionIDs, id)
 	}
 
 	c.TransactionCount = len(c.TransactionIDs)
-
-	return nil
 }
 
 // FindByID finds a category in the database
 func (c *Category) FindByID(cr *sql.DB, id int64) error {
 	if id <= 0 {
-		err := "ID must be a positive number: " + string(id)
-		return errors.New(err)
+		var err err.Error
+		err.Init("Category.FindByID()", "ID must be a positive number: "+string(id))
+		return err
 	}
 
 	query := "SELECT id,name,create_date,last_update,active,hex FROM categories WHERE id=$1;"
 
-	err := cr.QueryRow(query, id).Scan(
+	e := cr.QueryRow(query, id).Scan(
 		&c.ID,
 		&c.Name,
 		&c.CreateDate,
@@ -165,8 +174,9 @@ func (c *Category) FindByID(cr *sql.DB, id int64) error {
 		&c.Hex,
 	)
 
-	if err != nil {
-		fmt.Println("Category.FindByID(): Traceback: Error executing SELECT query.")
+	if e != nil {
+		var err err.Error
+		err.Init("Category.FindByID()", e.Error())
 		return err
 	}
 
@@ -179,40 +189,42 @@ func (c *Category) FindByID(cr *sql.DB, id int64) error {
 func FindCategoryByID(cr *sql.DB, categoryID int64) (Category, error) {
 	t := EmptyCategory()
 
-	err := t.FindByID(cr, categoryID)
+	e := t.FindByID(cr, categoryID)
 
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("FindCategoryByID()", e.Error())
 		return t, err
 	}
 
 	return t, nil
 }
 
-
 // GetAllCategories returns all categories
 func GetAllCategories(cr *sql.DB) ([]Category, error) {
 	var categories []Category
 	query := "SELECT id FROM categories;"
 
-	res, err := cr.Query(query)
+	res, e := cr.Query(query)
 
-	if err != nil {
-		fmt.Println("GetAllCategories(): Traceback: Error while executing the query")
+	if e != nil {
+		var err err.Error
+		err.Init("GetAllCategories()", "Error while executing the query")
 		return nil, err
 	}
 
 	for res.Next() {
 		var id int64
 
-		if err = res.Scan(&id); err != nil {
-			fmt.Println("[INFO] Skipping Record")
-			fmt.Printf("[WARN] GetAllCategories(): Error while scanning the id:\n%s\n", err)
+		if e = res.Scan(&id); e != nil {
+			log.Println("[INFO] GetAllCategories(): Skipping Record")
+			log.Printf("[WARN] GetAllCategories(): Error while scanning the id:\n%s\n", e)
 		} else {
 			cat := EmptyCategory()
 
-			if err = cat.FindByID(cr, id); err != nil {
-				fmt.Println("[INFO] Skipping Record")
-				fmt.Printf("[WARN] GetAllCategories: %s\n", err)
+			if e = cat.FindByID(cr, id); e != nil {
+				log.Println("[INFO] GetAllCategories(): Skipping Record")
+				log.Printf("[WARN] GetAllCategories(): %s\n", e)
 			} else {
 				cat.computeFields(cr)
 				categories = append(categories, cat)
