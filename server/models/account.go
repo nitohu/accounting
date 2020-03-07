@@ -258,16 +258,18 @@ func GetAllAccounts(cr *sql.DB) ([]Account, err.Error) {
 
 	for idRows.Next() {
 		var id int64
-		err := idRows.Scan(&id)
+		e = idRows.Scan(&id)
 
-		if err != nil {
-			fmt.Printf("[WARN] %s GetAllAccounts():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+		if e != nil {
+			log.Println("[INFO] GetAllAccounts(): Skipping record.")
+			log.Println("[WARN] GetAllAccounts(): ", e)
 		} else {
 			a := EmptyAccount()
-			err = a.FindByID(cr, id)
+			err := a.FindByID(cr, id)
 
-			if err != nil {
-				fmt.Printf("[WARN] %s GetAllAccounts():\n[INFO] Skipping Record\n%s", time.Now().Local(), err)
+			if !err.Empty() {
+				err.AddTraceback("GetAllAccounts()", "Error while finding account: "+fmt.Sprintf("%d", id))
+				log.Println("[WARN]", err)
 			} else {
 				accounts = append(accounts, a)
 			}

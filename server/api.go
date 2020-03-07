@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nitohu/err"
+
 	"./models"
 )
 
@@ -45,11 +47,11 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.ContentLength > 0 {
 		b := r.Body
 		body = make([]byte, r.ContentLength)
-		if _, err := io.ReadFull(b, body); err != nil {
-			fmt.Println("[ERROR] API.ServeHTTP():", err)
+		if _, e := io.ReadFull(b, body); e != nil {
+			var err err.Error
+			err.Init("API.ServeHTTP()", e.Error())
+			log.Println("[WARN]", err)
 		}
-
-		// body = api.replaceBodyJSON(body)
 	}
 
 	api.obj = nil
@@ -97,7 +99,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.obj = c
 		// Validate if the ID is existing
-		if err := c.FindByID(db, c.ID); err != nil {
+		if err := c.FindByID(db, c.ID); !err.Empty() {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
@@ -154,7 +156,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.obj = a
 		// Validate if the ID is existing
-		if err := a.FindByID(db, a.ID); err != nil {
+		if err := a.FindByID(db, a.ID); !err.Empty() {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
 			return
@@ -213,9 +215,10 @@ func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c, err := models.GetAllCategories(db)
-	if err != nil {
+	if !err.Empty() {
+		err.AddTraceback("API.getCategories()", "Error getting all categories.")
+		log.Println("[ERROR]", err)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
-		log.Printf("[ERROR] API.getCategories(): Error getting Categories.\n%s\n", err)
 		return
 	}
 
@@ -235,8 +238,9 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 
 	c := models.EmptyCategory()
 
-	if err := c.FindByID(db, int64(api.id)); err != nil {
-		log.Println("[ERROR] API.getCategoryByID():", err)
+	if err := c.FindByID(db, api.id); !err.Empty() {
+		err.AddTraceback("API.getCategoryByID()", "Error getting category:"+fmt.Sprintf("%d", api.id))
+		log.Println("[ERROR]", err)
 		fmt.Fprintln(w, errorGetID)
 		return
 	}
@@ -258,8 +262,9 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Get data if ID is present
 	if api.id > 0 {
-		if err := c.FindByID(db, api.id); err != nil {
-			log.Println("[WARN] API.updateCategory():", err)
+		if err := c.FindByID(db, api.id); !err.Empty() {
+			err.AddTraceback("API.updateCategory()", "Error getting category by ID: "+fmt.Sprintf("%d", api.id))
+			log.Println("[WARN]", err)
 			fmt.Fprint(w, errorGetID)
 			return
 		}
@@ -292,14 +297,16 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	c.LastUpdate = time.Now()
 
 	// Save the object to the database
-	var err error
+	var e error
 	if c.ID == 0 {
-		err = c.Create(db)
+		e = c.Create(db)
 	} else {
-		err = c.Save(db)
+		e = c.Save(db)
 	}
-	if err != nil {
-		log.Println("[WARN] API.updateCategory()", err)
+	if e != nil {
+		var err err.Error
+		err.Init("API.updateCategory()", e.Error())
+		log.Println("[WARN]", err)
 		fmt.Fprint(w, "{'error': 'Error creating/saving the category.'}")
 		return
 	}
@@ -322,8 +329,9 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 		ID: api.id,
 	}
 
-	if err := c.Delete(db); err != nil {
-		log.Println("[WARN] API.deleteCategory():", err)
+	if e := c.Delete(db); !e.Empty() {
+		e.AddTraceback("API.deleteCategory", "Error deleting category with ID: "+fmt.Sprintf("%d", api.id))
+		log.Println("[WARN]", e)
 		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
 		return
 	}
@@ -346,9 +354,10 @@ func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acc, err := models.GetAllAccounts(db)
-	if err != nil {
-		log.Println("[ERROR] API.getAccounts():", err)
+	acc, e := models.GetAllAccounts(db)
+	if !e.Empty() {
+		e.AddTraceback("API.getAccount()", "Error while getting accounts")
+		log.Println("[ERROR]", e)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
 		return
 	}
@@ -368,7 +377,9 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	acc := models.EmptyAccount()
-	if err := acc.FindByID(db, api.id); err != nil {
+	if err := acc.FindByID(db, api.id); !err.Empty() {
+		err.AddTraceback("API.getAccountByID", "Error while getting account: "+fmt.Sprintf("%d", api.id))
+		log.Println("[ERROR]", err)
 		fmt.Fprint(w, errorGetID)
 		return
 	}
@@ -388,9 +399,10 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if api.id > 0 {
-		if err := acc.Account.FindByID(db, api.id); err != nil {
+		if err := acc.Account.FindByID(db, api.id); !err.Empty() {
+			err.AddTraceback("API.updateAccount()", "Error while getting account:"+fmt.Sprintf("%d", api.id))
+			log.Println("[ERROR]", err)
 			w.WriteHeader(400)
-			log.Println("[WARN] API.updateCategory():", err)
 			fmt.Fprint(w, errorGetID)
 			return
 		}
@@ -431,14 +443,16 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 
 	acc.Account.LastUpdate = time.Now()
 
-	var err error
+	var e error
 	if acc.ID <= 0 {
-		err = acc.Account.Create(db)
+		e = acc.Account.Create(db)
 	} else {
-		err = acc.Account.Save(db)
+		e = acc.Account.Save(db)
 	}
-	if err != nil {
-		log.Println("[ERROR] API.updateAccount():", err)
+	if e != nil {
+		var err err.Error
+		err.Init("API.updateAccount()", e.Error())
+		log.Println("[ERROR]", err)
 		return
 	}
 
@@ -458,9 +472,10 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a, err := models.FindAccountByID(db, api.id)
-	if err != nil {
+	if !err.Empty() {
+		err.AddTraceback("API.deleteAccount()", "Error getting account: "+fmt.Sprintf("%d", api.id))
+		log.Println("[WARN]", err)
 		w.WriteHeader(400)
-		log.Println("[WARN] API.deleteAccount():", err)
 		fmt.Fprintln(w, "{'error', 'There was an error finding the record in the database.'}")
 		return
 	}
@@ -471,9 +486,10 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.Delete(db); err != nil {
+	if err := a.Delete(db); !err.Empty() {
+		err.AddTraceback("API.deleteAccount()", "Error while deleting account.")
+		log.Println("[ERROR]", err)
 		w.WriteHeader(500)
-		log.Println("[WARN] API.deleteAccount():", err)
 		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
 		return
 	}

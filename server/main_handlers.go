@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,8 +20,9 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	ctx, err := createContextFromSession(db, session)
 
-	if err != nil {
-		logWarn("handleRoot", "%s", err)
+	if !err.Empty() {
+		err.AddTraceback("handleRoot", "Error while creating the context.")
+		log.Println("[ERROR]", err)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
@@ -28,17 +30,20 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	ctx["Title"] = "Dashboard"
 
-	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); err != nil {
-		logWarn("handleRoot", "Error while getting transactions:\n%s", err)
+	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); !err.Empty() {
+		err.AddTraceback("handleRoot", "Error while getting the latest transactions.")
+		log.Println("[WARN]", err)
 	}
-	if ctx["Accounts"], err = models.GetLimitAccounts(db, 4); err != nil {
-		logWarn("handleRoot", "Error while gettings Accounts:\n%s", err)
+	if ctx["Accounts"], err = models.GetLimitAccounts(db, 4); !err.Empty() {
+		err.AddTraceback("handleRoot", "Error while getting accounts.")
+		log.Println("[WARN]", err)
 	}
 
-	err = tmpl.ExecuteTemplate(w, "index.html", ctx)
+	e := tmpl.ExecuteTemplate(w, "index.html", ctx)
 
-	if err != nil {
-		logError("handleLogin", "%s", err)
+	if e != nil {
+		err.Init("handleRoot", e.Error())
+		log.Println("[ERROR]", err)
 	}
 }
 
@@ -53,23 +58,23 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	ctx, err := createContextFromSession(db, session)
 	ctx["Title"] = "Settings"
 
-	if err != nil {
-		logWarn("handleSettings", "%s", err)
+	if !err.Empty() {
+		err.AddTraceback("handleSettings", "Error while creating the context.")
+		log.Println("[WARN]", err)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		return
 	}
 
 	settings := ctx["Settings"].(models.Settings)
 
-	fmt.Println(settings.StartDate)
-	fmt.Println(settings.StartDateForm)
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if r.Method != http.MethodPost {
-		err = tmpl.ExecuteTemplate(w, "settings.html", ctx)
+		e := tmpl.ExecuteTemplate(w, "settings.html", ctx)
 
-		if err != nil {
-			logError("handleSettings", "Error while executing the template:\n%s", err)
+		if e != nil {
+			err.Init("handleSettings", e.Error())
+			log.Println("[ERROR]", err)
 		}
 		return
 	}
@@ -86,12 +91,14 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	// Converting the hashed password to a string
 	// password := fmt.Sprintf("%X", pw)
-	startDate, err := time.Parse(dateFormLayout, sdate)
+	startDate, e := time.Parse(dateFormLayout, sdate)
 
 	settings.CalcInterval, _ = strconv.ParseInt(interval, 10, 64)
 
-	if err != nil {
-		logWarn("handleSettings", "Error while parsing the start_date:\n%s", err)
+	if e != nil {
+		err.Init("handleSettings", e.Error())
+		log.Println("[INFO] Using current time as start date.")
+		log.Println("[WARN]", err)
 		startDate = time.Now()
 	}
 
@@ -102,16 +109,16 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	ctx["Settings"] = settings
 
-	if err != nil {
-		logError("handleSettings", "Error while saving the settings:\n%s", err)
+	if !err.Empty() {
+		err.AddTraceback("handleSettings", "Error while saving the settings to the database.")
+		log.Println("[ERROR]", err)
 	}
 
-	ctx["SaveSuccess"] = true
+	e = tmpl.ExecuteTemplate(w, "settings.html", ctx)
 
-	err = tmpl.ExecuteTemplate(w, "settings.html", ctx)
-
-	if err != nil {
-		logError("handleLogin()", "Error while rendering the template:\n%s", err)
+	if e != nil {
+		err.Init("handleSettings()", e.Error())
+		log.Println("[ERROR]", err)
 	}
 }
 
@@ -121,9 +128,11 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 
 	ctx, err := createContextFromSession(db, session)
 
-	if err != nil {
-		logError("handlePageNotFound", "%s", err)
+	if !err.Empty() {
+		err.AddTraceback("handleNotFound()", "Error creating context.")
+		log.Println(err)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -131,10 +140,11 @@ func handleNotFound(w http.ResponseWriter, r *http.Request) {
 
 	ctx["Title"] = "404 - Not Found"
 
-	err = tmpl.ExecuteTemplate(w, "404.html", ctx)
+	e := tmpl.ExecuteTemplate(w, "404.html", ctx)
 
-	if err != nil {
-		logError("handlePageNotFound", "%s", err)
+	if e != nil {
+		err.Init("handleNotFound", e.Error())
+		log.Println(err)
 	}
 }
 
@@ -154,8 +164,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 
 	if auth, ok := session.Values["authenticated"].(bool); ok && auth {
-		logInfo(r.URL.Path, "User is already logged in")
+		log.Println("[INFO] User is already logged in. Redirecting....")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -169,14 +180,15 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Authenticate
 	success, err := Authenticate(pw)
-
-	if err != nil {
-		logWarn("handleLogin", "Error while authenticating:\n%s", err)
+	if !err.Empty() {
+		err.AddTraceback("handleLogin()", "Error while authenticating the user.")
+		log.Println("[ERROR]", err)
 		tmpl.ExecuteTemplate(w, "login.html", nil)
 		return
 	}
 
 	if success == false {
+		log.Println("[INFO] handleLogin(): Failed login attempt.")
 		msg := make(map[string]string)
 		msg["Error"] = "The authentication was not successful."
 		tmpl.ExecuteTemplate(w, "login.html", msg)
@@ -189,10 +201,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	query := "UPDATE settings SET session_key=$1;"
 
-	_, err = db.Exec(query, sessionKey)
+	_, e := db.Exec(query, sessionKey)
 
-	if err != nil {
-		logError("handleLogin", "Error while saving session key:%s", err)
+	if e != nil {
+		err.Init("handleLogin()", e.Error())
+		log.Println("[ERROR]", err)
+
 		msg := make(map[string]string)
 		msg["Error"] = "There was an error while saving your session key. Please try again."
 		tmpl.ExecuteTemplate(w, "login.html", msg)
@@ -203,10 +217,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticated"] = true
 	session.Values["key"] = sessionKey
 
-	err = session.Save(r, w)
+	e = session.Save(r, w)
 
-	if err != nil {
-		logWarn("handleLogin", "%s", err)
+	if e != nil {
+		err.Init("handleLogin", e.Error())
+		fmt.Println("[ERROR]", err)
+		return
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)

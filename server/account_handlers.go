@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/nitohu/err"
+
 	"./models"
 )
 
@@ -24,24 +26,27 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 	}
 	session, _ := store.Get(r, "session")
 
-	ctx, err := createContextFromSession(db, session)
+	ctx, e := createContextFromSession(db, session)
 
-	if err != nil {
-		logError("handleAccountOverview", "%s", err)
+	if !e.Empty() {
+		e.AddTraceback("handleAccountOverview", "Error creating context from session.")
+		log.Println("[ERROR]", e)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Accounts"
-	if ctx["Accounts"], err = models.GetAllAccounts(db); err != nil {
-		logWarn("handleAccountOverView", "Error while getting accounts:\n%s", err)
+	if ctx["Accounts"], e = models.GetAllAccounts(db); !e.Empty() {
+		e.AddTraceback("handleAccountOverview", "Error while getting the accounts.")
+		fmt.Println("[ERROR]", e)
 	}
 
-	err = tmpl.ExecuteTemplate(w, "accounts.html", ctx)
+	err := tmpl.ExecuteTemplate(w, "accounts.html", ctx)
 
 	if err != nil {
-		logError("handleAccountOverview", "%s", err)
+		e.Init("handleAccountOverview", err.Error())
+		fmt.Println("[ERROR]", e)
 	}
 }
 
@@ -52,10 +57,11 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	}
 	session, _ := store.Get(r, "session")
 
-	ctx, err := createContextFromSession(db, session)
+	ctx, e := createContextFromSession(db, session)
 
-	if err != nil {
-		logError("handleAccountEditing", "%s", err)
+	if !e.Empty() {
+		e.AddTraceback("handleAccountForm", "Error creating context from session.")
+		log.Println("[ERROR]", e)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
 	}
@@ -73,14 +79,18 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	ctx["Account"] = account
 
 	if idStr, ok := vars["id"]; ok {
-		if accountID, err = strconv.Atoi(idStr[0]); err != nil {
-			log.Printf("[WARN] handleAccountForm(): %s\n", err)
+		var e error
+		if accountID, e = strconv.Atoi(idStr[0]); e != nil {
+			var err err.Error
+			err.Init("handleAccountForm()", e.Error())
+			log.Println("[WARN]", err)
 		}
 
 		// Error getting account by id, account probably doesn't exit
 		// so return to the form
-		if err := account.FindByID(db, int64(accountID)); err != nil {
-			log.Println("[WARN] handleAccountForm():", err)
+		if e := account.FindByID(db, int64(accountID)); !e.Empty() {
+			e.AddTraceback("handleAccountForm()", e.Error())
+			log.Println("[WARN]", e)
 			account.ID = 0
 		} else {
 			ctx["Title"] = "Edit Account"
@@ -94,9 +104,10 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	// Method is GET
 	// Return the form
 	if r.Method != http.MethodPost {
-		err := tmpl.ExecuteTemplate(w, "account_form.html", ctx)
-		if err != nil {
-			logError("handleAccountEditing", "%s", err)
+		if e := tmpl.ExecuteTemplate(w, "account_form.html", ctx); e != nil {
+			var err err.Error
+			err.Init("handleAccountForm()", e.Error())
+			log.Println("[ERROR]", err)
 		}
 		return
 	}
@@ -118,21 +129,25 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if account.BankType != "bank" && account.BankType != "online" {
-		logError("handleAccountEditing", "Wrong value for bank type: %s", account.BankType)
-		ctx["Error"] = "There was an error in the form."
+		var err err.Error
+		err.Init("handleAccountForm", "Unkown bank type: "+account.BankType)
+		log.Println("[WARN]", err)
+
+		ctx["Error"] = "Unkown bank type: " + account.BankType
 		tmpl.ExecuteTemplate(w, "account_form.html", ctx)
 		return
 	}
 
 	// Save or create the account
-	fmt.Println(account.ID)
 	if account.ID <= 0 {
-		if err := account.Create(db); err != nil {
-			log.Println("handleAccountEditing():", err)
+		if err := account.Create(db); !err.Empty() {
+			err.AddTraceback("handleAccountForm()", "Error while creating the account.")
+			log.Println("[ERROR]", err)
 		}
 	} else {
-		if err = account.Save(db); err != nil {
-			log.Println("handleAccountEditing():", err)
+		if err := account.Save(db); !err.Empty() {
+			err.AddTraceback("handleAccountForm", "Error while saving the account.")
+			log.Println("[ERROR]", err)
 		}
 	}
 

@@ -2,7 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"errors"
+
+	"github.com/nitohu/err"
 
 	"./models"
 	"github.com/gorilla/sessions"
@@ -18,47 +19,39 @@ func EmptyContext() Context {
 	return ctx
 }
 
-func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, error) {
+func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, err.Error) {
 	ctx := EmptyContext()
 
-	// Make sure authenticated flag in session is true
-	authenticated, ok := session.Values["authenticated"].(bool)
-
-	if !ok {
-		err := "Authenticated not present in session"
-		return EmptyContext(), errors.New(err)
+	// Make sure authenticated flag in session is true and exists
+	var authenticated bool
+	if authenticated, ok := session.Values["authenticated"].(bool); !authenticated || !ok {
+		var err err.Error
+		err.Init("createContextFromSession()", "Authenticated not present in session or false.")
+		return ctx, err
 	}
 
 	// Check the session key with the one from the database
 	var dbSessionKey string
 	query := "SELECT session_key FROM settings LIMIT 1;"
 
-	err := db.QueryRow(query).Scan(&dbSessionKey)
-
-	if err != nil {
-		logError("createContextFromSession", "Traceback #1")
-		return EmptyContext(), err
+	if e := db.QueryRow(query).Scan(&dbSessionKey); e != nil {
+		var err err.Error
+		err.Init("createContextFromSession()", e.Error())
+		return ctx, err
 	}
 
-	sessionKey, ok := session.Values["key"].(string)
-
-	if !ok {
-		logWarn("createContextFromSession", "Traceback: Getting session key from session")
-		err := "Session key not present in session"
-		return EmptyContext(), errors.New(err)
-	}
-
-	if sessionKey != dbSessionKey {
-		err := "Session key is not equivalent to the one in the database."
-		return EmptyContext(), errors.New(err)
+	if sessionKey, ok := session.Values["key"].(string); !ok || (sessionKey != dbSessionKey) {
+		var err err.Error
+		err.Init("createContextFromSession()", "Error validating session key with the one from db.")
+		return ctx, err
 	}
 
 	// Get the settings from the database
-	settings, err := models.InitializeSettings(cr)
+	settings, e := models.InitializeSettings(cr)
 
-	if err != nil {
-		logWarn("createContextFromSession", "Traceback: Initializing settings")
-		return ctx, err
+	if !e.Empty() {
+		e.AddTraceback("createContextFromSession", "Error initializing settings.")
+		return ctx, e
 	}
 
 	// Add the variables to the context
@@ -66,5 +59,5 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 	ctx["Authenticated"] = authenticated
 	ctx["Settings"] = settings
 
-	return ctx, nil
+	return ctx, err.Error{}
 }

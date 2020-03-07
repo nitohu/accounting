@@ -4,6 +4,9 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
+	"log"
+
+	"github.com/nitohu/err"
 )
 
 var db *sql.DB
@@ -15,8 +18,8 @@ func dbInit(host, user, password, dbname string, port int) *sql.DB {
 	db, err := sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-		fmt.Printf("An error occurred while connecting to the database.\n"+
-			"%s", err)
+		log.Println("[ERROR] dbInit():", err)
+		return nil
 	}
 
 	fmt.Printf("[INFO] Successfully connected to postgres!\n")
@@ -24,12 +27,13 @@ func dbInit(host, user, password, dbname string, port int) *sql.DB {
 }
 
 // Authenticate the master password
-func Authenticate(password string) (bool, error) {
+func Authenticate(password string) (bool, err.Error) {
 	var pw string
 	query := "SELECT password FROM settings LIMIT 1"
 
-	if err := db.QueryRow(query).Scan(&pw); err != nil {
-		logWarn("Authenticate()", "Traceback: failed to get master password from database.")
+	if e := db.QueryRow(query).Scan(&pw); e != nil {
+		var err err.Error
+		err.Init("Authenticate()", e.Error())
 		return false, err
 	}
 
@@ -37,8 +41,8 @@ func Authenticate(password string) (bool, error) {
 	password = fmt.Sprintf("%X", passw)
 
 	if pw == password {
-		return true, nil
+		return true, err.Error{}
 	}
 
-	return false, nil
+	return false, err.Error{}
 }

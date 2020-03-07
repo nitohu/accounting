@@ -216,15 +216,15 @@ func GetAllCategories(cr *sql.DB) ([]Category, err.Error) {
 	for res.Next() {
 		var id int64
 
-		if e = res.Scan(&id); e != nil {
+		if err := res.Scan(&id); err != nil {
 			log.Println("[INFO] GetAllCategories(): Skipping Record")
-			log.Printf("[WARN] GetAllCategories(): Error while scanning the id:\n%s\n", e)
+			log.Printf("[WARN] GetAllCategories(): Error while scanning the id:\n%s\n", err)
 		} else {
 			cat := EmptyCategory()
 
-			if e = cat.FindByID(cr, id); e != nil {
+			if err := cat.FindByID(cr, id); e != nil {
 				log.Println("[INFO] GetAllCategories(): Skipping Record")
-				log.Printf("[WARN] GetAllCategories(): %s\n", e)
+				log.Printf("[WARN] GetAllCategories(): %s\n", err)
 			} else {
 				cat.computeFields(cr)
 				categories = append(categories, cat)

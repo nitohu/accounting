@@ -563,9 +563,9 @@ func GetAllTransactions(cr *sql.DB) ([]Transaction, err.Error) {
 		} else {
 			t := EmptyTransaction()
 
-			if e = t.FindByID(cr, id); e != nil {
+			if err := t.FindByID(cr, id); !err.Empty() {
 				log.Printf("[INFO] GetAllTransactions(): Skipping record with ID %d\n", t.ID)
-				log.Printf("[WARN] GetAllTransactions: %s\n", e)
+				log.Printf("[WARN] GetAllTransactions(): %s\n", err)
 			} else {
 				transactions = append(transactions, t)
 			}

@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"text/template"
-	"time"
 
 	"github.com/gorilla/sessions"
 
@@ -23,18 +21,6 @@ var (
 	dateFormLayout = "Monday 02 January 2006"
 	dbTimeLayout   = "2006-01-02 15:04:00"
 )
-
-func logInfo(funcName, msg string, args ...interface{}) {
-	fmt.Printf("[INFO] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
-}
-
-func logWarn(funcName, msg string, args ...interface{}) {
-	fmt.Printf("[WARN] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
-}
-
-func logError(funcName, msg string, args ...interface{}) {
-	fmt.Printf("[ERROR] %s %s: %s\n", time.Now().Local(), funcName, fmt.Sprintf(msg, args...))
-}
 
 func logging(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
