@@ -2,9 +2,11 @@ package models
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"log"
 	"time"
+
+	"github.com/nitohu/err"
 )
 
 // Account object
@@ -48,10 +50,12 @@ func EmptyAccount() Account {
 }
 
 // Create 's an account with the current values of the object
-func (a *Account) Create(cr *sql.DB) error {
+func (a *Account) Create(cr *sql.DB) err.Error {
 
 	if a.ID != 0 {
-		return errors.New("This object already has an id")
+		var err err.Error
+		err.Init("Account.Create()", "This object already has an id")
+		return err
 	}
 
 	var id int64
@@ -63,7 +67,7 @@ func (a *Account) Create(cr *sql.DB) error {
 	a.CreateDate = time.Now().Local()
 	a.LastUpdate = time.Now().Local()
 
-	err := cr.QueryRow(query,
+	e := cr.QueryRow(query,
 		a.Name,
 		a.Active,
 		a.Balance,
@@ -77,26 +81,29 @@ func (a *Account) Create(cr *sql.DB) error {
 		a.LastUpdate,
 	).Scan(&id)
 
-	if err != nil {
-		fmt.Println("Origin: Account.Create")
+	if e != nil {
+		var err err.Error
+		err.Init("Account.Create()", e.Error())
 		return err
 	}
 
 	a.ID = id
 
-	return nil
+	return err.Error{}
 }
 
 // Save 's the current values of the object to the database
-func (a *Account) Save(cr *sql.DB) error {
+func (a *Account) Save(cr *sql.DB) err.Error {
 	if a.ID == 0 {
-		return errors.New("This account as now id, maybe create it first?")
+		var err err.Error
+		err.Init("Account.Save()", "This account as no ID, maybe create it first?")
+		return err
 	}
 
 	query := "UPDATE accounts SET name=$2, active=$3, balance=$4, balance_forecast=$5, iban=$6,"
 	query += " bank_code=$7, account_nr=$8, bank_name=$9, bank_type=$10, last_update=$11 WHERE id=$1"
 
-	res, err := cr.Exec(query,
+	res, e := cr.Exec(query,
 		a.ID,
 		a.Name,
 		a.Active,
@@ -109,68 +116,65 @@ func (a *Account) Save(cr *sql.DB) error {
 		a.BankType,
 		time.Now().Local(),
 	)
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("Account.Save()", e.Error())
 		return err
 	}
-	if _, err = res.RowsAffected(); err != nil {
+	if _, e = res.RowsAffected(); e != nil {
+		var err err.Error
+		err.Init("Account.Save()", e.Error())
 		return err
 
 	}
-	if err = a.ComputeFields(cr); err != nil {
-		return err
-	}
+	a.computeFields(cr)
 
-	return nil
+	return err.Error{}
 }
 
 // Delete 's the account
-func (a *Account) Delete(cr *sql.DB) error {
+func (a *Account) Delete(cr *sql.DB) err.Error {
 	if a.ID == 0 {
-		return errors.New("The account you want to delete does not have an id")
+		var err err.Error
+		err.Init("Account.Delete()", "The account you want to delete does not have an id")
+		return err
 	}
 
 	query := "DELETE FROM accounts WHERE id=$1"
 
-	_, err := cr.Exec(query, a.ID)
+	_, e := cr.Exec(query, a.ID)
 
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("Account.Delete()", e.Error())
 		return err
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // ComputeFields computes the fields for this model
 // Gets automatically called in Account.Save() and Account.FindByID()
-func (a *Account) ComputeFields(cr *sql.DB) error {
-	if a.ID <= 0 {
-		return errors.New("This account has no ID")
-	}
-
+func (a *Account) computeFields(cr *sql.DB) {
 	query := "SELECT COUNT(*) FROM transactions WHERE account_id=$1;"
 
-	err := cr.QueryRow(query, a.ID).Scan(
+	e := cr.QueryRow(query, a.ID).Scan(
 		&a.TransactionCount,
 	)
-	if err != nil {
-		return err
+	if e != nil {
+		var err err.Error
+		err.Init("Account.ComputeFields()", "Error getting the number of transactions for account "+fmt.Sprintf("%d", a.ID))
+		log.Println("[WARN]", err)
 	}
-
-	return nil
 }
 
 // Book books a transaction in the account
 // Also saves the new balance to the database
-func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
-
+func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) err.Error {
 	amount := t.Amount
-
 	if invert == true {
 		amount = amount * -1
 	}
-
-	fmt.Printf("Book function of account; %s (%d)\n", a.Name, a.ID)
-	fmt.Printf("Transaction; %s (%d) %f\n", t.Name, t.ID, amount)
 
 	a.BalanceForecast += amount
 	a.Balance += amount
@@ -183,20 +187,22 @@ func (a *Account) Book(cr *sql.DB, t *Transaction, invert bool) error {
 	// 	a.Balance += amount
 	// }
 
-	err := a.Save(cr)
+	e := a.Save(cr)
 
-	if err != nil {
+	if e.Empty() == false {
+		var err err.Error
+		err.AddTraceback("Account.Book()", "Error while saving the Account "+a.Name)
 		return err
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // FindByID finds an account with it's id
-func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
+func (a *Account) FindByID(cr *sql.DB, accountID int64) err.Error {
 	query := "SELECT * FROM accounts WHERE id=$1"
 
-	err := cr.QueryRow(query, accountID).Scan(
+	e := cr.QueryRow(query, accountID).Scan(
 		&a.ID,
 		&a.Name,
 		&a.Active,
@@ -211,39 +217,42 @@ func (a *Account) FindByID(cr *sql.DB, accountID int64) error {
 		&a.LastUpdate,
 	)
 
-	if err != nil {
-		fmt.Println("Traceback: Account.FindById():", a.ID)
+	if e != nil {
+		var err err.Error
+		err.Init("Account.FindById():", e.Error())
 		return err
 	}
 
-	if err = a.ComputeFields(cr); err != nil {
-		return err
-	}
+	a.computeFields(cr)
 
-	return nil
+	return err.Error{}
 }
 
 // FindAccountByID is similar to FindByID but returns the account
-func FindAccountByID(cr *sql.DB, accountID int64) (Account, error) {
+func FindAccountByID(cr *sql.DB, accountID int64) (Account, err.Error) {
 	a := EmptyAccount()
 
-	err := a.FindByID(cr, accountID)
+	e := a.FindByID(cr, accountID)
 
-	if err != nil {
-		return a, err
+	if !e.Empty() {
+		msg := fmt.Sprintf("Error while getting account with ID %d from the database.", a.ID)
+		e.AddTraceback("FindAccountByID()", msg)
+		return a, e
 	}
 
-	return a, nil
+	return a, err.Error{}
 }
 
 // GetAllAccounts does that what you expect
-func GetAllAccounts(cr *sql.DB) ([]Account, error) {
+func GetAllAccounts(cr *sql.DB) ([]Account, err.Error) {
 	var accounts []Account
 	query := "SELECT id FROM accounts"
 
-	idRows, err := cr.Query(query)
+	idRows, e := cr.Query(query)
 
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("GetAllAccounts()", e.Error())
 		return accounts, err
 	}
 
@@ -266,38 +275,44 @@ func GetAllAccounts(cr *sql.DB) ([]Account, error) {
 
 	}
 
-	return accounts, nil
+	return accounts, err.Error{}
 }
 
 // GetLimitAccounts returns a limited number of accounts
-func GetLimitAccounts(cr *sql.DB, number int) ([]Account, error) {
+func GetLimitAccounts(cr *sql.DB, number int) ([]Account, err.Error) {
 	var result []Account
 
 	if number <= 0 {
-		err := "The number of the accounts must be bigger than 0."
-		return result, errors.New(err)
+		var err err.Error
+		err.Init("GetLimitAccounts()", "The number of the accounts must be bigger than 0.")
+		return result, err
 	}
 
 	query := "SELECT id FROM accounts LIMIT $1"
 
-	res, err := cr.Query(query, number)
+	res, e := cr.Query(query, number)
 
-	if err != nil {
-		fmt.Printf("[INFO] %s Account.GetLimitAccount(): Traceback: Error executing query.\n", time.Now())
+	if e != nil {
+		var err err.Error
+		err.Init("Account.GetLimitAccount()", e.Error())
 		return nil, err
 	}
 
 	for res.Next() {
 		var id int64
-		if err = res.Scan(&id); err != nil {
+		if e = res.Scan(&id); e != nil {
+			var err err.Error
+			err.Init("Account.GetLimitAccount()", e.Error())
 			return nil, err
 		}
 		acc := EmptyAccount()
-		if err = acc.FindByID(cr, id); err != nil {
+		if e = acc.FindByID(cr, id); e != nil {
+			var err err.Error
+			err.Init("Account.GetLimitAccount()", e.Error())
 			return nil, err
 		}
 		result = append(result, acc)
 	}
 
-	return result, nil
+	return result, err.Error{}
 }

@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+
+	"github.com/nitohu/err"
 )
 
 // Settings object
@@ -20,7 +22,7 @@ type Settings struct {
 }
 
 // InitializeSettings creates an empty settings object and initializes it
-func InitializeSettings(cr *sql.DB) (Settings, error) {
+func InitializeSettings(cr *sql.DB) (Settings, err.Error) {
 	s := Settings{
 		Name:          "",
 		Email:         "",
@@ -32,20 +34,21 @@ func InitializeSettings(cr *sql.DB) (Settings, error) {
 		StartDateForm: "",
 	}
 
-	err := s.Init(cr)
+	e := s.Init(cr)
 
-	if err != nil {
-		return s, err
+	if !e.Empty() {
+		e.AddTraceback("e.InitializeSettings()", "Error initializing the settings")
+		return s, e
 	}
 
-	return s, nil
+	return s, err.Error{}
 }
 
 // Init the settings
-func (s *Settings) Init(cr *sql.DB) error {
+func (s *Settings) Init(cr *sql.DB) err.Error {
 	query := "SELECT name,email,last_update,start_date,calc_interval,calc_uom,currency FROM settings;"
 
-	err := cr.QueryRow(query).Scan(
+	e := cr.QueryRow(query).Scan(
 		&s.Name,
 		&s.Email,
 		&s.lastUpdate,
@@ -54,18 +57,23 @@ func (s *Settings) Init(cr *sql.DB) error {
 		&s.CalcUoM,
 		&s.Currency,
 	)
+	if e != nil {
+		var err err.Error
+		err.Init("Settings.Init()", e.Error())
+		return err
+	}
 
 	s.computeFields(cr)
 
-	return err
+	return err.Error{}
 }
 
 // Save the current Settings object to the database
 // func (s *Settings) Save(cr *sql.DB, password string) error {
-func (s *Settings) Save(cr *sql.DB) error {
+func (s *Settings) Save(cr *sql.DB) err.Error {
 	query := "UPDATE settings SET name=$1,email=$2,last_update=$3,start_date=$4,calc_interval=$5,calc_uom=$6,currency=$7;"
 
-	_, err := cr.Exec(query,
+	_, e := cr.Exec(query,
 		s.Name,
 		s.Email,
 		time.Now(),
@@ -74,10 +82,15 @@ func (s *Settings) Save(cr *sql.DB) error {
 		s.CalcUoM,
 		s.Currency,
 	)
+	if e != nil {
+		var err err.Error
+		err.Init("Settings.Save()", e.Error())
+		return err
+	}
 
 	s.computeFields(cr)
 
-	return err
+	return err.Error{}
 }
 
 // GetLastUpdate returns the value of the last_update field

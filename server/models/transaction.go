@@ -2,10 +2,11 @@ package models
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/nitohu/err"
 )
 
 // Transaction model
@@ -52,33 +53,35 @@ func EmptyTransaction() Transaction {
 	return t
 }
 
-func bookIntoAccount(cr *sql.DB, id int64, t *Transaction, invert bool) error {
-	acc, err := FindAccountByID(cr, id)
+func bookIntoAccount(cr *sql.DB, id int64, t *Transaction, invert bool) err.Error {
+	acc, e := FindAccountByID(cr, id)
 
-	if err != nil {
-		fmt.Println("Origin: bookIntoAccount()")
-		fmt.Println("Hint: Finding Account")
-		return err
+	if !e.Empty() {
+		e.AddTraceback("bookIntoAccount()", "Error while finding account")
+		return e
 	}
 
-	err = acc.Book(cr, t, invert)
+	e = acc.Book(cr, t, invert)
 
-	if err != nil {
-		fmt.Println("Origin: bookIntoAccount()")
-		fmt.Println("Hint: Booking into Account")
-		return err
+	if !e.Empty() {
+		e.AddTraceback("bookIntoAccount()", "Error while booking into account")
+		return e
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // Create 's a transaction with the current values of the object
-func (t *Transaction) Create(cr *sql.DB) error {
+func (t *Transaction) Create(cr *sql.DB) err.Error {
 	// Requirements for creating a transaction
 	if t.ID != 0 {
-		return errors.New("This object already has an id")
+		var err err.Error
+		err.Init("Transaction.Create()", "This object already has an id")
+		return err
 	} else if t.Amount == 0.0 {
-		return errors.New("The Amount of this transaction is 0")
+		var err err.Error
+		err.Init("Transaction.Create()", "The Amount of this transaction is 0")
+		return err
 	}
 
 	var id int64
@@ -98,11 +101,11 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		categID = nil
 	}
 
-	var err error
+	var e error
 
 	// 4 cases of executing the query
 	if t.ToAccount == 0 && t.FromAccount > 0 {
-		err = cr.QueryRow(query,
+		e = cr.QueryRow(query,
 			t.Name,
 			t.Active,
 			t.TransactionDate,
@@ -116,7 +119,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			categID,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
-		err = cr.QueryRow(query,
+		e = cr.QueryRow(query,
 			t.Name,
 			t.Active,
 			t.TransactionDate,
@@ -131,7 +134,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		).Scan(&id)
 		// TODO: This should throw an error
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
-		err = cr.QueryRow(query,
+		e = cr.QueryRow(query,
 			t.Name,
 			t.Active,
 			t.TransactionDate,
@@ -145,7 +148,7 @@ func (t *Transaction) Create(cr *sql.DB) error {
 			categID,
 		).Scan(&id)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
-		err = cr.QueryRow(query,
+		e = cr.QueryRow(query,
 			t.Name,
 			t.Active,
 			t.TransactionDate,
@@ -160,8 +163,9 @@ func (t *Transaction) Create(cr *sql.DB) error {
 		).Scan(&id)
 	}
 
-	if err != nil {
-		fmt.Println("Traceback: models.Transaction.Create(): Inserting transaction into database")
+	if e != nil {
+		var err err.Error
+		err.Init("Transaction.Create()", e.Error())
 		return err
 	}
 
@@ -172,8 +176,8 @@ func (t *Transaction) Create(cr *sql.DB) error {
 	if t.FromAccount > 0 {
 		err := bookIntoAccount(cr, t.FromAccount, t, true)
 
-		if err != nil {
-			fmt.Println("Traceback: models.Transaction.Create(): Book into FromAccount")
+		if !err.Empty() {
+			err.AddTraceback("Transaction.Create()", "Error while booking into FromAccount")
 			return err
 		}
 	}
@@ -182,23 +186,25 @@ func (t *Transaction) Create(cr *sql.DB) error {
 	if t.ToAccount > 0 {
 		err := bookIntoAccount(cr, t.ToAccount, t, false)
 
-		if err != nil {
-			fmt.Println("Traceback: models.Transaction.Create(): Book into ToAccount")
+		if !err.Empty() {
+			err.AddTraceback("Transaction.Create()", "Error while booking into ToAccount")
 			return err
 		}
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // Save 's the current values of the object to the database
-func (t *Transaction) Save(cr *sql.DB) error {
+func (t *Transaction) Save(cr *sql.DB) err.Error {
 	if t.ID == 0 {
-		fmt.Println("Traceback: models.Transaction.Create(): #1")
-		return errors.New("This transaction as no ID, maybe create it first?")
+		var err err.Error
+		err.Init("Transaction.Save()", "This transaction as no ID, maybe create it first?")
+		return err
 	} else if t.Amount == 0.0 {
-		fmt.Println("Traceback: models.Transaction.Create(): #2")
-		return errors.New("The Amount of the transaction with the id " + fmt.Sprintf("%d", t.ID) + " is 0")
+		var err err.Error
+		err.Init("Transaction.Save()", "The Amount of the transaction with the id "+fmt.Sprintf("%d", t.ID)+" is 0")
+		return err
 	}
 
 	// Get old data
@@ -210,10 +216,11 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 	row := cr.QueryRow(query, t.ID)
 
-	err := row.Scan(&oldAmount, &TransactionDateStr, &accountID, &toAccountID)
+	e := row.Scan(&oldAmount, &TransactionDateStr, &accountID, &toAccountID)
 
-	if err != nil {
-		fmt.Println("Traceback: models.Transaction.Create(): Fetching old data from database")
+	if e != nil {
+		var err err.Error
+		err.Init("Transaction.Save()", e.Error())
 		return err
 	}
 
@@ -232,7 +239,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 	t.TransactionDate = time.Now().Local()
 
 	if t.ToAccount == 0 && t.FromAccount > 0 {
-		_, err = cr.Exec(query,
+		_, e = cr.Exec(query,
 			t.ID,
 			t.Name,
 			t.Active,
@@ -246,7 +253,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			categID,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount > 0 {
-		_, err = cr.Exec(query,
+		_, e = cr.Exec(query,
 			t.ID,
 			t.Name,
 			t.Active,
@@ -261,7 +268,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		)
 	} else if t.ToAccount == 0 && t.FromAccount == 0 {
 		// TODO: This case shouldn't be allowed
-		_, err = cr.Exec(query,
+		_, e = cr.Exec(query,
 			t.ID,
 			t.Name,
 			t.Active,
@@ -275,7 +282,7 @@ func (t *Transaction) Save(cr *sql.DB) error {
 			categID,
 		)
 	} else if t.ToAccount > 0 && t.FromAccount == 0 {
-		_, err = cr.Exec(query,
+		_, e = cr.Exec(query,
 			t.ID,
 			t.Name,
 			t.Active,
@@ -290,8 +297,9 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		)
 	}
 
-	if err != nil {
-		fmt.Println("Traceback: models.Transaction.Create(): Write the new data to the database.")
+	if e != nil {
+		var err err.Error
+		err.Init("Transaction.Save()", e.Error())
 		return err
 	}
 
@@ -315,18 +323,18 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		if accountID != nil {
 			err := bookIntoAccount(cr, accountID.(int64), &temp, false)
 
-			if err != nil {
-				fmt.Println("Traceback: models.Transaction.Create(): Redo booking from old origin account.")
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while redoing booking from old origin account: "+accountID.(string))
 				return err
 			}
 		}
 
 		// Book the amount into the new account
-		err = bookIntoAccount(cr, t.FromAccount, t, true)
+		err := bookIntoAccount(cr, t.FromAccount, t, true)
 		originChanged = true
 
-		if err != nil {
-			fmt.Println("Traceback: models.Transaction.Create(): Booking to new origin account.")
+		if !err.Empty() {
+			err.AddTraceback("Transaction.Save()", "Error while booking to new origin account: "+fmt.Sprintf("%d", t.FromAccount))
 			return err
 		}
 	}
@@ -339,17 +347,17 @@ func (t *Transaction) Save(cr *sql.DB) error {
 		if toAccountID != nil {
 			err := bookIntoAccount(cr, toAccountID.(int64), &temp, true)
 
-			if err != nil {
-				fmt.Println("Traceback: models.Transaction.Create(): Removing transaction from the old receiving account.")
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while removing transaction from the old receiving account: "+toAccountID.(string))
 				return err
 			}
 		}
 
 		// Book into new account
-		err = bookIntoAccount(cr, t.ToAccount, t, false)
+		err := bookIntoAccount(cr, t.ToAccount, t, false)
 
-		if err != nil {
-			fmt.Println("Traceback: models.Transaction.Create(): Book transaction into new receiving account.")
+		if !err.Empty() {
+			err.AddTraceback("Transaction.Save()", "Error while booking transaction into new receiving account: "+fmt.Sprintf("%d", t.ToAccount))
 			return err
 		}
 	}
@@ -370,8 +378,8 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 			err := bookIntoAccount(cr, t.FromAccount, &temp, true)
 
-			if err != nil {
-				fmt.Println("Traceback: models.Transaction.Create(): Booking difference into origin account.")
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while booking difference into origin account: "+fmt.Sprintf("%d", t.FromAccount))
 				return err
 			}
 		}
@@ -381,63 +389,64 @@ func (t *Transaction) Save(cr *sql.DB) error {
 
 			err := bookIntoAccount(cr, t.ToAccount, &temp, false)
 
-			if err != nil {
-				fmt.Println("Traceback: models.Transaction.Create(): Booking difference into destination account.")
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while booking difference into destination account: "+fmt.Sprintf("%d", t.ToAccount))
 				return err
 			}
 		}
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // Delete 's the transtaction
-func (t *Transaction) Delete(cr *sql.DB) error {
+func (t *Transaction) Delete(cr *sql.DB) err.Error {
 	if t.ID == 0 {
-		return errors.New("The transaction you want to delete does not have an id")
+		var err err.Error
+		err.Init("Transaction.Delete()", "The transaction you want to delete does not have an id")
+		return err
 	}
 
 	if t.FromAccount > 0 {
-		fmt.Println("delete transaction fromAccount")
 		err := bookIntoAccount(cr, t.FromAccount, t, false)
 
-		if err != nil {
-			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: booking into t.FromAccount")
+		if !err.Empty() {
+			err.AddTraceback("Transaction.Delete()", "Redo booking from origin account: "+fmt.Sprintf("%d", t.FromAccount))
 			return err
 		}
 	}
 	if t.ToAccount > 0 {
-		fmt.Println("delete transaction toAccount")
 		err := bookIntoAccount(cr, t.ToAccount, t, true)
 
-		if err != nil {
-			fmt.Println("Origin: Transaction.Delete")
-			fmt.Println("Hint: booking into t.FromAccount")
+		if err.Empty() {
+			err.AddTraceback("Transaction.Delete()", "Redo booking from recipient account: "+fmt.Sprintf("%d", t.FromAccount))
 			return err
 		}
 	}
 
 	query := "DELETE FROM transactions WHERE id=$1"
 
-	_, err := cr.Exec(query, t.ID)
+	_, e := cr.Exec(query, t.ID)
 
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("Transaction.Delete()", e.Error())
 		return err
 	}
 
-	return nil
+	return err.Error{}
 }
 
 // ComputeFields computes the fields which are not directly received
 // from the database
-func (t *Transaction) ComputeFields(cr *sql.DB) error {
+func (t *Transaction) computeFields(cr *sql.DB) {
 	// Compute: FromAccountName
 	if t.FromAccount != 0 {
 		fromAccount, err := FindAccountByID(cr, t.FromAccount)
 
-		if err != nil {
-			return err
+		if !err.Empty() {
+			err.AddTraceback("Transaction.computeFields()", "Error while finding origin account by ID.")
+			log.Println("[WARN]", err)
 		}
 
 		t.FromAccountName = fromAccount.Name
@@ -449,8 +458,9 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 	if t.ToAccount != 0 {
 		toAccount, err := FindAccountByID(cr, t.ToAccount)
 
-		if err != nil {
-			return err
+		if !err.Empty() {
+			err.AddTraceback("Transaction.computeFields()", "Error while finding recipient account by ID:"+fmt.Sprintf("%d", t.CategoryID))
+			log.Println("[WARN]", err)
 		}
 
 		t.ToAccountName = toAccount.Name
@@ -463,17 +473,16 @@ func (t *Transaction) ComputeFields(cr *sql.DB) error {
 
 	// Compute: Category
 	if t.CategoryID > 0 {
-		var err error
-		if t.Category, err = FindCategoryByID(cr, t.CategoryID); err != nil {
-			log.Printf("[WARN] Transaction.ComputeFields: Error while finding category by ID: %d (Transaction: %d)\n", t.CategoryID, t.ID)
+		var err err.Error
+		if t.Category, err = FindCategoryByID(cr, t.CategoryID); !err.Empty() {
+			err.AddTraceback("Transaction.computeFields()", "Error while finding category by ID: "+fmt.Sprintf("%d", t.CategoryID))
+			log.Println("[WARN]", err)
 		}
 	}
-
-	return nil
 }
 
 // FindByID finds a transaction with it's id
-func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
+func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) err.Error {
 	query := "SELECT id, name, active, transaction_date, last_update, create_date, "
 	query += "amount, account_id, to_account, transaction_type, description, category_id "
 	query += "FROM transactions WHERE id=$1 "
@@ -481,7 +490,7 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 
 	var fromAccountID, toAccountID, categID interface{}
 
-	err := cr.QueryRow(query, transactionID).Scan(
+	e := cr.QueryRow(query, transactionID).Scan(
 		&t.ID,
 		&t.Name,
 		&t.Active,
@@ -495,6 +504,11 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 		&t.Description,
 		&categID,
 	)
+	if e != nil {
+		var err err.Error
+		err.Init("Transaction.FindByID()", e.Error())
+		return err
+	}
 
 	if fromAccountID != nil {
 		t.FromAccount = fromAccountID.(int64)
@@ -508,53 +522,50 @@ func (t *Transaction) FindByID(cr *sql.DB, transactionID int64) error {
 		t.CategoryID = categID.(int64)
 	}
 
-	if err != nil {
-		return err
-	}
+	t.computeFields(cr)
 
-	t.ComputeFields(cr)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err.Error{}
 }
 
 // FindTransactionByID is similar to FindByID but returns the transaction
-func FindTransactionByID(cr *sql.DB, transactionID int64) (Transaction, error) {
+func FindTransactionByID(cr *sql.DB, transactionID int64) (Transaction, err.Error) {
 	t := EmptyTransaction()
 
-	err := t.FindByID(cr, transactionID)
+	e := t.FindByID(cr, transactionID)
 
-	if err != nil {
-		return t, err
+	if !e.Empty() {
+		e.AddTraceback("FindTransactionByID()", "Error while finding transaction by ID: "+fmt.Sprintf("%d", t.ID))
+		return t, e
 	}
 
-	return t, nil
+	return t, err.Error{}
 }
 
 // GetAllTransactions does that what you expect
-func GetAllTransactions(cr *sql.DB) ([]Transaction, error) {
+func GetAllTransactions(cr *sql.DB) ([]Transaction, err.Error) {
 	var transactions []Transaction
 	query := "SELECT id FROM transactions"
 
-	idRows, err := cr.Query(query)
+	idRows, e := cr.Query(query)
 
-	if err != nil {
+	if e != nil {
+		var err err.Error
+		err.Init("GetAllTransactions()", e.Error())
 		return transactions, err
 	}
 
 	for idRows.Next() {
 		var id int64
 
-		if err = idRows.Scan(&id); err != nil {
-			fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetAllTransactions():\n%s", time.Now().Local(), err)
+		if e = idRows.Scan(&id); e != nil {
+			log.Println("[INFO] GetAllTransactions(): Skipping record")
+			log.Printf("[WARN] GetAllTransactions: %s\n", e)
 		} else {
 			t := EmptyTransaction()
 
-			if err = t.FindByID(cr, id); err != nil {
-				fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetAllTransactions():\n%s", time.Now().Local(), err)
+			if e = t.FindByID(cr, id); e != nil {
+				log.Printf("[INFO] GetAllTransactions(): Skipping record with ID %d\n", t.ID)
+				log.Printf("[WARN] GetAllTransactions: %s\n", e)
 			} else {
 				transactions = append(transactions, t)
 			}
@@ -562,40 +573,40 @@ func GetAllTransactions(cr *sql.DB) ([]Transaction, error) {
 
 	}
 
-	return transactions, nil
+	return transactions, err.Error{}
 }
 
-// GetLatestransactions returns a limited number of the latest transactions
+// GetLatestTransactions returns a limited number of the latest transactions
 // latest transactions are sorted by their transaction_date
-func GetLatestTransactions(cr *sql.DB, amount int) ([]Transaction, error) {
+func GetLatestTransactions(cr *sql.DB, amount int) ([]Transaction, err.Error) {
 	var transactions []Transaction
 	query := "SELECT id FROM transactions ORDER BY transaction_date DESC LIMIT $1"
 
-	rows, err := cr.Query(query, amount)
+	rows, e := cr.Query(query, amount)
 
-	if err != nil {
-		fmt.Printf("[WARN] %s GetLatestTransactions(): Traceback: Error while running the query:\n%s", time.Now().Local(), err)
+	if e != nil {
+		var err err.Error
+		err.Init("GetLatestTransactions()", e.Error())
 		return transactions, err
 	}
 
 	for rows.Next() {
 		var id int64
 
-		if err = rows.Scan(&id); err != nil {
-			fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetLatestTransactions():\n%s", time.Now().Local(), err)
+		if e = rows.Scan(&id); e != nil {
+			log.Println("[INFO] GetLatestTransactions(): Skipping record")
+			log.Printf("[WARN] GetLatestTransactions: %s\n", e)
 		} else {
 			t := EmptyTransaction()
 
-			if err = t.FindByID(cr, id); err != nil {
-
-				fmt.Printf("[INFO] Skipping Record\n[WARN] %s GetLatestTransactions(): Error while finding transaction by id:\n%s",
-					time.Now().Local(), err)
-
+			if e = t.FindByID(cr, id); e != nil {
+				log.Printf("[INFO] GetLatestTransactions(): Skipping record with ID: %d\n", t.ID)
+				log.Printf("[WARN] GetLatestTransactions: %s\n", e)
 			} else {
 				transactions = append(transactions, t)
 			}
 		}
 	}
 
-	return transactions, nil
+	return transactions, err.Error{}
 }

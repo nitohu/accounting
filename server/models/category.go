@@ -37,7 +37,7 @@ func EmptyCategory() Category {
 }
 
 // Create a new category in the database
-func (c *Category) Create(cr *sql.DB) error {
+func (c *Category) Create(cr *sql.DB) err.Error {
 	if c.ID > 0 {
 		var err err.Error
 		err.Init("Category.Create()", "This category already has an ID. Maybe try saving it?")
@@ -71,11 +71,11 @@ func (c *Category) Create(cr *sql.DB) error {
 
 	c.computeFields(cr)
 
-	return nil
+	return err.Error{}
 }
 
 // Save the current category to the database
-func (c *Category) Save(cr *sql.DB) error {
+func (c *Category) Save(cr *sql.DB) err.Error {
 	if c.ID <= 0 {
 		var err err.Error
 		err.Init("Category.Save()", "This category has no ID. Maybe create it first?")
@@ -108,11 +108,11 @@ func (c *Category) Save(cr *sql.DB) error {
 
 	c.computeFields(cr)
 
-	return nil
+	return err.Error{}
 }
 
 // Delete the current category from the database
-func (c *Category) Delete(cr *sql.DB) error {
+func (c *Category) Delete(cr *sql.DB) err.Error {
 	if c.ID <= 0 {
 		var err err.Error
 		err.Init("Category.Delete()", "ID must be bigger than 0")
@@ -131,7 +131,7 @@ func (c *Category) Delete(cr *sql.DB) error {
 	c.Hex = ""
 	c.Active = false
 
-	return nil
+	return err.Error{}
 }
 
 func (c *Category) computeFields(cr *sql.DB) {
@@ -156,7 +156,7 @@ func (c *Category) computeFields(cr *sql.DB) {
 }
 
 // FindByID finds a category in the database
-func (c *Category) FindByID(cr *sql.DB, id int64) error {
+func (c *Category) FindByID(cr *sql.DB, id int64) err.Error {
 	if id <= 0 {
 		var err err.Error
 		err.Init("Category.FindByID()", "ID must be a positive number: "+string(id))
@@ -182,26 +182,26 @@ func (c *Category) FindByID(cr *sql.DB, id int64) error {
 
 	c.computeFields(cr)
 
-	return nil
+	return err.Error{}
 }
 
 // FindCategoryByID is similar to FindByID but returns the category
-func FindCategoryByID(cr *sql.DB, categoryID int64) (Category, error) {
+func FindCategoryByID(cr *sql.DB, categoryID int64) (Category, err.Error) {
 	t := EmptyCategory()
 
 	e := t.FindByID(cr, categoryID)
 
-	if e != nil {
+	if !e.Empty() {
 		var err err.Error
 		err.Init("FindCategoryByID()", e.Error())
 		return t, err
 	}
 
-	return t, nil
+	return t, err.Error{}
 }
 
 // GetAllCategories returns all categories
-func GetAllCategories(cr *sql.DB) ([]Category, error) {
+func GetAllCategories(cr *sql.DB) ([]Category, err.Error) {
 	var categories []Category
 	query := "SELECT id FROM categories;"
 
@@ -232,5 +232,5 @@ func GetAllCategories(cr *sql.DB) ([]Category, error) {
 		}
 	}
 
-	return categories, nil
+	return categories, err.Error{}
 }
