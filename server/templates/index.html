@@ -174,7 +174,7 @@
                                 {{ range .Transactions }}
                                     <tr>
                                         <td>{{ .Name }}</td>
-                                        <td>{{ ( call $.HumanReadable .Amount ) }} €</td>
+                                        <td>{{ printf "%.2f" .Amount }} {{ $.Settings.Currency }}</td>
                                         <td>{{ .FromAccountName }}</td>
                                         <td><p style="color: {{ .Category.Hex }};">{{ .Category.Name }}</p></td>
                                         <td>{{ .TransactionDateStr }}</td>

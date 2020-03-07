@@ -45,7 +45,7 @@ func HumanReadable(num float64) string {
 
 			// Get the part of the number which will be removed
 			del, _ := strconv.Atoi(number[firstCut:])
-
+			// Get digit for rounding
 			exp, _ := strconv.ParseFloat(number[firstCut:secondCut], 64)
 			// Calculate next smaller value of del
 			smaller := exp * math.Pow(10, float64(i*3))

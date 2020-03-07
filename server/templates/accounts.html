@@ -100,7 +100,7 @@
                                     {{ range .Accounts }}
                                         <tr id="{{ .ID }}">
                                             <td><a href="/accounts/form?id={{ .ID }}">{{ .Name }}</a></td>
-                                            <td>{{ (call $.HumanReadable .Balance) }} {{ $.Settings.Currency }}</td>
+                                            <td>{{ printf "%.2f" .Balance }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .BankName }}</td>
                                             <td>{{ .Iban }}</td>
                                             <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>

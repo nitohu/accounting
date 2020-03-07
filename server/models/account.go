@@ -31,7 +31,7 @@ func EmptyAccount() Account {
 	a := Account{
 		ID:               0,
 		Name:             "",
-		Active:           false,
+		Active:           true,
 		Balance:          0.0,
 		BalanceForecast:  0.0,
 		Iban:             "",

@@ -104,7 +104,7 @@
                                     {{ range .Transactions }}
                                         <tr>
                                             <td><a href="/transactions/form?id={{ .ID }}">{{ .Name }}</a></td>
-                                            <td>{{ ( call $.HumanReadable .Amount ) }} {{ $.Settings.Currency }}</td>
+                                            <td>{{ printf "%.2f" .Amount }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .FromAccountName }}</td>
                                             <td>
                                                 {{ if .Category.Name }}
