@@ -599,9 +599,9 @@ func GetLatestTransactions(cr *sql.DB, amount int) ([]Transaction, err.Error) {
 		} else {
 			t := EmptyTransaction()
 
-			if e = t.FindByID(cr, id); e != nil {
+			if err := t.FindByID(cr, id); !err.Empty() {
 				log.Printf("[INFO] GetLatestTransactions(): Skipping record with ID: %d\n", t.ID)
-				log.Printf("[WARN] GetLatestTransactions: %s\n", e)
+				log.Println("[WARN]", err)
 			} else {
 				transactions = append(transactions, t)
 			}

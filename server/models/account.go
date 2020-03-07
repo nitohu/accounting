@@ -308,9 +308,8 @@ func GetLimitAccounts(cr *sql.DB, number int) ([]Account, err.Error) {
 			return nil, err
 		}
 		acc := EmptyAccount()
-		if e = acc.FindByID(cr, id); e != nil {
-			var err err.Error
-			err.Init("Account.GetLimitAccount()", e.Error())
+		if err := acc.FindByID(cr, id); e != nil {
+			err.AddTraceback("Account.GetLimitAccount()", "Error while finding account: "+fmt.Sprintf("%d", id))
 			return nil, err
 		}
 		result = append(result, acc)
