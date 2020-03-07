@@ -1,8 +1,8 @@
 -- # of Transacions in the last x days
 -- first day = $1 (ex: 2020-01-01)
 -- last day = $1 (ex: 2020-02-16)
-SELECT COUNT(*) FROM transactions WHERE transaction_date >= '2020-01-01'
-AND transaction_date <= '2020-02-27' AND active='t';
+SELECT COUNT(*) FROM transactions WHERE transaction_date >= NOW() - interval '30' day
+AND transaction_date <= NOW() + interval '1' day AND active='t';
 
 -- Total balance
 SELECT SUM(a.balance) FROM (

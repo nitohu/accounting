@@ -32,6 +32,7 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 		e.AddTraceback("handleAccountOverview", "Error creating context from session.")
 		log.Println("[ERROR]", e)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

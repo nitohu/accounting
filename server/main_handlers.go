@@ -38,6 +38,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		err.AddTraceback("handleRoot", "Error while getting accounts.")
 		log.Println("[WARN]", err)
 	}
+	if ctx["Statistics"], err = models.GetAllStatistics(db); !err.Empty() {
+		err.AddTraceback("handleRoot", "Error while getting statistics.")
+		log.Println("[WARN]", err)
+	}
 
 	e := tmpl.ExecuteTemplate(w, "index.html", ctx)
 
