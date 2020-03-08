@@ -36,9 +36,10 @@ JOIN (
 ) AS b ON 1=1
 WHERE acc.active=True;
 
--- Total value moved
-SELECT SUM(amount) FROM transactions WHERE transaction_date >= '2020-01-01'
-AND transaction_date <= '2020-02-27' AND active='t';
+-- Total expenses last 30 days 
+SELECT SUM(amount) FROM transactions WHERE transaction_date >= NOW() - interval '30' day
+AND transaction_date <= NOW() + interval '1' day AND active='t'
+AND to_account IS NULL;
 
 -- Average value moved per account
 SELECT 
