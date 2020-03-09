@@ -41,6 +41,10 @@ SELECT SUM(amount) FROM transactions WHERE transaction_date >= NOW() - interval 
 AND transaction_date <= NOW() + interval '1' day AND active='t'
 AND to_account IS NULL;
 
+-- Total income last 30 days
+SELECT SUM(amount) FROM transactions WHERE transaction_date >= NOW() - interval '30' day
+AND transaction_date <= NOW() + interval '1' day AND active='t' AND from_account IS NULL;
+
 -- Average value moved per account
 SELECT 
     SUM(amount) / COUNT(account_id)
