@@ -68,5 +68,5 @@ AND transaction_date <= NOW() + interval '1' day AND active='t' AND account_id I
 -- Average value moved per account
 SELECT 
     SUM(amount) / COUNT(account_id)
-FROM transactions WHERE transaction_date >= '2020-01-01'
-AND transaction_date <= '2020-02-27' AND active='t';
+FROM transactions WHERE transaction_date >= transaction_date >= NOW() - interval '30' day
+AND transaction_date <= NOW() + interval '1' day AND active='t';
