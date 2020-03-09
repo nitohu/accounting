@@ -98,6 +98,23 @@ func (s *Settings) GetLastUpdate() time.Time {
 	return s.lastUpdate
 }
 
+func (s *Settings) ShiftSalaryDate(cr *sql.DB) err.Error {
+	n := time.Now()
+	shifted := false
+	for n.After(s.StartDate) {
+		shifted = true
+		s.StartDate = s.StartDate.AddDate(0,1,0)
+	}
+	if shifted {
+		if e := s.Save(cr); !e.Empty() {
+			e.AddTraceback("Settings.shiftSalaryDate()", "Error while saving the settings to the database.")
+			return e
+		}
+	}
+	return err.Error{}
+}
+
+
 func (s *Settings) computeFields(cr *sql.DB) {
 	s.StartDateForm = s.StartDate.Format("Monday 02 January 2006")
 }

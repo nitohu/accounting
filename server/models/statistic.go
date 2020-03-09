@@ -160,9 +160,20 @@ func (s *Statistic) Save(cr *sql.DB) err.Error {
 
 // Compute the value with the ComputeQuery
 func (s *Statistic) Compute(cr *sql.DB) err.Error {
-	if e := cr.QueryRow(s.ComputeQuery).Scan(&s.Value); e != nil {
+	// Make sure the salary_date (still start_date, will be changed soon) is always in the future
+	settings, e := InitializeSettings(cr)
+	if !e.Empty() {
+		e.AddTraceback("Statistic.Compute()", "There was an error initializing the settings.")
+		return e
+	}
+	if e := settings.ShiftSalaryDate(cr); !e.Empty() {
+		e.AddTraceback("Statistic.Compute()", "Error while shifting the salary date.")
+		return e
+	}
+
+	if error := cr.QueryRow(s.ComputeQuery).Scan(&s.Value); error != nil {
 		var err err.Error
-		err.Init("Statistic.Compute()", e.Error())
+		err.Init("Statistic.Compute()", error.Error())
 		return err
 	}
 	return err.Error{}

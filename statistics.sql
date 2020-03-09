@@ -36,6 +36,26 @@ JOIN (
 ) AS b ON 1=1
 WHERE acc.active=True;
 
+-- Average balance per day, total
+SELECT SUM(c.money_per_day) FROM (
+    SELECT
+        acc.id,
+        acc.balance / b.delta_start_date as money_per_day,
+        acc.name,
+        acc.balance
+    FROM accounts AS acc
+    JOIN (
+        SELECT 
+            CASE 
+                WHEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 >= 0
+                THEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400
+                ELSE EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 * -1
+            END delta_start_date
+        FROM settings LIMIT 1
+    ) AS b ON 1=1
+    WHERE acc.active=True
+) AS c;
+
 -- Total expenses last 30 days 
 SELECT SUM(amount) FROM transactions WHERE transaction_date >= NOW() - interval '30' day
 AND transaction_date <= NOW() + interval '1' day AND active='t'
@@ -43,7 +63,7 @@ AND to_account IS NULL;
 
 -- Total income last 30 days
 SELECT SUM(amount) FROM transactions WHERE transaction_date >= NOW() - interval '30' day
-AND transaction_date <= NOW() + interval '1' day AND active='t' AND from_account IS NULL;
+AND transaction_date <= NOW() + interval '1' day AND active='t' AND account_id IS NULL;
 
 -- Average value moved per account
 SELECT 
