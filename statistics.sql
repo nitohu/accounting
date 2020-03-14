@@ -12,26 +12,26 @@ SELECT SUM(a.balance) FROM (
 -- Get the number of days as a decimal since the start date defined from settings
 SELECT 
     CASE 
-        WHEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 >= 0
-        THEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400
-        ELSE EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 * -1
-    END delta_start_date
+        WHEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 >= 0
+        THEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400
+        ELSE EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 * -1
+    END delta_salary_date
 FROM settings LIMIT 1;
 
 -- Average balance per day, per account
 SELECT
     acc.id,
-    acc.balance / b.delta_start_date as money_per_day,
+    acc.balance / b.delta_salary_date as money_per_day,
     acc.name,
     acc.balance
 FROM accounts AS acc
 JOIN (
     SELECT 
         CASE 
-            WHEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 >= 0
-            THEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400
-            ELSE EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 * -1
-        END delta_start_date
+            WHEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 >= 0
+            THEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400
+            ELSE EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 * -1
+        END delta_salary_date
     FROM settings LIMIT 1
 ) AS b ON 1=1
 WHERE acc.active=True;
@@ -40,17 +40,17 @@ WHERE acc.active=True;
 SELECT SUM(c.money_per_day) FROM (
     SELECT
         acc.id,
-        acc.balance / b.delta_start_date as money_per_day,
+        acc.balance / b.delta_salary_date as money_per_day,
         acc.name,
         acc.balance
     FROM accounts AS acc
     JOIN (
         SELECT 
             CASE 
-                WHEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 >= 0
-                THEN EXTRACT(epoch FROM AGE(start_date, NOW()))/86400
-                ELSE EXTRACT(epoch FROM AGE(start_date, NOW()))/86400 * -1
-            END delta_start_date
+                WHEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 >= 0
+                THEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400
+                ELSE EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 * -1
+            END delta_salary_date
         FROM settings LIMIT 1
     ) AS b ON 1=1
     WHERE acc.active=True
@@ -68,5 +68,5 @@ AND transaction_date <= NOW() + interval '1' day AND active='t' AND account_id I
 -- Average value moved per account
 SELECT 
     SUM(amount) / COUNT(account_id)
-FROM transactions WHERE transaction_date >= transaction_date >= NOW() - interval '30' day
+FROM transactions WHERE transaction_date >= NOW() - interval '30' day
 AND transaction_date <= NOW() + interval '1' day AND active='t';

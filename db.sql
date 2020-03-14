@@ -3,11 +3,12 @@ CREATE TABLE settings (
     password text,
     email text,
     last_update timestamp,
-    start_date timestamp,
+    salary_date timestamp,
     calc_interval int,
     calc_uom text,
     currency text,
-    session_key text
+    session_key text,
+    account_id int references accounts(id)
 );
 
 CREATE TABLE accounts (
@@ -45,9 +46,9 @@ CREATE TABLE statistics (
     create_date timestamp,
     last_update timestamp,
     description text,
-    chart_data text,
     keys text,
-    value float,
+    value text,
+    visualisation text,
     execution_date timestamp
 );
 
