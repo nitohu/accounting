@@ -469,7 +469,7 @@ func (t *Transaction) computeFields(cr *sql.DB) {
 	}
 
 	// Compute: TransactionDateStr
-	t.TransactionDateStr = t.TransactionDate.Format("Monday 02 January 2006 - 15:04")
+	t.TransactionDateStr = t.TransactionDate.Format("02.01.2006 - 15:04")
 
 	// Compute: Category
 	if t.CategoryID > 0 {

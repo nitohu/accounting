@@ -160,7 +160,7 @@ func (s *Statistic) Save(cr *sql.DB) err.Error {
 
 // Compute the value with the ComputeQuery
 func (s *Statistic) Compute(cr *sql.DB) err.Error {
-	// Make sure the salary_date (still start_date, will be changed soon) is always in the future
+	// Make sure the salary_date is always in the future
 	settings, e := InitializeSettings(cr)
 	if !e.Empty() {
 		e.AddTraceback("Statistic.Compute()", "There was an error initializing the settings.")

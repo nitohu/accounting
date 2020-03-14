@@ -89,13 +89,13 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	// pw := sha256.Sum256([]byte(r.FormValue("password")))
 
 	settings.Currency = r.FormValue("currency")
-	sdate := r.FormValue("start_date")
+	sdate := r.FormValue("salary_date")
 	interval := r.FormValue("calc_interval")
 	settings.CalcUoM = r.FormValue("calc_uom")
 
 	// Converting the hashed password to a string
 	// password := fmt.Sprintf("%X", pw)
-	startDate, e := time.Parse(dateFormLayout, sdate)
+	startDate, e := time.Parse(dateLayout, sdate)
 
 	settings.CalcInterval, _ = strconv.ParseInt(interval, 10, 64)
 
@@ -106,7 +106,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 		startDate = time.Now()
 	}
 
-	settings.StartDate = startDate
+	settings.SalaryDate = startDate
 
 	// err = settings.Save(db, password)
 	err = settings.Save(db)

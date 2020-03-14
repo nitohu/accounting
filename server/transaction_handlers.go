@@ -119,7 +119,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	// Format the time received from the form
 	tDate := r.FormValue("datetime")
-	transactionDate, e := time.Parse(dtFormLayout, tDate)
+	transactionDate, e := time.Parse(dtLayout, tDate)
 
 	if e != nil {
 		err.Init("handleTransactionForm()", e.Error())
