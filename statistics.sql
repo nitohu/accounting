@@ -35,7 +35,7 @@ SELECT json_object_agg(a.name, a.money_per_day) FROM (
             END delta_salary_date
         FROM settings LIMIT 1
     ) AS b ON 1=1
-    WHERE acc.active=True
+    WHERE acc.active=True AND acc.balance > 0
 ) AS a;
 
 -- Average balance per day, total

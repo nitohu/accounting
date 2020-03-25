@@ -96,7 +96,7 @@
                 </div>
                 <div class="body mb-2">
                     <div class="row clearfix">
-                        {{ $overview := $.Statistics.FindByExtIDs "total_balance" "transaction_count" "balance_per_day" }}
+                        {{ $overview := $.Statistics.FindByVisualisation "number"}}
                         {{ range $overview.GetArray }}
                         <div class="col-lg-3 col-md-6 col-sm-6">
                             <div class="state_w1 mb-1 mt-1">
