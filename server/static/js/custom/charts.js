@@ -5,6 +5,7 @@ class MyChart {
         this.data = JSON.parse(value)
         this.visualisation = visualisation
         this.keys = Object.keys(this.data)
+        this.values = Object.values(this.data)
     }
 
     generateChart() {
@@ -18,7 +19,7 @@ class MyChart {
 
         let dataset = {
             label: this.name,
-            data: Object.values(this.data),
+            data: this.values,
             backgroundColor: backgroundColors,
             borderColor: borderColors,
             borderWidth: 1
@@ -45,14 +46,10 @@ class MyChart {
                 tooltips: {
                     callbacks: {
                         title: function(elem) {
-                            // console.log(self.keys)
-                            console.log(self.keys)
-                            console.log(elem)
-                            console.log(elem[0].index, self.keys[elem[0].index])
                             return self.keys[elem[0].index]
                         },
                         label: function(item) {
-                            return item.yLabel + "€ per day"
+                            return self.values[item.index]
                         }
                     }
                 },
@@ -65,8 +62,6 @@ class MyChart {
                 }
             }
         }
-
-        console.log(chartData)
 
         return chartData
     }
