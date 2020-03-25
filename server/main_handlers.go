@@ -95,7 +95,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	// Converting the hashed password to a string
 	// password := fmt.Sprintf("%X", pw)
-	startDate, e := time.Parse(dateLayout, sdate)
+	startDate, e := time.Parse(dateSettingsLayout, sdate)
 
 	settings.CalcInterval, _ = strconv.ParseInt(interval, 10, 64)
 

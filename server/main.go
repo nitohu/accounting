@@ -21,10 +21,10 @@ var (
 
 	// datetime form layout
 	// dtFormLayout = "Monday 02 January 2006 - 15:04"
-	// dateFormLayout = "Monday 02 January 2006"
-	dtLayout     = "02.01.2006 - 15:04"
-	dateLayout   = "02.01.2006"
-	dbTimeLayout = "2006-01-02 15:04:00"
+	dateSettingsLayout = "Monday 02 January 2006"
+	dtLayout           = "02.01.2006 - 15:04"
+	dateLayout         = "02.01.2006"
+	dbTimeLayout       = "2006-01-02 15:04:00"
 )
 
 func logging(f http.HandlerFunc) http.HandlerFunc {
