@@ -24,6 +24,7 @@ class MyChart {
             borderWidth: 1
         }
 
+        const self = this
         let chartData = {
             type: this.visualisation,
             data: {
@@ -43,6 +44,13 @@ class MyChart {
                 },
                 tooltips: {
                     callbacks: {
+                        title: function(elem) {
+                            // console.log(self.keys)
+                            console.log(self.keys)
+                            console.log(elem)
+                            console.log(elem[0].index, self.keys[elem[0].index])
+                            return self.keys[elem[0].index]
+                        },
                         label: function(item) {
                             return item.yLabel + "€ per day"
                         }
@@ -57,6 +65,8 @@ class MyChart {
                 }
             }
         }
+
+        console.log(chartData)
 
         return chartData
     }
