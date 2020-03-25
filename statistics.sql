@@ -19,22 +19,24 @@ SELECT
 FROM settings LIMIT 1;
 
 -- Average balance per day, per account
-SELECT
-    acc.id,
-    acc.balance / b.delta_salary_date as money_per_day,
-    acc.name,
-    acc.balance
-FROM accounts AS acc
-JOIN (
-    SELECT 
-        CASE 
-            WHEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 >= 0
-            THEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400
-            ELSE EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 * -1
-        END delta_salary_date
-    FROM settings LIMIT 1
-) AS b ON 1=1
-WHERE acc.active=True;
+SELECT json_object_agg(a.name, a.money_per_day) FROM (
+    SELECT
+        acc.id,
+        acc.balance / b.delta_salary_date as money_per_day,
+        acc.name,
+        acc.balance
+    FROM accounts AS acc
+    JOIN (
+        SELECT 
+            CASE 
+                WHEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 >= 0
+                THEN EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400
+                ELSE EXTRACT(epoch FROM AGE(salary_date, NOW()))/86400 * -1
+            END delta_salary_date
+        FROM settings LIMIT 1
+    ) AS b ON 1=1
+    WHERE acc.active=True
+) AS a;
 
 -- Average balance per day, total
 SELECT SUM(c.money_per_day) FROM (

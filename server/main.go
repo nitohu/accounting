@@ -20,7 +20,6 @@ var (
 	store = sessions.NewCookieStore(key)
 
 	// datetime form layout
-	// dtFormLayout = "Monday 02 January 2006 - 15:04"
 	dateSettingsLayout = "Monday 02 January 2006"
 	dtLayout           = "02.01.2006 - 15:04"
 	dateLayout         = "02.01.2006"

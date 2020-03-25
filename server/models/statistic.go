@@ -25,6 +25,7 @@ type Statistic struct {
 	Value         string
 	ExecutionDate time.Time
 	Visualisation string
+	ExternalID    string
 }
 
 // EmptyStatistic returns an empty statistic
@@ -188,7 +189,7 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 	}
 
 	query := "SELECT id,active,name,compute_query,last_update,execution_date,description,visualisation,keys,"
-	query += "value FROM statistics WHERE id=$1"
+	query += "value,external_id FROM statistics WHERE id=$1"
 
 	e := cr.QueryRow(query, id).Scan(
 		&s.ID,
@@ -201,6 +202,7 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 		&s.Visualisation,
 		&s.Keys,
 		&s.Value,
+		&s.ExternalID,
 	)
 
 	if e != nil {
@@ -218,15 +220,15 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 }
 
 // GetAllStatistics returns all statistics from the database
-func GetAllStatistics(cr *sql.DB) ([]Statistic, err.Error) {
+func GetAllStatistics(cr *sql.DB) (StatisticSet, err.Error) {
 	query := "SELECT id FROM statistics"
-	var stats []Statistic
+	var stats StatisticSet
 
 	rows, e := cr.Query(query)
 	if e != nil {
 		var err err.Error
 		err.Init("GetAllStatistics():", e.Error())
-		return nil, err
+		return stats, err
 	}
 
 	for rows.Next() {
@@ -241,8 +243,60 @@ func GetAllStatistics(cr *sql.DB) ([]Statistic, err.Error) {
 			err.AddTraceback("GetAllStatistics()", "Error while getting statistic: "+fmt.Sprintf("%d", id))
 			return stats, err
 		}
-		stats = append(stats, s)
+		// stats = append(stats, s)
+		stats.stats = append(stats.stats, s)
 	}
 
 	return stats, err.Error{}
+}
+
+// StatisticSet holds a bunch of statistics, they can be queried inside the HTML template
+type StatisticSet struct {
+	stats []Statistic
+}
+
+// FindByExtID gets a Statistic by it's external ID
+func (s StatisticSet) FindByExtID(extID string) Statistic {
+	for i := 0; i < len(s.stats); i++ {
+		stat := s.stats[i]
+
+		if stat.ExternalID == extID {
+			return stat
+		}
+	}
+
+	return Statistic{}
+}
+
+// FindByExtIDs finds multiple statistics by their external ids
+func (s StatisticSet) FindByExtIDs(extIDs ...string) StatisticSet {
+	var res StatisticSet
+
+	for x := 0; x < len(extIDs); x++ {
+		stat := s.FindByExtID(extIDs[x])
+		if stat.Active {
+			res.stats = append(res.stats, stat)
+		}
+	}
+
+	return res
+}
+
+// FindByVisualisation finds Statistics by their type of visualisation
+// and returns them in a new StatisticSet
+func (s StatisticSet) FindByVisualisation(vis string) StatisticSet {
+	var res StatisticSet
+
+	for i := 0; i < len(s.stats); i++ {
+		if vis == s.stats[i].Visualisation {
+			res.stats = append(res.stats, s.stats[i])
+		}
+	}
+
+	return res
+}
+
+// GetArray returns the statistics as an array
+func (s StatisticSet) GetArray() []Statistic {
+	return s.stats
 }

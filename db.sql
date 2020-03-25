@@ -49,7 +49,8 @@ CREATE TABLE statistics (
     keys text,
     value text,
     visualisation text,
-    execution_date timestamp
+    execution_date timestamp,
+    external_id text
 );
 
 CREATE TABLE transactions (
