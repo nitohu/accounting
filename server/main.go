@@ -33,7 +33,7 @@ func logging(f http.HandlerFunc) http.HandlerFunc {
 }
 
 func init() {
-	db = dbInit("127.0.0.1", "nitohu", "123", "accounting-dev", 5432)
+	db = dbInit("127.0.0.1", "nitohu", "123", "AccountingPROD", 5432)
 	tmpl = template.Must(template.ParseGlob("./templates/*"))
 }
 
