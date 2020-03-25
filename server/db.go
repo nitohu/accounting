@@ -11,8 +11,8 @@ import (
 
 var db *sql.DB
 
-func dbInit(host, user, password, dbname string, port int) *sql.DB {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+func dbInit(host, user, password, dbname, port string) *sql.DB {
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlInfo)

@@ -236,8 +236,6 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		categID = nil
 	}
 
-	t.TransactionDate = time.Now().Local()
-
 	if t.ToAccount == 0 && t.FromAccount > 0 {
 		_, e = cr.Exec(query,
 			t.ID,

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"text/template"
 
 	"github.com/gorilla/sessions"
@@ -13,6 +14,8 @@ import (
 var tmpl *template.Template
 
 var (
+	port = ":80"
+
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
 	store = sessions.NewCookieStore(key)
 
@@ -33,8 +36,17 @@ func logging(f http.HandlerFunc) http.HandlerFunc {
 }
 
 func init() {
-	db = dbInit("127.0.0.1", "nitohu", "123", "accounting-dev", 5432)
+	data, err := getCmdLineArgs(os.Args)
+	if !err.Empty() {
+		log.Fatalln(err)
+	}
+	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
+
 	tmpl = template.Must(template.ParseGlob("./templates/*"))
+
+	if val, ok := data["port"]; ok {
+		port = ":" + val
+	}
 }
 
 func main() {
@@ -70,5 +82,5 @@ func main() {
 	// Categories
 	http.HandleFunc("/categories/", logging(handleCategoryOverview))
 
-	log.Fatalln(http.ListenAndServe(":8080", nil))
+	log.Fatalln(http.ListenAndServe(port, nil))
 }
