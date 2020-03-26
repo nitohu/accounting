@@ -1,11 +1,12 @@
 class MyChart {
-    constructor(name, ext_id, value, visualisation) {
+    constructor(name, ext_id, value, visualisation,suffix) {
         this.name = name
         this.ext_id = ext_id
         this.data = JSON.parse(value)
         this.visualisation = visualisation
         this.keys = Object.keys(this.data)
         this.values = Object.values(this.data)
+        this.suffix = suffix || ""
     }
 
     generateChart() {
@@ -49,7 +50,7 @@ class MyChart {
                             return self.keys[elem[0].index]
                         },
                         label: function(item) {
-                            return self.values[item.index]
+                            return self.values[item.index] + " " + self.suffix
                         }
                     }
                 },
@@ -73,7 +74,7 @@ class MyChart {
 
         const [red, green, blue] = this.preventWhite(raw_red, raw_green, raw_blue)
 
-        let backgroundColor = "rgba("+red+","+green+","+blue+",0.4)"
+        let backgroundColor = "rgba("+red+","+green+","+blue+",0.8)"
         let borderColor = "rgba("+red+","+green+","+blue+",1)"
 
         return [backgroundColor, borderColor]
@@ -102,16 +103,14 @@ $(document).ready(function() {
         let extID = $(this).find(".extID").text()
         let value = $(this).find(".value").text()
         let visualisation = $(this).find(".visualisation").text()
+        let suffix = $(this).find(".suffix").text()
 
         $(this).find(".info").remove()
 
-        let chart = new MyChart(name, extID, value, visualisation)
+        let chart = new MyChart(name, extID, value, visualisation,suffix)
         let data = chart.generateChart()
 
         let canvas = $(this).find(".chartjs_graph")
         new Chart(canvas, data)
     })
-    // for(let obj in chartObjs) {
-    //     console.log(obj)
-    // }
 })

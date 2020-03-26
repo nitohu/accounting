@@ -102,7 +102,7 @@
                             <div class="state_w1 mb-1 mt-1">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h5>{{ .Value }}</h5>
+                                        <h5>{{ .Value }} {{ .Suffix }}</h5>
                                         <span><i class="zmdi zmdi-turning-sign"></i> {{ .Name }}</span>
                                     </div>
                                 </div>
@@ -166,6 +166,7 @@
                         <span class="extID">{{$avgBalance.ExternalID}}</span>
                         <span class="value">{{$avgBalance.Value}}</span>
                         <span class="visualisation">{{$avgBalance.Visualisation}}</span>
+                        <span class="suffix">{{$avgBalance.Suffix}}</span>
                     </div>
                     <canvas id="balance_per_day" class="chartjs_graph"></canvas>
                 </div>

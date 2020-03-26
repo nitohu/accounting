@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/nitohu/err"
@@ -25,7 +26,9 @@ type Statistic struct {
 	Value         string
 	ExecutionDate time.Time
 	Visualisation string
+	Suffix        string
 	ExternalID    string
+	Monetary      bool
 }
 
 // EmptyStatistic returns an empty statistic
@@ -63,7 +66,7 @@ func (s *Statistic) Create(cr *sql.DB) err.Error {
 	}
 
 	query := "INSERT INTO statistics (active,name,compute_query,last_update,create_date,description,visualisation,keys,"
-	query += "value,execution_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
+	query += "value,execution_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12);"
 
 	res, e := cr.Exec(query,
 		s.Active,
@@ -76,6 +79,8 @@ func (s *Statistic) Create(cr *sql.DB) err.Error {
 		s.Keys,
 		s.Value,
 		s.ExecutionDate,
+		s.Suffix,
+		s.Monetary,
 	)
 
 	if e != nil {
@@ -115,7 +120,7 @@ func (s *Statistic) Save(cr *sql.DB) err.Error {
 	}
 
 	query := "UPDATE statistics SET name=$1,active=$2,compute_query=$3,last_update=$4,description=$5,visualisation=$6,keys=$7,"
-	query += "value=$8,execution_date=$9 WHERE id=$10;"
+	query += "value=$8,suffix=$9,execution_date=$10,monetary=$12 WHERE id=$11;"
 
 	s.LastUpdate = time.Now()
 
@@ -129,7 +134,9 @@ func (s *Statistic) Save(cr *sql.DB) err.Error {
 		s.Keys,
 		s.Value,
 		s.ExecutionDate,
+		s.Suffix,
 		s.ID,
+		s.Monetary,
 	)
 
 	if e != nil {
@@ -172,11 +179,29 @@ func (s *Statistic) Compute(cr *sql.DB) err.Error {
 		return e
 	}
 
+	// If s.Monetary is true, set the suffix to the currency symbol
+	if s.Monetary {
+		s.Suffix = settings.Currency
+	}
+
+	// Compute the value of the statistic
 	if error := cr.QueryRow(s.ComputeQuery).Scan(&s.Value); error != nil {
 		var err err.Error
 		err.Init("Statistic.Compute()", error.Error())
 		return err
 	}
+
+	// If the value is numerical, shorten the number of decimals
+	if s.Visualisation == "number" {
+		val, er := strconv.ParseFloat(s.Value, 64)
+		if er != nil {
+			var err err.Error
+			err.Init("Statistic.Compute()", er.Error())
+			return err
+		}
+		s.Value = fmt.Sprintf("%.2f", val)
+	}
+
 	return err.Error{}
 }
 
@@ -189,7 +214,7 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 	}
 
 	query := "SELECT id,active,name,compute_query,last_update,execution_date,description,visualisation,keys,"
-	query += "value,external_id FROM statistics WHERE id=$1"
+	query += "value,suffix,external_id,monetary FROM statistics WHERE id=$1"
 
 	e := cr.QueryRow(query, id).Scan(
 		&s.ID,
@@ -202,7 +227,9 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 		&s.Visualisation,
 		&s.Keys,
 		&s.Value,
+		&s.Suffix,
 		&s.ExternalID,
+		&s.Monetary,
 	)
 
 	if e != nil {

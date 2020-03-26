@@ -50,6 +50,8 @@ CREATE TABLE statistics (
     value text,
     visualisation text,
     execution_date timestamp,
+    suffix text,
+    monetary boolean,
     external_id text
 );
 
