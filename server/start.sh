@@ -1,1 +1,1 @@
-go run *.go
+go run . -c ../accounting.conf 

@@ -12,7 +12,7 @@ import (
 // GenerateSessionKey generates a unique key for each session
 func GenerateSessionKey() string {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	charset += "0123456789?.,-_*?:;#+"
+	charset += "0123456789?.,-_*!:;#+"
 
 	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
 	key := make([]byte, 32)
