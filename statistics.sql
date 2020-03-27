@@ -34,7 +34,11 @@ AND transaction_date <= NOW() + interval '1' day AND active='t';
 SELECT json_object_agg(a.name, a.money_per_day) FROM (
     SELECT
         acc.id,
-        acc.balance / b.delta_salary_date as money_per_day,
+        CASE
+            WHEN b.delta_salary_date > 1
+            THEN acc.balance / b.delta_salary_date 
+            ELSE acc.balance * b.delta_salary_date
+        END money_per_day,
         acc.name,
         acc.balance
     FROM accounts AS acc

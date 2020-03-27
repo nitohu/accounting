@@ -56,6 +56,7 @@ class MyChart {
                 },
                 scales: {
                     yAxes: [{
+                        display: self.visualisation == "pie" ? false : true,
                         ticks: {
                             beginAtZero: true
                         }
