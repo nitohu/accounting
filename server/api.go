@@ -156,12 +156,14 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.obj = a
 		// Validate if the ID is existing
-		if err := a.FindByID(db, a.ID); !err.Empty() {
-			w.WriteHeader(500)
-			fmt.Fprintf(w, "{'error': '%s'}", err)
-			return
+		if a.ID > 0 {
+			if err := a.FindByID(db, a.ID); !err.Empty() {
+				w.WriteHeader(500)
+				fmt.Fprintf(w, "{'error': 'ID is not existing in the database'}")
+				return
+			}
+			api.id = a.ID
 		}
-		api.id = a.ID
 		api.updateAccount(w, r)
 	case "/accounts/delete":
 		a := models.EmptyAccount()
@@ -172,6 +174,38 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.id = a.ID
 		api.deleteAccount(w, r)
+	//
+	// Transactions
+	//
+	case "/transactions":
+		api.id = 0
+		t := models.EmptyTransaction()
+		if len(body) > 0 {
+			if e := json.Unmarshal(body, &t); e != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", e)
+				return
+			}
+		}
+		api.id = t.ID
+		if api.id > 0 {
+			api.getTransactionByID(w, r)
+			return
+		}
+		api.getTransactions(w, r)
+	case "/transactions/update":
+		api.id = 0
+		t := models.EmptyTransaction()
+		if len(body) > 0 {
+			if e := json.Unmarshal(body, &t); e != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", e)
+				return
+			}
+		}
+		// Validate if the ID is existing
+		api.id = t.ID
+		api.obj = t
 	default:
 		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
@@ -444,16 +478,15 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 
 	acc.Account.LastUpdate = time.Now()
 
-	var e error
+	var e err.Error
 	if acc.ID <= 0 {
 		e = acc.Account.Create(db)
 	} else {
 		e = acc.Account.Save(db)
 	}
-	if e != nil {
-		var err err.Error
-		err.Init("API.updateAccount()", e.Error())
-		log.Println("[ERROR]", err)
+	if !e.Empty() {
+		e.AddTraceback("API.updateAccount()", "Error while writing account to the database.")
+		log.Println("[ERROR]", e)
 		return
 	}
 
@@ -496,4 +529,52 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
+}
+
+/*
+	##############################
+	#                            #
+	#        Transactions        #
+	#                            #
+	##############################
+*/
+
+// Returns all transactions
+func (api API) getTransactions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/transactions/: Method must be GET.'}")
+		return
+	}
+
+	acc, e := models.GetLatestTransactions(db, -1)
+	if !e.Empty() {
+		e.AddTraceback("API.getTransactions()", "Error while getting transactions")
+		log.Println("[ERROR]", e)
+		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
+		return
+	}
+
+	api.sendResult(w, acc)
+}
+
+// Returns a specific transaction with the given id
+func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/transactions/: Method must be GET.'}")
+		return
+	}
+	if api.id <= 0 {
+		fmt.Fprint(w, errorID)
+		return
+	}
+
+	t := models.EmptyTransaction()
+	if err := t.FindByID(db, api.id); !err.Empty() {
+		err.AddTraceback("API.getTransactionByID", "Error while getting transaction: "+fmt.Sprintf("%d", api.id))
+		log.Println("[ERROR]", err)
+		fmt.Fprint(w, errorGetID)
+		return
+	}
+
+	api.sendResult(w, t)
 }

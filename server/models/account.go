@@ -51,7 +51,6 @@ func EmptyAccount() Account {
 
 // Create 's an account with the current values of the object
 func (a *Account) Create(cr *sql.DB) err.Error {
-
 	if a.ID != 0 {
 		var err err.Error
 		err.Init("Account.Create()", "This object already has an id")
