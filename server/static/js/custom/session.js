@@ -18,7 +18,6 @@ $(document).ready(function() {
 
     function read() {
         let c = document.cookie
-        console.log(c)
         let cookies = c.split(" ")
 
         for(let i = 0; i < cookies.length; i++) {
@@ -37,13 +36,10 @@ $(document).ready(function() {
     }
 
     function getCurrentSettings() {
-        console.log("getCurrentSettings")
         let c = $("body").prop("class")
-        
         let classes = c.split(" ")
-        console.log(classes)
-
         let themeSettings = []
+
         for (let i = 0; i < classes.length; i++) {
             let setting = ""
             if (classes[i].includes("-")) {
@@ -53,22 +49,15 @@ $(document).ready(function() {
             }
             themeSettings.push(setting)
         }
-        console.log(themeSettings)
+        
         store(themeSettings)
         updateUI(themeSettings)
-    }
-
-    function getColorSettings() {
-        // Wait 100ms before executing the function
-        // Otherwise it can happen that the old color setting gets stored into the cookie
-        setTimeout(getCurrentSettings, 100)
     }
 
     function updateUI(data) {
         if (data == undefined) {
             return
         }
-        console.log(data.length)
         if(data.length > 0) {
             $("body").removeClass()
         }
@@ -78,8 +67,16 @@ $(document).ready(function() {
 
             if (item == "toggle") {
                 item = "ls-toggle-menu"
-                $("#checkbox2").prop("active")
+                $("#checkbox2").prop("checked", true)
+            } else if (item == "dark") {
+                item = "theme-"+item
+                $("#lighttheme").prop("checked", false)
+                $("#darktheme").prop("checked", true)
+            } else if (item == "rtl") {
+                $("#checkbox1").prop("checked", true)
             } else {
+                $("li[data-theme].active").removeClass("active")
+                $("li[data-theme="+ item +"]").addClass("active")
                 item = "theme-"+item
             }
 
@@ -87,11 +84,19 @@ $(document).ready(function() {
         }
     }
 
-    console.log(read())
-    // getCurrentSettings()
     updateUI(read())
 
     $(".themeSetting").change(getCurrentSettings)
-    $(".themeButton").click(getCurrentSettings)
-    $(".themeColorBtn").click(getColorSettings)
+    $(".themeButton").click(function() {
+        // Toggle current state of the "Mini Sidebar" checkbox
+        let state = $("#checkbox2").prop("checked")
+        $("#checkbox2").prop("checked", !state)
+
+        getCurrentSettings()
+    })
+    $(".themeColorBtn").click(function() {
+        // Wait 100ms before executing the function
+        // Otherwise it can happen that the old color setting gets stored into the cookie
+        setTimeout(getCurrentSettings, 100)
+    })
 })
