@@ -20,15 +20,6 @@ type API struct {
 	obj interface{}
 }
 
-// APIAccount holds the account type and additional fields for parsing
-// from JSON
-type APIAccount struct {
-	models.Account
-
-	Balance string
-	Active  string
-}
-
 const (
 	errorID    = "{'error': 'Please provide a valid ID.'}"
 	errorGetID = "{'error': 'There was an unexpected error while getting the record by ID.'}"
@@ -206,20 +197,12 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		// Validate if the ID is existing
 		api.id = t.ID
 		api.obj = t
+		api.updateTransaction(w, r)
 	default:
 		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
 	}
 }
-
-// func (api API) replaceBodyJSON(body []byte) []byte {
-// 	bodyStr := string(body)
-
-// 	bodyStr = strings.Replace(bodyStr, "Balance", "apiBalance", -1)
-// 	bodyStr = strings.Replace(bodyStr, "Active", "apiActive", -1)
-
-// 	return []byte(bodyStr)
-// }
 
 func (api API) sendResult(w http.ResponseWriter, data interface{}) {
 	d, err := json.Marshal(data)
@@ -429,12 +412,10 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acc := APIAccount{
-		Account: models.EmptyAccount(),
-	}
+	acc := models.EmptyAccount()
 
 	if api.id > 0 {
-		if err := acc.Account.FindByID(db, api.id); !err.Empty() {
+		if err := acc.FindByID(db, api.id); !err.Empty() {
 			err.AddTraceback("API.updateAccount()", "Error while getting account:"+fmt.Sprintf("%d", api.id))
 			log.Println("[ERROR]", err)
 			w.WriteHeader(400)
@@ -442,47 +423,49 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		acc.Account.CreateDate = time.Now()
-		acc.Account.Active = true
+		acc.CreateDate = time.Now()
+		acc.Active = true
 	}
 
 	reqData := api.obj.(models.Account)
 
+	// Validate user input
 	if acc.ID == 0 && reqData.Name == "" && reqData.Balance == 0.0 {
 		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': 'Please provide a name and balance for creating a category.'}")
 		return
 	}
 
+	// Set fields which are not empty
 	if reqData.Name != "" {
-		acc.Account.Name = reqData.Name
+		acc.Name = reqData.Name
 	}
 	if reqData.Balance != 0.0 {
-		acc.Account.Balance = reqData.Balance
+		acc.Balance = reqData.Balance
 	}
 	if reqData.Iban != "" {
-		acc.Account.Iban = reqData.Iban
+		acc.Iban = reqData.Iban
 	}
 	if reqData.BankCode != "" {
-		acc.Account.BankCode = reqData.BankCode
+		acc.BankCode = reqData.BankCode
 	}
 	if reqData.AccountNr != "" {
-		acc.Account.AccountNr = reqData.AccountNr
+		acc.AccountNr = reqData.AccountNr
 	}
 	if reqData.BankName != "" {
-		acc.Account.BankName = reqData.BankName
+		acc.BankName = reqData.BankName
 	}
 	if reqData.BankType != "" {
-		acc.Account.BankType = reqData.BankType
+		acc.BankType = reqData.BankType
 	}
 
-	acc.Account.LastUpdate = time.Now()
+	acc.LastUpdate = time.Now()
 
 	var e err.Error
 	if acc.ID <= 0 {
-		e = acc.Account.Create(db)
+		e = acc.Create(db)
 	} else {
-		e = acc.Account.Save(db)
+		e = acc.Save(db)
 	}
 	if !e.Empty() {
 		e.AddTraceback("API.updateAccount()", "Error while writing account to the database.")
@@ -490,7 +473,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.sendResult(w, acc.Account)
+	api.sendResult(w, acc)
 }
 
 // deletes an account with an ID
@@ -573,6 +556,78 @@ func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		err.AddTraceback("API.getTransactionByID", "Error while getting transaction: "+fmt.Sprintf("%d", api.id))
 		log.Println("[ERROR]", err)
 		fmt.Fprint(w, errorGetID)
+		return
+	}
+
+	api.sendResult(w, t)
+}
+
+func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(400)
+		fmt.Fprint(w, "{'error': '/api/transactions/update: Method must be POST.'}")
+		return
+	}
+
+	t := models.EmptyTransaction()
+	if api.id > 0 {
+		if e := t.FindByID(db, api.id); !e.Empty() {
+			e.AddTraceback("api.updateTransaction()", "Error while searching transaction per ID.")
+			log.Println("[ERROR]", e)
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "{'error': '/api/transactions/update: An error occured while getting transaction from database: %d'}", api.id)
+			return
+		}
+	} else {
+		t.CreateDate = time.Now()
+		t.LastUpdate = time.Now()
+	}
+
+	req := api.obj.(models.Transaction)
+
+	if req.Name == "" || req.Amount <= 0 || (req.FromAccount <= 0 && req.ToAccount <= 0) {
+		w.WriteHeader(400)
+		fmt.Fprint(w, "{'error', 'At least one required field was empty (Name, Amount) or both accounts were 0'}")
+		return
+	}
+
+	t.Name = req.Name
+	t.Amount = req.Amount
+	t.Active = req.Active
+
+	var emptyTime time.Time
+
+	if req.Description != "" {
+		t.Description = req.Description
+	}
+	if req.TransactionDate != emptyTime {
+		t.TransactionDate = req.TransactionDate
+	}
+	if req.TransactionType != "" {
+		t.TransactionType = req.TransactionType
+	}
+	if req.CategoryID >= 0 {
+		t.CategoryID = req.CategoryID
+	}
+	if req.FromAccount >= 0 {
+		t.FromAccount = req.FromAccount
+	}
+	if req.ToAccount >= 0 {
+		t.ToAccount = req.ToAccount
+	}
+
+	t.LastUpdate = time.Now()
+
+	var e err.Error
+	if api.id > 0 {
+		e = t.Save(db)
+	} else {
+		e = t.Create(db)
+	}
+	if !e.Empty() {
+		w.WriteHeader(400)
+		fmt.Println("{'error': 'An error occured while saving/creating the transaction.'}")
+		e.AddTraceback("api.updateTransaction()", "Error while creating/saving the transaction.")
 		return
 	}
 
