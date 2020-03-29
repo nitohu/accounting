@@ -578,9 +578,19 @@ func GetAllTransactions(cr *sql.DB) ([]Transaction, err.Error) {
 // latest transactions are sorted by their transaction_date
 func GetLatestTransactions(cr *sql.DB, amount int) ([]Transaction, err.Error) {
 	var transactions []Transaction
-	query := "SELECT id FROM transactions ORDER BY transaction_date DESC LIMIT $1"
+	query := "SELECT id FROM transactions ORDER BY transaction_date DESC"
 
-	rows, e := cr.Query(query, amount)
+	if amount > 0 {
+		query += " LIMIT $1"
+	}
+
+	var rows *sql.Rows
+	var e error
+	if amount > 0 {
+		rows, e = cr.Query(query, amount)
+	} else {
+		rows, e = cr.Query(query)
+	}
 
 	if e != nil {
 		var err err.Error

@@ -38,7 +38,7 @@ func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Transactions"
-	if ctx["Transactions"], e = models.GetAllTransactions(db); !e.Empty() {
+	if ctx["Transactions"], e = models.GetLatestTransactions(db, -1); !e.Empty() {
 		e.AddTraceback("handleTransactionOverview()", "Error while getting all transactions.")
 		fmt.Println("[WARN]", e)
 	}
