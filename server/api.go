@@ -127,9 +127,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.getAccounts(w, r)
 	case "/accounts/create":
-		a := APIAccount{
-			Account: models.EmptyAccount(),
-		}
+		a := models.EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
