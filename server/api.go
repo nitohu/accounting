@@ -196,6 +196,18 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.id = t.ID
 		api.obj = t
 		api.updateTransaction(w, r)
+	case "/transactions/delete":
+		api.id = 0
+		t := models.Transaction{}
+		if len(body) > 0 {
+			if e := json.Unmarshal(body, &t); e != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", e)
+				return
+			}
+		}
+		api.id = t.ID
+		api.deleteTransaction(w, r)
 	default:
 		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
@@ -509,6 +521,7 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
 	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
 }
 
@@ -552,7 +565,7 @@ func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	t := models.EmptyTransaction()
 	if err := t.FindByID(db, api.id); !err.Empty() {
 		err.AddTraceback("API.getTransactionByID", "Error while getting transaction: "+fmt.Sprintf("%d", api.id))
-		log.Println("[ERROR]", err)
+		log.Println("[WARN]", err)
 		fmt.Fprint(w, errorGetID)
 		return
 	}
@@ -573,7 +586,7 @@ func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
 			e.AddTraceback("api.updateTransaction()", "Error while searching transaction per ID.")
 			log.Println("[ERROR]", e)
 			w.WriteHeader(400)
-			fmt.Fprintf(w, "{'error': '/api/transactions/update: An error occured while getting transaction from database: %d'}", api.id)
+			fmt.Fprintf(w, errorGetID)
 			return
 		}
 	} else {
@@ -630,4 +643,38 @@ func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.sendResult(w, t)
+}
+
+func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(405)
+		fmt.Fprint(w, "{'error', '/api/transactions/delete: Method must be DELETE.'}")
+		return
+	} else if api.id <= 0 {
+		w.WriteHeader(400)
+		fmt.Fprint(w, errorID)
+		return
+	}
+
+	// Validate that the ID is existing in the database
+	t := models.Transaction{}
+
+	if e := t.FindByID(db, api.id); !e.Empty() {
+		w.WriteHeader(400)
+		fmt.Fprint(w, errorGetID)
+		e.AddTraceback("api.deleteTransaction()", "Error while finding record by ID: "+fmt.Sprintf("%d", api.id))
+		log.Println("[WARN]", e)
+		return
+	}
+
+	if e := t.Delete(db); !e.Empty() {
+		w.WriteHeader(400)
+		fmt.Fprint(w, "{'error', 'There was an unexpected error deleting the transaction from the database'}")
+		e.AddTraceback("api.deleteTransaction()", "Error deleting the transaction "+fmt.Sprintf("%d", api.id))
+		log.Println("[ERROR]", e)
+		return
+	}
+
+	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
+	fmt.Fprintf(w, "{'success': 'You've successfully deleted the transaction with the id %d'}", api.id)
 }

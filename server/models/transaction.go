@@ -416,7 +416,9 @@ func (t *Transaction) Delete(cr *sql.DB) err.Error {
 	if t.ToAccount > 0 {
 		err := bookIntoAccount(cr, t.ToAccount, t, true)
 
-		if err.Empty() {
+		if !err.Empty() {
+			// TODO: If FromAccount was bigger than 0, it's already booked at this time
+			// Make sure the booking is reverted again.
 			err.AddTraceback("Transaction.Delete()", "Redo booking from recipient account: "+fmt.Sprintf("%d", t.FromAccount))
 			return err
 		}
