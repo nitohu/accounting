@@ -164,6 +164,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	if !err.Empty() {
 		err.AddTraceback("handleTransactionForm()", "Error while writing the transaction to the database.")
+		log.Println(err)
 	}
 
 	http.Redirect(w, r, "/transactions/", http.StatusSeeOther)

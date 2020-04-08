@@ -73,7 +73,7 @@ func main() {
 	// Transactions
 	http.HandleFunc("/transactions/", logging(handleTransactionOverview))
 	http.HandleFunc("/transactions/form/", logging(handleTransactionForm))
-	http.HandleFunc("/transactions/delete/{id}", logging(handleTransactionDeletion))
+	http.HandleFunc("/transactions/delete/{id}/", logging(handleTransactionDeletion))
 
 	// Statistics
 	http.HandleFunc("/statistics/", logging(handleStatisticsOverview))

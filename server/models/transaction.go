@@ -210,13 +210,12 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 	// Get old data
 	var oldAmount float64
 	var accountID, toAccountID interface{}
-	var TransactionDateStr time.Time
 
-	query := "SELECT amount, transaction_date, account_id, to_account FROM transactions WHERE id=$1"
+	query := "SELECT amount, account_id, to_account FROM transactions WHERE id=$1"
 
 	row := cr.QueryRow(query, t.ID)
 
-	e := row.Scan(&oldAmount, &TransactionDateStr, &accountID, &toAccountID)
+	e := row.Scan(&oldAmount, &accountID, &toAccountID)
 
 	if e != nil {
 		var err err.Error
@@ -236,6 +235,7 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		categID = nil
 	}
 
+	// Write data to database
 	if t.ToAccount == 0 && t.FromAccount > 0 {
 		_, e = cr.Exec(query,
 			t.ID,
@@ -304,14 +304,10 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 	/*
 		Change balance on accounts
 	*/
-
-	temp := EmptyTransaction()
-
-	temp.Name = t.Name
-	temp.Amount = oldAmount
-
-	originChanged := false
-	destinationChanged := false
+	temp := Transaction{
+		Name:   t.Name,
+		Amount: oldAmount,
+	}
 
 	// The origin account changed
 	if accountID != t.FromAccount {
@@ -328,12 +324,13 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		}
 
 		// Book the amount into the new account
-		err := bookIntoAccount(cr, t.FromAccount, t, true)
-		originChanged = true
+		if t.FromAccount > 0 {
+			err := bookIntoAccount(cr, t.FromAccount, t, true)
 
-		if !err.Empty() {
-			err.AddTraceback("Transaction.Save()", "Error while booking to new origin account: "+fmt.Sprintf("%d", t.FromAccount))
-			return err
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while booking to new origin account: "+fmt.Sprintf("%d", t.FromAccount))
+				return err
+			}
 		}
 	}
 
@@ -341,7 +338,6 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 	if toAccountID != t.ToAccount {
 		// Remove booking from old destination account
 		// Make sure the old amount is used
-		destinationChanged = true
 		if toAccountID != nil {
 			err := bookIntoAccount(cr, toAccountID.(int64), &temp, true)
 
@@ -352,11 +348,13 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		}
 
 		// Book into new account
-		err := bookIntoAccount(cr, t.ToAccount, t, false)
+		if t.ToAccount > 0 {
+			err := bookIntoAccount(cr, t.ToAccount, t, false)
 
-		if !err.Empty() {
-			err.AddTraceback("Transaction.Save()", "Error while booking transaction into new receiving account: "+fmt.Sprintf("%d", t.ToAccount))
-			return err
+			if !err.Empty() {
+				err.AddTraceback("Transaction.Save()", "Error while booking transaction into new receiving account: "+fmt.Sprintf("%d", t.ToAccount))
+				return err
+			}
 		}
 	}
 
@@ -368,7 +366,7 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		// The origin did not change
 		// So book the difference into the origin account
 		// If the origin has changed we've already booked into the accounts
-		if !originChanged {
+		if accountID == t.FromAccount {
 			// Calculate difference and book the difference into the origin account
 			diff := t.Amount - oldAmount
 
@@ -383,7 +381,7 @@ func (t *Transaction) Save(cr *sql.DB) err.Error {
 		}
 
 		// The destination did not change
-		if !destinationChanged {
+		if toAccountID == t.ToAccount {
 
 			err := bookIntoAccount(cr, t.ToAccount, &temp, false)
 
