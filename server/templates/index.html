@@ -154,7 +154,7 @@
                     <h2><strong>Amount per category</strong> last 30 days</h2>
                 </div>
                 <div class="body dataChart">
-                    {{ $avgBalance := $.Statistics.FindByExtID "total_category_amount" }}
+                    {{ $avgBalance := $.Statistics.FindByExtID "past_category_amount" }}
                     <div class="info">
                         <span class="name">{{$avgBalance.Name}}</span>
                         <span class="extID">{{$avgBalance.ExternalID}}</span>
