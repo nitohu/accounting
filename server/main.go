@@ -14,7 +14,9 @@ import (
 var tmpl *template.Template
 
 var (
-	port = ":80"
+	port         = ":80"
+	certFilePath = ""
+	keyFilePath  = ""
 
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
 	store = sessions.NewCookieStore(key)
@@ -43,8 +45,16 @@ func init() {
 
 	tmpl = template.Must(template.ParseGlob("./templates/*"))
 
+	log.Println("init()", data)
+
 	if val, ok := data["port"]; ok {
 		port = ":" + val
+	}
+	if val, ok := data["certfile"]; ok {
+		certFilePath = val
+	}
+	if val, ok := data["keyfile"]; ok {
+		keyFilePath = val
 	}
 }
 
@@ -81,5 +91,9 @@ func main() {
 	// Categories
 	http.HandleFunc("/categories/", logging(handleCategoryOverview))
 
-	log.Fatalln(http.ListenAndServe(port, nil))
+	if certFilePath != "" && keyFilePath != "" {
+		log.Fatalln(http.ListenAndServeTLS(port, certFilePath, keyFilePath, nil))
+	} else {
+		log.Fatalln(http.ListenAndServe(port, nil))
+	}
 }
