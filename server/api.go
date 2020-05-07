@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nitohu/err"
+	"github.com/nitohu/accounting/server/models"
 
-	"./models"
+	"github.com/nitohu/err"
 )
 
 // API Handler for the Accounting app
@@ -208,6 +208,22 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.id = t.ID
 		api.deleteTransaction(w, r)
+	case "/statistics":
+		api.id = 0
+		s := models.Statistic{}
+		if len(body) > 0 {
+			if e := json.Unmarshal(body, &s); e != nil {
+				w.WriteHeader(400)
+				fmt.Fprintf(w, "{'error': '%s'}", e)
+				return
+			}
+		}
+		api.id = s.ID
+		if api.id > 0 {
+			api.getStatisticByID(w, r)
+			return
+		}
+		api.getStatistics(w, r)
 	default:
 		w.WriteHeader(404)
 		fmt.Fprint(w, "{'error': '404 Not Found', 'status': 404}")
@@ -677,4 +693,52 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
 	fmt.Fprintf(w, "{'success': 'You've successfully deleted the transaction with the id %d'}", api.id)
+}
+
+/*
+	##############################
+	#                            #
+	#         Statistics         #
+	#                            #
+	##############################
+*/
+
+// Returns all Statistics
+func (api API) getStatistics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/statistics: Method must be GET.")
+		return
+	}
+
+	stats, e := models.GetAllStatistics(db)
+	if !e.Empty() {
+		e.AddTraceback("api.getStatistics()", "Error while getting statistics.")
+		log.Println("[ERROR]", e)
+		fmt.Fprint(w, "{'error': 'Server error while getting the statistics.'}")
+		return
+	}
+
+	api.sendResult(w, stats.GetArray())
+}
+
+// Returns specific Statistic
+func (api API) getStatisticByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fmt.Fprint(w, "{'error': '/api/statistics: Method must be GET.")
+		return
+	}
+	if api.id <= 0 {
+		fmt.Fprint(w, errorID)
+		return
+	}
+
+	s := models.Statistic{}
+	if e := s.FindByID(db, api.id); !e.Empty() {
+		e.AddTraceback("api.getStatisticByID()", "Error getting Statistic by ID.")
+		log.Println("[WARN]", e)
+		fmt.Fprint(w, errorGetID)
+		return
+	}
+
+	api.sendResult(w, s)
 }
