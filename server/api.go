@@ -709,7 +709,7 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[INFO] api.deleteTransaction(): Account with ID %d was successfully deleted.\n", api.id)
+	log.Printf("[INFO] api.deleteTransaction(): Transaction with ID %d was successfully deleted.\n", api.id)
 	fmt.Fprintf(w, "{'success': 'The record with the id %d was successfully deleted.'}", api.id)
 }
 
