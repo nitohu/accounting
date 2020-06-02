@@ -2,7 +2,7 @@ class MyChart {
     constructor(name, ext_id, value, visualisation,suffix) {
         this.name = name
         this.ext_id = ext_id
-        this.data = JSON.parse(value)
+        this.data = JSON.parse(value || "{}")
         this.visualisation = visualisation
         this.keys = Object.keys(this.data)
         this.values = Object.values(this.data)
@@ -10,6 +10,10 @@ class MyChart {
     }
 
     generateChart() {
+        if (this.visualisation == "") {
+            return
+        }
+        
         let backgroundColors = []
         let borderColors = []
         for(let i = 0; i < this.keys.length; i++) {
@@ -112,6 +116,7 @@ $(document).ready(function() {
         let data = chart.generateChart()
 
         let canvas = $(this).find(".chartjs_graph")
+        console.log(data)
         new Chart(canvas, data)
     })
 })
