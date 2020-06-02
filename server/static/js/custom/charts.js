@@ -5,22 +5,46 @@ class MyChart {
         this.data = JSON.parse(value || "{}")
         this.visualisation = visualisation
         this.keys = Object.keys(this.data)
-        this.values = Object.values(this.data)
+        // Temporary variable until the values are checked
+        // Could be objects or a list of numbers
+        this.vals = Object.values(this.data)
+        // Actual variable which later holds the numerical values
+        this.values = []
         this.suffix = suffix || ""
     }
 
     generateChart() {
+        console.log(this.name)
+        console.log(this.values)
+        console.log(this.visualisation)
         if (this.visualisation == "") {
             return
         }
         
         let backgroundColors = []
         let borderColors = []
-        for(let i = 0; i < this.keys.length; i++) {
-            let [bg, border] = this.generateColor()
-            backgroundColors.push(bg)
-            borderColors.push(border)
+        // Additional information should be provided
+        if (typeof(this.vals[0]) === typeof({})) {
+            console.log(this.vals)
+            let values = []
+            for(let index in this.vals) {
+                let item = this.vals[index]
+                backgroundColors.push(item.hex)
+                values.push(item.value)
+            }
+            this.values = values
+        } else {
+            for(let i = 0; i < this.keys.length; i++) {
+                let [bg, border] = this.generateColor()
+                backgroundColors.push(bg)
+                borderColors.push(border)
+            }
+            
+            this.values = this.vals
         }
+        
+        console.log(backgroundColors)
+        console.log(borderColors)
 
         let dataset = {
             label: this.name,
@@ -116,7 +140,6 @@ $(document).ready(function() {
         let data = chart.generateChart()
 
         let canvas = $(this).find(".chartjs_graph")
-        console.log(data)
         new Chart(canvas, data)
     })
 })
