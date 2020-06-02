@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -268,7 +269,7 @@ func GetAllStatistics(cr *sql.DB) (StatisticSet, err.Error) {
 		}
 		if err := s.FindByID(cr, id); !err.Empty() {
 			err.AddTraceback("GetAllStatistics()", "Error while getting statistic: "+fmt.Sprintf("%d", id))
-			return stats, err
+			log.Print("[WARN] ", err)
 		}
 		// stats = append(stats, s)
 		stats.stats = append(stats.stats, s)
