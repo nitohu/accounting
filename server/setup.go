@@ -60,33 +60,8 @@ func getCmdLineArgs(args []string) (map[string]string, err.Error) {
 			os.Exit(0)
 			return nil, err.Error{}
 		} else if kw == "-c" || kw == "--config" {
-			filePath := val
-			data, error := ioutil.ReadFile(filePath)
-			if error != nil {
-				var e err.Error
-				e.Init("getCmdLineArgs()", error.Error())
+			if e := readConfFile(&res, val); !e.Empty() {
 				return nil, e
-			}
-
-			var kw, val string
-			kwPassed := false
-			for x := 0; x < len(data); x++ {
-				c := data[x]
-				if c == byte('=') {
-					kwPassed = true
-				} else if c == byte('\n') {
-					if kw != "" && val != "" {
-						res[kw] = val
-					}
-
-					kwPassed = false
-					kw = ""
-					val = ""
-				} else if kwPassed {
-					val += string(c)
-				} else {
-					kw += string(c)
-				}
 			}
 		} else if kw == "-H" || kw == "--dbhost" {
 			res["dbhost"] = val
@@ -108,6 +83,44 @@ func getCmdLineArgs(args []string) (map[string]string, err.Error) {
 	}
 
 	return res, err.Error{}
+}
+
+func readConfFile(res *map[string]string, filePath string) err.Error {
+	data, error := ioutil.ReadFile(filePath)
+	if error != nil {
+		var e err.Error
+		e.Init("getCmdLineArgs()", error.Error())
+		return e
+	}
+
+	var kw, val string
+	kwPassed := false
+	for x := 0; x < len(data); x++ {
+		c := data[x]
+		if c == byte('=') {
+			kwPassed = true
+		} else if c == byte('\n') {
+			if kw != "" && val != "" {
+				(*res)[kw] = val
+			}
+
+			kwPassed = false
+			kw = ""
+			val = ""
+		} else if c == byte(';') {
+			var comment string
+			for c != byte('\n') {
+				x++
+				c = data[x]
+				comment += string(c)
+			}
+		} else if kwPassed {
+			val += string(c)
+		} else {
+			kw += string(c)
+		}
+	}
+	return err.Error{}
 }
 
 func validateCmdlineData(data map[string]string) err.Error {
