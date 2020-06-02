@@ -14,9 +14,6 @@ class MyChart {
     }
 
     generateChart() {
-        console.log(this.name)
-        console.log(this.values)
-        console.log(this.visualisation)
         if (this.visualisation == "") {
             return
         }
@@ -25,7 +22,6 @@ class MyChart {
         let borderColors = []
         // Additional information should be provided
         if (typeof(this.vals[0]) === typeof({})) {
-            console.log(this.vals)
             let values = []
             for(let index in this.vals) {
                 let item = this.vals[index]
@@ -42,9 +38,6 @@ class MyChart {
             
             this.values = this.vals
         }
-        
-        console.log(backgroundColors)
-        console.log(borderColors)
 
         let dataset = {
             label: this.name,

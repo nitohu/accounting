@@ -74,7 +74,7 @@ SELECT json_object_agg(b.name, b.obj) FROM (
     ) AS a
 ) AS b;
 
--- Money spent per category, last 30 days = Avg per day
+-- Average Money spent per category, last 30 days
 SELECT json_object_agg(b.name, b.amount) FROM (
     SELECT a.name,a.amount/30 amount FROM (
         SELECT c.name,SUM(t.amount) amount FROM categories AS c
@@ -83,3 +83,15 @@ SELECT json_object_agg(b.name, b.amount) FROM (
         GROUP BY c.name
     ) as a
 ) as b;
+
+-- Money spent per category, per month => Ext. ID: category_spent_monthly
+select json_object_agg(
+	CONCAT(a.month, '/', a.year),
+	a.amount
+) from (
+	SELECT to_char(date_trunc('month', t.transaction_date), 'YYYY') AS year,
+		   to_char(date_trunc('month', t.transaction_date), 'Mon') AS month,
+		   sum(t.amount) AS amount
+	FROM transactions AS t
+	GROUP BY date_trunc('month', t.transaction_date)
+) as a;
