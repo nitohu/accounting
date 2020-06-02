@@ -69,3 +69,13 @@ SELECT json_object_agg(a.name,a.sum) FROM (
     WHERE t.active=true AND c.active=true AND t.transaction_date >= NOW() - interval '30 days'
     GROUP BY c.name
 ) AS a;
+
+-- Money spent per category, last 30 days = Avg per day
+SELECT json_object_agg(b.name, b.amount) FROM (
+    SELECT a.name,a.amount/30 amount FROM (
+        SELECT c.name,SUM(t.amount) amount FROM categories AS c
+        JOIN transactions AS t ON c.id=t.category_id
+        WHERE t.active=true AND c.active=true AND t.transaction_date >= NOW() - interval '30 days'
+        GROUP BY c.name
+    ) as a
+) as b;
