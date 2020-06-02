@@ -141,12 +141,12 @@
             xhr.open("DELETE", "/api/transactions/delete", true)
             xhr.setRequestHeader("Content-Type", "application/json")
             xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    let m = xhr.responseText.replace(/'/g, '"')
+                if (this.readyState == 4 && this.status == 200) {
+                    let m = this.responseText.replace(/'/g, '"')
                     let msg = JSON.parse(m)
                     console.log(msg.success)
-                } else if (xhr.readyState == 4 && (xhr.status == 400 || xhr.status == 405)) {
-                    let m = xhr.responseText.replace(/'/g, '"')
+                } else if (this.readyState == 4 && (this.status == 400 || this.status == 405)) {
+                    let m = this.responseText.replace(/'/g, '"')
                     let msg = JSON.parse(m)
                     console.warn(msg.error)
                 }

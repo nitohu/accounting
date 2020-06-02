@@ -7,24 +7,25 @@ $(document).ready(function() {
     }
 
     function deleteAccount(e) {
-        data = {
-            "ID": Number.parseInt(e.path[2].id)
-        }
-        console.log(e.path)
-        console.log(e.path[2].id)
-        console.log(typeof(e.path[2].id))
-        console.log(data)
+        let id = $(e.target).attr("account-id")
+        data = {"ID": Number.parseInt(id)}
+        
         let xhr = new XMLHttpRequest()
         xhr.open("DELETE", "/api/accounts/delete", true)
         xhr.setRequestHeader("Content-Type", "application/json")
         xhr.onreadystatechange = function() {
             if (this.readyState == 4) {
+                let m = this.response.replace(/'/g, '"')
+                let msg = JSON.parse(m)
                 if (this.status == 400) {
-                    console.error(this.response)
+                    console.error(msg.error)
                 } else if (this.status == 200) {
                     window.location.reload()
+                    console.log(msg.success)
+                } else if (this.status == 403) {
+                    console.warn(msg.error)
                 } else {
-                    console.warn(this.status)
+                    console.error(this.response)
                 }
             }
         }

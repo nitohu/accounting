@@ -101,7 +101,7 @@
                                             <td>{{ printf "%.2f" .Balance }} {{ $.Settings.Currency }}</td>
                                             <td>{{ .BankName }}</td>
                                             <td>{{ .Iban }}</td>
-                                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="material-icons">X</i></td>
+                                            <td class="deleteEntry" account-id="{{ .ID }}"><i account-id="{{ .ID }}" class="material-icons">X</i></td>
                                         </tr>
                                     {{ end }}
                                 </tbody>

@@ -510,6 +510,7 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if api.id <= 0 {
+		w.WriteHeader(400)
 		fmt.Fprintln(w, errorID)
 		return
 	}
@@ -519,13 +520,13 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		err.AddTraceback("API.deleteAccount()", "Error getting account: "+fmt.Sprintf("%d", api.id))
 		log.Println("[WARN]", err)
 		w.WriteHeader(400)
-		fmt.Fprintln(w, "{'error', 'There was an error finding the record in the database.'}")
+		fmt.Fprintln(w, "{'error': 'There was an error finding the record in the database.'}")
 		return
 	}
 
 	if a.TransactionCount > 0 {
 		w.WriteHeader(403)
-		fmt.Println(w, "{'error', 'You cannot delete this record because it has transactions referenced to it'}")
+		fmt.Fprintln(w, "{'error': 'You cannot delete this record because it has transactions referenced to it'}")
 		return
 	}
 
@@ -691,7 +692,7 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
+	log.Printf("[INFO] api.deleteTransaction(): Account with ID %d was successfully deleted.\n", api.id)
 	fmt.Fprintf(w, "{'success': 'The record with the id %d was successfully deleted.'}", api.id)
 }
 
