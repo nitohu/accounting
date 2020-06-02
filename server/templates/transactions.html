@@ -112,7 +112,7 @@
                                             </td>
                                             <td>{{ .TransactionDateStr }}</td>
                                             <td>{{ .ToAccountName }}</td>
-                                            <td class="deleteEntry" id="delete_{{ .ID }}"><i class="zmdi zmdi-close"></i></td>
+                                            <td class="deleteEntry" id="delete_{{ .ID }}" data-id="{{ .ID }}"><i class="zmdi zmdi-close" data-id="{{ .ID }}"></i></td>
                                         </tr>
                                     {{ end }}
                                 </tbody>

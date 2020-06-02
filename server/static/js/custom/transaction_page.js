@@ -8,8 +8,8 @@ $(document).ready(function() {
     function addTableButtonEvent() {
         for (let i = 0; i < btns.length; i++) {
             let btn = btns[i]
-            btn.addEventListener("click", function() {
-                let id = btn.id.split("_")[1]
+            btn.addEventListener("click", function(e) {
+                let id = $(this).attr("data-id")
                 deleteTransaction(id)
             })
         }
@@ -78,7 +78,6 @@ $(document).ready(function() {
                 
                 // Generate & append new list items to the list
                 let data = JSON.parse(this.responseText)
-                console.log(data)
                 generateTableItems(data)
             }
         }
