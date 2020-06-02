@@ -85,13 +85,14 @@ SELECT json_object_agg(b.name, b.amount) FROM (
 ) as b;
 
 -- Money spent per category, per month => Ext. ID: category_spent_monthly
-select json_object_agg(
+SELECT json_object_agg(
 	CONCAT(a.month, '/', a.year),
 	a.amount
-) from (
+) FROM (
 	SELECT to_char(date_trunc('month', t.transaction_date), 'YYYY') AS year,
 		   to_char(date_trunc('month', t.transaction_date), 'Mon') AS month,
-		   sum(t.amount) AS amount
+		   SUM(t.amount) AS amount
 	FROM transactions AS t
+    WHERE t.account_id IS NOT NULL AND t.to_account IS NULL
 	GROUP BY date_trunc('month', t.transaction_date)
-) as a;
+) AS a;
