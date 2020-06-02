@@ -173,8 +173,7 @@
                 </div>
                 <div class="body dataChart">
                     {{ $avgBalance := $.Statistics.FindByExtID "balance_per_day" }}
-                    <!-- <div class="info"> -->
-                        <div>
+                    <div class="info">
                         <span class="name">{{$avgBalance.Name}}</span>
                         <span class="extID">{{$avgBalance.ExternalID}}</span>
                         <span class="value">{{$avgBalance.Value}}</span>
