@@ -380,7 +380,7 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
+	fmt.Fprintf(w, "{'success': 'The record with the id %d was successfully deleted.'}", api.id)
 }
 
 /*
@@ -538,7 +538,7 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
-	fmt.Fprintf(w, "{'success': 'You've successfully deleted the record with the id %d'}", api.id)
+	fmt.Fprintf(w, "{'success': 'The record with the id %d was successfully deleted.'}", api.id)
 }
 
 /*
@@ -692,7 +692,7 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[INFO] api.deleteAccount(): Account with ID %d was successfully deleted.\n", api.id)
-	fmt.Fprintf(w, "{'success': 'You've successfully deleted the transaction with the id %d'}", api.id)
+	fmt.Fprintf(w, "{'success': 'The record with the id %d was successfully deleted.'}", api.id)
 }
 
 /*

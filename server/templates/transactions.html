@@ -135,12 +135,23 @@
         let btn = btns[i]
         btn.addEventListener("click", function() {
             let id = btn.id.split("_")[1]
+            let xhr = new XMLHttpRequest()
+            let data = JSON.stringify({"ID": Number.parseInt(id)})
 
-            console.warn("Deleting record with id ", id)
-            fetch("/transactions/delete/"+id).then(function() {
-                window.location.reload()
-            })
-
+            xhr.open("DELETE", "/api/transactions/delete", true)
+            xhr.setRequestHeader("Content-Type", "application/json")
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    let m = xhr.responseText.replace(/'/g, '"')
+                    let msg = JSON.parse(m)
+                    console.log(msg.success)
+                } else if (xhr.readyState == 4 && (xhr.status == 400 || xhr.status == 405)) {
+                    let m = xhr.responseText.replace(/'/g, '"')
+                    let msg = JSON.parse(m)
+                    console.warn(msg.error)
+                }
+            }
+            xhr.send(data)
         })
     }
 </script>
