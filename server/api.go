@@ -253,6 +253,7 @@ func (api API) sendResult(w http.ResponseWriter, data interface{}) {
 // Also handles if
 func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/: Method must be GET.'}")
 		return
 	}
@@ -261,6 +262,7 @@ func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 	if !err.Empty() {
 		err.AddTraceback("API.getCategories()", "Error getting all categories.")
 		log.Println("[ERROR]", err)
+		w.WriteHeader(500)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
 		return
 	}
@@ -271,10 +273,12 @@ func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 // getCategoryByID gets a category by it's ID
 func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/: Method must be POST for getting categories by ID.'}")
 		return
 	}
 	if api.id <= 0 {
+		w.WriteHeader(400)
 		fmt.Fprintln(w, errorID)
 		return
 	}
@@ -284,6 +288,7 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 	if err := c.FindByID(db, api.id); !err.Empty() {
 		err.AddTraceback("API.getCategoryByID()", "Error getting category:"+fmt.Sprintf("%d", api.id))
 		log.Println("[ERROR]", err)
+		w.WriteHeader(400)
 		fmt.Fprintln(w, errorGetID)
 		return
 	}
@@ -297,6 +302,7 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 // Returns the data written to the database
 func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
@@ -308,6 +314,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 		if err := c.FindByID(db, api.id); !err.Empty() {
 			err.AddTraceback("API.updateCategory()", "Error getting category by ID: "+fmt.Sprintf("%d", api.id))
 			log.Println("[WARN]", err)
+			w.WriteHeader(400)
 			fmt.Fprint(w, errorGetID)
 			return
 		}
@@ -322,6 +329,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Error catching when the client wants to create a category but provides no name
 	if c.ID == 0 && reqData.Name == "" {
+		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': 'Please provide a name for creating a category.'}")
 		return
 	}
@@ -361,10 +369,12 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 // deletes a category with an ID
 func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/delete: Method must be DELETE.'}")
 		return
 	}
 	if api.id <= 0 {
+		w.WriteHeader(400)
 		fmt.Fprintln(w, errorID)
 		return
 	}
@@ -376,6 +386,7 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	if e := c.Delete(db); !e.Empty() {
 		e.AddTraceback("API.deleteCategory", "Error deleting category with ID: "+fmt.Sprintf("%d", api.id))
 		log.Println("[WARN]", e)
+		w.WriteHeader(400)
 		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
 		return
 	}
@@ -394,6 +405,7 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 // Gives back all accounts
 func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
 		return
 	}
@@ -402,6 +414,7 @@ func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 	if !e.Empty() {
 		e.AddTraceback("API.getAccount()", "Error while getting accounts")
 		log.Println("[ERROR]", e)
+		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
 		return
 	}
@@ -412,10 +425,12 @@ func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 // Returns a specific account with the given id
 func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
 		return
 	}
 	if api.id <= 0 {
+		w.WriteHeader(400)
 		fmt.Fprint(w, errorID)
 		return
 	}
@@ -424,6 +439,8 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	if err := acc.FindByID(db, api.id); !err.Empty() {
 		err.AddTraceback("API.getAccountByID", "Error while getting account: "+fmt.Sprintf("%d", api.id))
 		log.Println("[ERROR]", err)
+
+		w.WriteHeader(400)
 		fmt.Fprint(w, errorGetID)
 		return
 	}
@@ -433,7 +450,7 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 
 func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.WriteHeader(400)
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
@@ -505,7 +522,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 // deletes an account with an ID
 func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		w.WriteHeader(400)
+		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/delete: Method must be DELETE.'}")
 		return
 	}

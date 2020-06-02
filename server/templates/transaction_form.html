@@ -177,7 +177,13 @@
 <script src="/static/plugins/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js"></script> 
 
 <!-- Custom JS -->
-<script src="/static/js/custom/transaction_page.js"></script>
+<script>
+    $('.datetimepicker').bootstrapMaterialDatePicker({
+        format: 'DD.MM.YYYY - HH:mm',
+        clearButton: true,
+        weekStart: 1
+    });
+</script>
 
 </body>
 </html>

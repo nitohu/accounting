@@ -99,7 +99,7 @@
                                         <th><i class="zmdi zmdi-close"></i></th>
                                     </tr>
                                 </tfoot>
-                                <tbody>
+                                <tbody data-currency="{{ $.Settings.Currency }}" id="transaction_list">
                                     {{ range .Transactions }}
                                         <tr>
                                             <td><a href="/transactions/form?id={{ .ID }}">{{ .Name }}</a></td>
@@ -127,33 +127,6 @@
 
 {{ template "scripts" }}
 
-<script>
-
-    let btns = document.getElementsByClassName("deleteEntry")
-
-    for (let i = 0; i < btns.length; i++) {
-        let btn = btns[i]
-        btn.addEventListener("click", function() {
-            let id = btn.id.split("_")[1]
-            let xhr = new XMLHttpRequest()
-            let data = JSON.stringify({"ID": Number.parseInt(id)})
-
-            xhr.open("DELETE", "/api/transactions/delete", true)
-            xhr.setRequestHeader("Content-Type", "application/json")
-            xhr.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    let m = this.responseText.replace(/'/g, '"')
-                    let msg = JSON.parse(m)
-                    console.log(msg.success)
-                } else if (this.readyState == 4 && (this.status == 400 || this.status == 405)) {
-                    let m = this.responseText.replace(/'/g, '"')
-                    let msg = JSON.parse(m)
-                    console.warn(msg.error)
-                }
-            }
-            xhr.send(data)
-        })
-    }
-</script>
+<script src="/static/js/custom/transaction_page.js"></script>
 </body>
 </html>

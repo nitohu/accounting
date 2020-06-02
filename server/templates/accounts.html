@@ -94,7 +94,8 @@
                                         <th><i class="zmdi zmdi-close"></i></th>
                                     </tr>
                                 </tfoot>
-                                <tbody>
+                                <tbody id="account_list" data-currency="{{ $.Settings.Currency }}">
+                                    <!-- Content will be generated via javascript -->
                                     {{ range .Accounts }}
                                         <tr id="{{ .ID }}">
                                             <td><a href="/accounts/form?id={{ .ID }}">{{ .Name }}</a></td>
