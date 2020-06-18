@@ -1,0 +1,13 @@
+#!/bin/bash
+PACKAGES=(
+	github.com/gorilla/mux
+	github.com/gorilla/sessions
+	github.com/lib/pq
+	github.com/nitohu/accounting/server/models
+	github.com/nitohu/err
+)
+for pack in ${PACKAGES[@]}; do
+	echo "Installing ${pack} ..."
+	go get $pack
+done
+
