@@ -1,1 +1,1 @@
-go run . -c ../accounting.conf 
+go run . -c ../development.conf 

@@ -17,7 +17,8 @@ var (
 	port         = ":80"
 	certFilePath = ""
 	keyFilePath  = ""
-	app_dir      = ""
+	appDir       = ""
+	logFile      = os.File{}
 
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
 	store = sessions.NewCookieStore(key)
@@ -44,8 +45,8 @@ func init() {
 	}
 	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
 
-	app_dir = data["app_dir"]
-	tmpl = template.Must(template.ParseGlob(app_dir + "/templates/*"))
+	appDir = data["app_dir"]
+	tmpl = template.Must(template.ParseGlob(appDir + "/templates/*"))
 
 	if val, ok := data["port"]; ok {
 		port = ":" + val
@@ -56,13 +57,23 @@ func init() {
 	if val, ok := data["keyfile"]; ok {
 		keyFilePath = val
 	}
+	if val, ok := data["logfile"]; ok {
+		logFile, err := os.OpenFile(val, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("[FATAL] init(): Error opening log file: %s\n%s\n", data["logfile"], err)
+		}
+
+		log.SetOutput(logFile)
+		log.Println("test")
+	}
 }
 
 func main() {
 	defer db.Close()
+	defer logFile.Close()
 	http.Handle(
 		"/static/", http.StripPrefix("/static/",
-			http.FileServer(http.Dir(app_dir+"/static/")),
+			http.FileServer(http.Dir(appDir+"/static/")),
 		),
 	)
 
