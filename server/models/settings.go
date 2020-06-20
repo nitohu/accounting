@@ -1,7 +1,9 @@
 package models
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,11 +14,13 @@ import (
 type Settings struct {
 	Name         string
 	Email        string
-	SalaryDate    time.Time
+	SalaryDate   time.Time
 	CalcInterval int64
 	CalcUoM      string
 	Currency     string
+	APIActive    bool
 
+	apiKey     string
 	lastUpdate time.Time
 
 	SalaryDateForm string
@@ -24,16 +28,7 @@ type Settings struct {
 
 // InitializeSettings creates an empty settings object and initializes it
 func InitializeSettings(cr *sql.DB) (Settings, err.Error) {
-	s := Settings{
-		Name:          "",
-		Email:         "",
-		SalaryDate:     time.Now(),
-		CalcInterval:  0,
-		CalcUoM:       "",
-		Currency:      "",
-		lastUpdate:    time.Now(),
-		SalaryDateForm: "",
-	}
+	s := Settings{}
 
 	e := s.Init(cr)
 
@@ -47,7 +42,7 @@ func InitializeSettings(cr *sql.DB) (Settings, err.Error) {
 
 // Init the settings
 func (s *Settings) Init(cr *sql.DB) err.Error {
-	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency FROM settings;"
+	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency,api_active FROM settings;"
 
 	e := cr.QueryRow(query).Scan(
 		&s.Name,
@@ -57,6 +52,7 @@ func (s *Settings) Init(cr *sql.DB) err.Error {
 		&s.CalcInterval,
 		&s.CalcUoM,
 		&s.Currency,
+		&s.APIActive,
 	)
 	if e != nil {
 		var err err.Error
@@ -72,7 +68,8 @@ func (s *Settings) Init(cr *sql.DB) err.Error {
 // Save the current Settings object to the database
 // func (s *Settings) Save(cr *sql.DB, password string) error {
 func (s *Settings) Save(cr *sql.DB) err.Error {
-	query := "UPDATE settings SET name=$1,email=$2,last_update=$3,salary_date=$4,calc_interval=$5,calc_uom=$6,currency=$7;"
+	query := "UPDATE settings SET name=$1,email=$2,last_update=$3,salary_date=$4,"
+	query += "calc_interval=$5,calc_uom=$6,currency=$7,api_active=$8,api_key=$9;"
 
 	_, e := cr.Exec(query,
 		s.Name,
@@ -82,6 +79,8 @@ func (s *Settings) Save(cr *sql.DB) err.Error {
 		s.CalcInterval,
 		s.CalcUoM,
 		s.Currency,
+		s.APIActive,
+		s.apiKey,
 	)
 	if e != nil {
 		var err err.Error
@@ -115,6 +114,26 @@ func (s *Settings) ShiftSalaryDate(cr *sql.DB) err.Error {
 		log.Println("[INFO] Settings.ShiftSalaryDate(): Salary date shifted.")
 	}
 	return err.Error{}
+}
+
+// SetAPIKey hashes the given API key and sets it as the value
+func (s *Settings) SetAPIKey(apiKey string) err.Error {
+	if len(apiKey) != 64 {
+		var e err.Error
+		e.Init("Settings.SetAPIKey()", "The API Key must be 64 characters long. (len="+string(len(apiKey))+")")
+		return e
+	}
+	key := sha256.Sum256([]byte(apiKey))
+	s.apiKey = fmt.Sprintf("%x", key)
+	s.APIActive = true
+
+	return err.Error{}
+}
+
+// ClearAPIKey deletes the API Key
+func (s *Settings) ClearAPIKey() {
+	s.apiKey = ""
+	s.APIActive = false
 }
 
 func (s *Settings) computeFields(cr *sql.DB) {

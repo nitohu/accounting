@@ -8,7 +8,9 @@ CREATE TABLE settings (
     calc_uom text,
     currency text,
     session_key text,
-    account_id int references accounts(id)
+    account_id int references accounts(id),
+    api_key text,
+    api_active boolean
 );
 
 CREATE TABLE accounts (

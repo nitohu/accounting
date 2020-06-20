@@ -80,14 +80,14 @@
                                         <div class="form-group">
                                             <label for="name">Your Name</label>
                                             <input type="text" class="form-control" name="name"
-                                                value="{{ .Settings.Name }}" id="name" />
+                                                value="{{ .Settings.Name }}" id="name" placeholder="Kenny" />
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="email">E-Mail</label>
                                             <input type="email" id="email" class="form-control"
-                                                value="{{ .Settings.Email }}" name="email" />
+                                                value="{{ .Settings.Email }}" name="email" placeholder="example@mail.com" />
                                         </div>
                                     </div>
                                 </div>
@@ -95,8 +95,12 @@
                                 <!-- Master Password -->
                                 <div class="form-group">
                                     <label for="password">Master Password (only placeholder for now)</label>
-                                    <input type="password" id="password" class="form-control">
+                                    <input type="password" id="password" class="form-control" placeholder="••••••••••••••••••">
                                 </div>
+
+                                <p>API: {{ if .Settings.APIActive }}<span style="color:#2ecc71">Active</span>{{ else }}<span style="color:#e74c3c">Inactive</span>{{end}}</p>
+                                <button class="btn btn-primary" data-toggle="modal" data-target="#defaultModal" onclick="generateAPIKey()" type="button">Generate new API Key</button>
+                                <button class="btn btn-danger btn-sm" {{ if eq .Settings.APIActive false }}disabled{{ end }} type="button">Deactivate</button>
                                 
                                 <h3>Statistics Settings</h3>
 
@@ -154,6 +158,35 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- API Key Modal -->
+                            <div class="modal fade" id="defaultModal" tabindex="-1" role="dialog">
+                                <div class="modal-dialog modal-lg" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h4 class="title" id="defaultModalLabel">API Key</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="alert alert-warning">
+                                                <strong>Warning!</strong> This is the first and last time you'll be able to see the token.
+                                                Make sure you store this key in a safe location. If you lose it, you'll need to create a new one.
+                                            </div>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        <i class="zmdi zmdi-hc-fw"></i>
+                                                    </span>
+                                                </div>
+                                                <input type="text" name="api_key" placeholder="API Key" id="api_key" class="form-control" />
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <!-- <button type="button" class="btn btn-default btn-round waves-effect">SAVE CHANGES</button> -->
+                                            <button type="button" class="btn btn-danger waves-effect" data-dismiss="modal">CLOSE</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -169,5 +202,8 @@
 
 <script src="/static/js/pages/forms/basic-form-elements.js"></script>
 <!-- <script src="/static/js/pages/forms/advanced-form-elements.js"></script> -->
+
+<script src="/static/js/lib/sjcl.js"></script>
+<script src="/static/js/custom/settings_page.js"></script>
 </body>
 </html>
