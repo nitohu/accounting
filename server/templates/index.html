@@ -188,7 +188,7 @@
         <div class="col-md-12 col-lg-8">
             <div class="card">
                 <div class="header">
-                    <h2><strong>Amount per Category</strong> Total</h2>
+                    <h2><strong>Coming Soon</strong></h2>
                     <ul class="header-dropdown">
                         <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle"
                                 data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -205,21 +205,14 @@
                     </ul>
                 </div>
                 <div class="body dataChart">
-                    {{ $totalPerCategory := $.Statistics.FindByExtID "total_category_amount" }}
-                    <div class="info">
-                        <span class="name">{{ $totalPerCategory.Name }}</span>
-                        <span class="extID">{{ $totalPerCategory.ExternalID }}</span>
-                        <span class="value">{{ $totalPerCategory.Value }}</span>
-                        <span class="visualisation">{{ $totalPerCategory.Visualisation }}</span>
-                    </div>
-                    <canvas id="total_category_amount" class="chartjs_graph"></canvas>
+                    
                 </div>
             </div>
         </div>
         <div class="col-lg-4 col-md-12">
             <div class="card">
                 <div class="header">
-                    <h2><strong>Distribution</strong></h2>
+                    <h2><strong>Total Amount</strong> per category</h2>
                     <ul class="header-dropdown">
                         <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle"
                                 data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -235,9 +228,15 @@
                         </li>
                     </ul>
                 </div>
-                <div class="body text-center">
-                    <div id="chart-pie" class="c3_chart d_distribution"></div>
-                    <button class="btn btn-primary mt-4 mb-4">View More</button>
+                <div class="body dataChart">
+                    {{ $totalPerCategory := $.Statistics.FindByExtID "total_category_amount" }}
+                    <div class="info">
+                        <span class="name">{{ $totalPerCategory.Name }}</span>
+                        <span class="extID">{{ $totalPerCategory.ExternalID }}</span>
+                        <span class="value">{{ $totalPerCategory.Value }}</span>
+                        <span class="visualisation">{{ $totalPerCategory.Visualisation }}</span>
+                    </div>
+                    <canvas id="total_category_amount" class="chartjs_graph" height="210"></canvas>
                 </div>
             </div>
         </div>
@@ -246,7 +245,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="header">
-                    <h2><strong>Traffic</strong> Source</h2>
+                    <h2><strong>Amount spent</strong> monthly & categorywise</h2>
                     <ul class="header-dropdown">
                         <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle"
                                 data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">

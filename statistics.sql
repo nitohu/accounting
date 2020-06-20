@@ -95,4 +95,5 @@ SELECT json_object_agg(
 	FROM transactions AS t
     WHERE t.account_id IS NOT NULL AND t.to_account IS NULL
 	GROUP BY date_trunc('month', t.transaction_date)
+	ORDER BY date_trunc('month', t.transaction_date) ASC
 ) AS a;
