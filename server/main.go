@@ -17,6 +17,7 @@ var (
 	port         = ":80"
 	certFilePath = ""
 	keyFilePath  = ""
+	app_dir      = ""
 
 	key   = []byte("087736079f8d9e4c7fc7b642bb4c7afa")
 	store = sessions.NewCookieStore(key)
@@ -30,7 +31,7 @@ var (
 
 func logging(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("[INFO] %s: %s\n", r.URL.Path, r.Method)
+		log.Printf("%s [INFO] %s: %s\n", r.RemoteAddr, r.URL.Path, r.Method)
 
 		f(w, r)
 	}
@@ -43,9 +44,8 @@ func init() {
 	}
 	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
 
-	tmpl = template.Must(template.ParseGlob("./templates/*"))
-
-	log.Println("init()", data)
+	app_dir = data["app_dir"]
+	tmpl = template.Must(template.ParseGlob(app_dir + "/templates/*"))
 
 	if val, ok := data["port"]; ok {
 		port = ":" + val
@@ -62,7 +62,7 @@ func main() {
 	defer db.Close()
 	http.Handle(
 		"/static/", http.StripPrefix("/static/",
-			http.FileServer(http.Dir("./static/")),
+			http.FileServer(http.Dir(app_dir+"/static/")),
 		),
 	)
 
