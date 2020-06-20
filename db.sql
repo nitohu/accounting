@@ -1,17 +1,4 @@
-CREATE TABLE settings (
-    name text,
-    password text,
-    email text,
-    last_update timestamp,
-    salary_date timestamp,
-    calc_interval int,
-    calc_uom text,
-    currency text,
-    session_key text,
-    account_id int references accounts(id),
-    api_key text,
-    api_active boolean
-);
+BEGIN;
 
 CREATE TABLE accounts (
     id serial,
@@ -37,6 +24,21 @@ CREATE TABLE categories (
     create_date timestamp,
     last_update timestamp,
     hex text
+);
+
+CREATE TABLE settings (
+    name text,
+    password text,
+    email text,
+    last_update timestamp,
+    salary_date timestamp,
+    calc_interval int,
+    calc_uom text,
+    currency text,
+    session_key text,
+    account_id int references accounts(id),
+    api_key text,
+    api_active boolean
 );
 
 CREATE TABLE statistics (
@@ -74,3 +76,5 @@ CREATE TABLE transactions (
     description text,
     category_id int references categories(id)
 );
+
+COMMIT;
