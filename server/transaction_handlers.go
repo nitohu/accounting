@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"./models"
+	"github.com/nitohu/accounting/server/models"
 
 	"github.com/gorilla/mux"
 )

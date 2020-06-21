@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"./models"
+	"github.com/nitohu/accounting/server/models"
 )
 
 func handleStatisticsOverview(w http.ResponseWriter, r *http.Request) {
