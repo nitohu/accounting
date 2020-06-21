@@ -5,7 +5,7 @@ import (
 
 	"github.com/nitohu/err"
 
-	"github.com/nitohu/accounting/server/models"
+	"./models"
 	"github.com/gorilla/sessions"
 )
 

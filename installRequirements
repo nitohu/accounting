@@ -5,7 +5,6 @@ PACKAGES=(
 	github.com/lib/pq
 	github.com/nitohu/accounting/server/models
 	github.com/nitohu/err
-	github.com/nitohu/accounting/server/handlers
 )
 for pack in ${PACKAGES[@]}; do
 	echo "Installing ${pack} ..."

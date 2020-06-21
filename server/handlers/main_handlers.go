@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nitohu/accounting/server/models"
+	"./models"
 )
 
 // Root

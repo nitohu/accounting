@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/nitohu/accounting/server/models"
-	"github.com/nitohu/accounting/server/handlers"
 
 	_ "github.com/lib/pq"
 )

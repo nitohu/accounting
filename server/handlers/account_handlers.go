@@ -8,7 +8,7 @@ import (
 
 	"github.com/nitohu/err"
 
-	"github.com/nitohu/accounting/server/models"
+	"./models"
 )
 
 /*
