@@ -2,3 +2,4 @@
 .vscode/*
 development.conf
 *.log
+update-packages
