@@ -22,6 +22,9 @@ type API struct {
 	APIPrefix    string
 	AccessRights []string
 	LocalKey     bool
+
+	// Computed
+	AccessRightCount int
 }
 
 //GetAllAccessRights returns a list of all existing api access rights
@@ -75,6 +78,10 @@ func generateRandomKey(length int) string {
 	return key
 }
 
+func (a *API) compute() {
+	a.AccessRightCount = len(a.AccessRights)
+}
+
 // Create the current instance in the database
 func (a *API) Create(cr *sql.DB) err.Error {
 	if a.ID != 0 {
@@ -109,6 +116,7 @@ func (a *API) Create(cr *sql.DB) err.Error {
 		err.Init("API.Create()", e.Error())
 		return err
 	}
+	a.compute()
 
 	return err.Error{}
 }
@@ -147,6 +155,7 @@ func (a *API) Save(cr *sql.DB) err.Error {
 		return err
 	}
 
+	a.compute()
 	return err.Error{}
 }
 
