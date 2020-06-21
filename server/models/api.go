@@ -217,6 +217,7 @@ func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
 		return err
 	}
 	a.AccessRights = strings.Split(rights, ";")
+	a.compute()
 
 	return err.Error{}
 }
@@ -245,6 +246,7 @@ func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
 		return err
 	}
 	a.AccessRights = strings.Split(rights, ";")
+	a.compute()
 
 	return err.Error{}
 }
