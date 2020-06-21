@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ type API struct {
 	LocalKey     bool
 }
 
+//GetAllAccessRights returns a list of all existing api access rights
 func GetAllAccessRights() []string {
 	return []string{
 		"transaction.read",
@@ -186,12 +188,11 @@ func (a *API) GenerateAPIKey() {
 // FindByPrefix takes the given prefix and returns the corresponding API record
 func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
 	query := "SELECT id,active,name,create_date,last_update,api_key,api_prefix,local_key,access_rights"
-	query += "FROM api WHERE prefix=$1;"
+	query += " FROM api WHERE api_prefix=$1;"
 
 	var rights string
 
 	e := cr.QueryRow(query, prefix).Scan(
-		&prefix,
 		&a.ID,
 		&a.Active,
 		&a.Name,
@@ -205,6 +206,34 @@ func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
 	if e != nil {
 		var err err.Error
 		err.Init("API.FindByPrefix()", e.Error())
+		return err
+	}
+	a.AccessRights = strings.Split(rights, ";")
+
+	return err.Error{}
+}
+
+// FindByID takes the given ID and returns the corresponding API record
+func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
+	query := "SELECT id,active,name,create_date,last_update,api_key,api_prefix,local_key,access_rights"
+	query += " FROM api WHERE id=$1;"
+
+	var rights string
+
+	e := cr.QueryRow(query, id).Scan(
+		&a.ID,
+		&a.Active,
+		&a.Name,
+		&a.CreateDate,
+		&a.LastUpdate,
+		&a.apiKey,
+		&a.APIPrefix,
+		&a.LocalKey,
+		&rights,
+	)
+	if e != nil {
+		var err err.Error
+		err.Init("API.FindByID()", e.Error())
 		return err
 	}
 	a.AccessRights = strings.Split(rights, ";")
@@ -231,6 +260,7 @@ func GetLocalKeys(cr *sql.DB) ([]API, err.Error) {
 			return nil, err
 		}
 		var a API
+		log.Println(prefix)
 		if err := a.FindByPrefix(cr, prefix); !err.Empty() {
 			return nil, err
 		}

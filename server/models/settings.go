@@ -1,9 +1,7 @@
 package models
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -18,9 +16,8 @@ type Settings struct {
 	CalcInterval int64
 	CalcUoM      string
 	Currency     string
-	APIActive    bool
+	APIKey       API
 
-	apiKey     string
 	lastUpdate time.Time
 
 	SalaryDateForm string
@@ -42,7 +39,9 @@ func InitializeSettings(cr *sql.DB) (Settings, err.Error) {
 
 // Init the settings
 func (s *Settings) Init(cr *sql.DB) err.Error {
-	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency,api_active FROM settings;"
+	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency,api_key FROM settings;"
+
+	var apiKey interface{}
 
 	e := cr.QueryRow(query).Scan(
 		&s.Name,
@@ -52,12 +51,39 @@ func (s *Settings) Init(cr *sql.DB) err.Error {
 		&s.CalcInterval,
 		&s.CalcUoM,
 		&s.Currency,
-		&s.APIActive,
+		&apiKey,
 	)
 	if e != nil {
 		var err err.Error
 		err.Init("Settings.Init()", e.Error())
 		return err
+	}
+
+	if apiKey != nil {
+		var a API
+		if err := a.FindByID(cr, apiKey.(int64)); !err.Empty() {
+			err.AddTraceback("Settings.Init()", "Error while getting API key for this application. #1")
+			return err
+		}
+		s.APIKey = a
+	} else {
+		// If no API key is assigned for this application, assign one (local_key=true ASC)
+		query := "SELECT id FROM api WHERE local_key='t' ORDER BY id ASC;"
+		var id int64
+		var a API
+		if e = cr.QueryRow(query).Scan(&id); e != nil {
+			var err err.Error
+			err.Init("Settings.Init()", e.Error())
+			return err
+		}
+		if err := a.FindByID(cr, id); !err.Empty() {
+			err.AddTraceback("Settings.Init()", "Error while getting API key for this application. #2")
+			return err
+		}
+		s.APIKey = a
+		if err := s.Save(cr); !err.Empty() {
+			err.AddTraceback("Settings.Init()", "Error while saving the settings.")
+		}
 	}
 
 	s.computeFields(cr)
@@ -69,7 +95,7 @@ func (s *Settings) Init(cr *sql.DB) err.Error {
 // func (s *Settings) Save(cr *sql.DB, password string) error {
 func (s *Settings) Save(cr *sql.DB) err.Error {
 	query := "UPDATE settings SET name=$1,email=$2,last_update=$3,salary_date=$4,"
-	query += "calc_interval=$5,calc_uom=$6,currency=$7,api_active=$8,api_key=$9;"
+	query += "calc_interval=$5,calc_uom=$6,currency=$7,api_key=$8;"
 
 	_, e := cr.Exec(query,
 		s.Name,
@@ -79,8 +105,7 @@ func (s *Settings) Save(cr *sql.DB) err.Error {
 		s.CalcInterval,
 		s.CalcUoM,
 		s.Currency,
-		s.APIActive,
-		s.apiKey,
+		s.APIKey.ID,
 	)
 	if e != nil {
 		var err err.Error
@@ -114,26 +139,6 @@ func (s *Settings) ShiftSalaryDate(cr *sql.DB) err.Error {
 		log.Println("[INFO] Settings.ShiftSalaryDate(): Salary date shifted.")
 	}
 	return err.Error{}
-}
-
-// SetAPIKey hashes the given API key and sets it as the value
-func (s *Settings) SetAPIKey(apiKey string) err.Error {
-	if len(apiKey) != 64 {
-		var e err.Error
-		e.Init("Settings.SetAPIKey()", "The API Key must be 64 characters long. (len="+string(len(apiKey))+")")
-		return e
-	}
-	key := sha256.Sum256([]byte(apiKey))
-	s.apiKey = fmt.Sprintf("%x", key)
-	s.APIActive = true
-
-	return err.Error{}
-}
-
-// ClearAPIKey deletes the API Key
-func (s *Settings) ClearAPIKey() {
-	s.apiKey = ""
-	s.APIActive = false
 }
 
 func (s *Settings) computeFields(cr *sql.DB) {
