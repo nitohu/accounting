@@ -61,7 +61,7 @@
             <div class="card widget_2 big_icon zmdi-balance">
                 <div class="body">
                     <h6>{{ .Name }}</h6>
-                    <h2>{{ ( call $.HumanReadable .Balance 1 ) }} {{ $.Settings.Currency }}</h2>
+                    <h2>{{ ( call $.HumanReadable .Balance ) }} {{ $.Settings.Currency }}</h2>
                     <small>{{ .Iban }}</small>
                 </div>
             </div>
