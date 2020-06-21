@@ -180,6 +180,11 @@ func (a *API) SetAPIKey(key string) err.Error {
 	return err.Error{}
 }
 
+// GetAPIKey returns the current API Key
+func (a *API) GetAPIKey() string {
+	return a.apiKey
+}
+
 // GenerateAPIKey generates an api key and sets it to the variable
 func (a *API) GenerateAPIKey() {
 	a.APIPrefix = generateRandomKey(6)
