@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,6 +35,12 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Logging
 	log.Printf("[INFO] %s: %s\n", r.URL.Path, r.Method)
 
+	// Authorize
+	prefix := api.authorize(w, r)
+	if prefix == "" {
+		return
+	}
+
 	// Parse a body if there is one
 	if r.ContentLength > 0 {
 		b := r.Body
@@ -49,6 +56,48 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	api.id = 0
 
 	api.multiplexer(w, r, path, body)
+}
+
+func (api *API) authorize(w http.ResponseWriter, r *http.Request) string {
+	key := r.Header.Get("Authorization")
+	if key != "" {
+		log.Println(key)
+		k := strings.Split(key, " ")
+		key := k[1]
+		if k[0] == "Bearer" {
+			var dbKey, fullKey string
+			var local bool
+			query := "SELECT api_key,local_key FROM api WHERE api_prefix=$1"
+			k = strings.Split(key, ".")
+			prefix := k[0]
+
+			if e := db.QueryRow(query, prefix).Scan(&dbKey, &local); e != nil {
+				fmt.Println("[ERROR]", e)
+			}
+
+			if local {
+				fullKey = key
+			} else {
+				fullKey = fmt.Sprintf("%x", sha256.Sum256([]byte(key)))
+			}
+
+			if fullKey == dbKey {
+				// Client is authenticated
+				return prefix
+			}
+			w.WriteHeader(401)
+			fmt.Fprintln(w, "{'error': 'The provided API Key is invalid.'}")
+		} else {
+			w.Header().Set("WWW-Authenticate", "Bearer realm=\"Valid API Key must be provided for access to the API\"")
+			w.WriteHeader(401)
+			fmt.Fprintln(w, "{'error': 'Please provide an API key in the request headers.'}")
+		}
+	} else {
+		w.Header().Set("WWW-Authenticate", "Bearer realm=\"Valid API Key must be provided for access to the API\"")
+		w.WriteHeader(401)
+		fmt.Fprintln(w, "{'error': 'Please provide an API key in the request headers.'}")
+	}
+	return ""
 }
 
 func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
