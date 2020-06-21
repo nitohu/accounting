@@ -24,6 +24,16 @@ func GenerateSessionKey() string {
 	return string(key)
 }
 
+// StrContains takes an array of strings (a) an checks if it contains the element (e)
+func StrContains(a []string, e string) bool {
+	for _, i := range a {
+		if i == e {
+			return true
+		}
+	}
+	return false
+}
+
 // HumanReadable takes a long number and converts
 // it to a human readable string
 func HumanReadable(num float64, digits int) string {

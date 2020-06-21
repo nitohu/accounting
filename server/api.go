@@ -19,6 +19,7 @@ import (
 type API struct {
 	id  int64
 	obj interface{}
+	key models.API
 }
 
 const (
@@ -36,8 +37,7 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] %s: %s\n", r.URL.Path, r.Method)
 
 	// Authorize
-	prefix := api.authorize(w, r)
-	if prefix == "" {
+	if !api.authorize(w, r) {
 		return
 	}
 
@@ -58,7 +58,7 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	api.multiplexer(w, r, path, body)
 }
 
-func (api *API) authorize(w http.ResponseWriter, r *http.Request) string {
+func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 	key := r.Header.Get("Authorization")
 	if key != "" {
 		log.Println(key)
@@ -83,7 +83,17 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) string {
 
 			if fullKey == dbKey {
 				// Client is authenticated
-				return prefix
+				var a models.API
+				fmt.Println(prefix)
+				if err := a.FindByPrefix(db, prefix); !err.Empty() {
+					w.WriteHeader(400)
+					err.AddTraceback("api.authorize", "Error while fetching API record.")
+					log.Println("[ERROR]", err)
+					fmt.Fprintln(w, "{'error': 'There was an unexpected error while fetching the API record.'}")
+					return false
+				}
+				api.key = a
+				return true
 			}
 			w.WriteHeader(401)
 			fmt.Fprintln(w, "{'error': 'The provided API Key is invalid.'}")
@@ -97,7 +107,18 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) string {
 		w.WriteHeader(401)
 		fmt.Fprintln(w, "{'error': 'Please provide an API key in the request headers.'}")
 	}
-	return ""
+	return false
+}
+
+func (api *API) checkAccessRight(w http.ResponseWriter, accessRight string) bool {
+	fmt.Println(api.key.AccessRights)
+	fmt.Println(accessRight)
+	if !StrContains(api.key.AccessRights, accessRight) {
+		w.WriteHeader(403)
+		fmt.Fprintf(w, "{'error': 'The provided access key does not have the mandatory rights to perform this action.'}")
+		return false
+	}
+	return true
 }
 
 func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
@@ -106,6 +127,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	// Categories
 	//
 	case "/categories":
+		if !api.checkAccessRight(w, "category.read") {
+			return
+		}
 		c := models.EmptyCategory()
 		if len(body) > 0 {
 			if err := json.Unmarshal(body, &c); err != nil {
@@ -121,6 +145,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.getCategories(w, r)
 	case "/categories/create":
+		if !api.checkAccessRight(w, "category.write") {
+			return
+		}
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
@@ -131,6 +158,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.obj = c
 		api.updateCategory(w, r)
 	case "/categories/update":
+		if !api.checkAccessRight(w, "category.write") {
+			return
+		}
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
@@ -147,6 +177,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.id = c.ID
 		api.updateCategory(w, r)
 	case "/categories/delete":
+		if !api.checkAccessRight(w, "category.delete") {
+			return
+		}
 		c := models.EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
@@ -160,6 +193,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	// Accounts
 	//
 	case "/accounts":
+		if !api.checkAccessRight(w, "account.read") {
+			return
+		}
 		api.id = 0
 		a := models.EmptyAccount()
 		if len(body) > 0 {
@@ -176,6 +212,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.getAccounts(w, r)
 	case "/accounts/create":
+		if !api.checkAccessRight(w, "account.write") {
+			return
+		}
 		a := models.EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
@@ -186,6 +225,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.obj = a
 		api.updateAccount(w, r)
 	case "/accounts/update":
+		if !api.checkAccessRight(w, "account.write") {
+			return
+		}
 		a := models.EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
@@ -204,6 +246,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.updateAccount(w, r)
 	case "/accounts/delete":
+		if !api.checkAccessRight(w, "account.delete") {
+			return
+		}
 		a := models.EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
@@ -216,6 +261,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	// Transactions
 	//
 	case "/transactions":
+		if !api.checkAccessRight(w, "transaction.read") {
+			return
+		}
 		api.id = 0
 		t := models.EmptyTransaction()
 		if len(body) > 0 {
@@ -232,6 +280,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		}
 		api.getTransactions(w, r)
 	case "/transactions/update":
+		if !api.checkAccessRight(w, "transaction.write") {
+			return
+		}
 		api.id = 0
 		t := models.EmptyTransaction()
 		if len(body) > 0 {
@@ -246,6 +297,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.obj = t
 		api.updateTransaction(w, r)
 	case "/transactions/delete":
+		if !api.checkAccessRight(w, "transaction.delete") {
+			return
+		}
 		api.id = 0
 		t := models.Transaction{}
 		if len(body) > 0 {
@@ -258,6 +312,9 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		api.id = t.ID
 		api.deleteTransaction(w, r)
 	case "/statistics":
+		if !api.checkAccessRight(w, "statistics.read") {
+			return
+		}
 		api.id = 0
 		s := models.Statistic{}
 		if len(body) > 0 {
