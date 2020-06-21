@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -241,8 +240,8 @@ func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
 	return err.Error{}
 }
 
-// GetLocalKeys returns all local API Keys
-func GetLocalKeys(cr *sql.DB) ([]API, err.Error) {
+// GetLocalAPIKeys returns all local API Keys
+func GetLocalAPIKeys(cr *sql.DB) ([]API, err.Error) {
 	var res []API
 
 	query := "SELECT api_prefix FROM api WHERE local_key='t';"
@@ -260,8 +259,35 @@ func GetLocalKeys(cr *sql.DB) ([]API, err.Error) {
 			return nil, err
 		}
 		var a API
-		log.Println(prefix)
 		if err := a.FindByPrefix(cr, prefix); !err.Empty() {
+			return nil, err
+		}
+		res = append(res, a)
+	}
+
+	return res, err.Error{}
+}
+
+// GetAllAPIKeys returns all existing API keys
+func GetAllAPIKeys(cr *sql.DB) ([]API, err.Error) {
+	var res []API
+
+	query := "SELECT id FROM api;"
+	rows, e := cr.Query(query)
+	if e != nil {
+		var err err.Error
+		err.Init("API.GetAllAPIKeys()", e.Error())
+		return nil, err
+	}
+	for rows.Next() {
+		var id int64
+		if e = rows.Scan(&id); e != nil {
+			var err err.Error
+			err.Init("API.GetAllAPIKeys()", e.Error())
+			return nil, err
+		}
+		var a API
+		if err := a.FindByID(cr, id); !err.Empty() {
 			return nil, err
 		}
 		res = append(res, a)
