@@ -5,8 +5,8 @@ import (
 
 	"github.com/nitohu/err"
 
-	"github.com/nitohu/accounting/server/models"
 	"github.com/gorilla/sessions"
+	"github.com/nitohu/accounting/server/models"
 )
 
 // Context type represents context
@@ -58,6 +58,7 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 	ctx["HumanReadable"] = HumanReadable
 	ctx["Authenticated"] = authenticated
 	ctx["Settings"] = settings
+	ctx["GetAPIKey"] = settings.APIKey.GetAPIKey
 
 	return ctx, err.Error{}
 }

@@ -61,7 +61,6 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 	key := r.Header.Get("Authorization")
 	if key != "" {
-		log.Println(key)
 		k := strings.Split(key, " ")
 		key := k[1]
 		if k[0] == "Bearer" {
@@ -72,7 +71,7 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 			prefix := k[0]
 
 			if e := db.QueryRow(query, prefix).Scan(&dbKey, &local); e != nil {
-				fmt.Println("[ERROR]", e)
+				log.Println("[ERROR]", e)
 			}
 
 			if local {
@@ -84,7 +83,6 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 			if fullKey == dbKey {
 				// Client is authenticated
 				var a models.API
-				fmt.Println(prefix)
 				if err := a.FindByPrefix(db, prefix); !err.Empty() {
 					w.WriteHeader(400)
 					err.AddTraceback("api.authorize", "Error while fetching API record.")
@@ -111,8 +109,6 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func (api *API) checkAccessRight(w http.ResponseWriter, accessRight string) bool {
-	fmt.Println(api.key.AccessRights)
-	fmt.Println(accessRight)
 	if !StrContains(api.key.AccessRights, accessRight) {
 		w.WriteHeader(403)
 		fmt.Fprintf(w, "{'error': 'The provided access key does not have the mandatory rights to perform this action.'}")

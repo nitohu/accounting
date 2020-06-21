@@ -8,7 +8,7 @@
 
 <title>:: {{ .Title }} :: Accounting</title>
 <!-- Favicon-->
-<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
 <!-- Bootstrap Material Datetime Picker Css -->
 <link href="/static/plugins/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css" rel="stylesheet" />
@@ -94,7 +94,11 @@
 
                                 <!-- Master Password -->
                                 <div class="form-group">
-                                    <label for="password">Master Password (only placeholder for now)</label>
+                                    <label for="password">Old Master Password</label>
+                                    <input type="old_password" id="password" class="form-control" placeholder="••••••••••••••••••">
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">New Master Password</label>
                                     <input type="password" id="password" class="form-control" placeholder="••••••••••••••••••">
                                 </div>
                                 
@@ -111,7 +115,8 @@
                                     </div>
                                     <!-- Beginning of the month -->
                                     <div class="col-md-6">
-                                        <div class="labelBuffer"></div>
+                                        <!-- <div class="labelBuffer"></div> -->
+                                        <label for="salary_date">Salary Date</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i class="zmdi zmdi-calendar"></i></span>
