@@ -73,7 +73,7 @@ func init() {
 		keyFilePath = val
 	}
 	// Check if API access exists for this application
-	apiAccess, err := models.GetLocalKeys(db)
+	apiAccess, err := models.GetLocalAPIKeys(db)
 	if !err.Empty() {
 		log.Fatalf("[FATAL] init(): Error while getting api local keys:\n%s\n", err)
 	}
@@ -107,6 +107,7 @@ func main() {
 	// General
 	http.HandleFunc("/", logging(handleRoot))
 	http.HandleFunc("/settings/", logging(handleSettings))
+	http.HandleFunc("/settings/api/", logging(handleAPISettings))
 	http.HandleFunc("/login/", logging(handleLogin))
 	http.HandleFunc("/logout/", logging(handleLogout))
 

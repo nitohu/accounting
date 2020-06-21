@@ -1,0 +1,117 @@
+<!doctype html>
+<html class="no-js " lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<meta name="description" content="Responsive Bootstrap 4 and web Application ui kit.">
+
+<title>:: {{ .Title }} :: Accounting</title>
+<!-- Favicon-->
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
+<!-- Bootstrap Material Datetime Picker Css -->
+<link href="/static/plugins/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css" rel="stylesheet" />
+<!-- Bootstrap Select Css -->
+<link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
+<!-- Custom Css -->
+<link rel="stylesheet" href="/static/css/style.min.css">
+<link rel="stylesheet" href="/static/css/custom.css">
+</head>
+
+<body class="theme-blush">
+
+<!-- Page Loader -->
+<div class="page-loader-wrapper">
+    <div class="loader">
+        <div class="m-t-30"><img class="zmdi-hc-spin" src="/static/images/loader.svg" width="48" height="48" alt="Aero"></div>
+        <p>Please wait...</p>
+    </div>
+</div>
+
+<!-- Overlay For Sidebars -->
+<div class="overlay"></div>
+
+<!-- Main Search -->
+<div id="search">
+    <button id="close" type="button" class="close btn btn-primary btn-icon btn-icon-mini btn-round">x</button>
+    <form>
+        <input type="search" value="" placeholder="Search..." />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+{{ template "rightSidebar" }}
+
+{{ template "leftSidebar" . }}
+
+<!-- Main Content -->
+<section class="content">
+    <div class="body_scroll">
+        <div class="block-header">
+            <div class="row">
+                <div class="col-lg-7 col-md-6 col-sm-12">
+                    <h2>Settings</h2>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
+                        <li class="breadcrumb-item">Settings</li>
+                        <li class="breadcrumb-item active">API</li>
+                    </ul>
+                    <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
+                </div>
+                <div class="col-lg-5 col-md-6 col-sm-12">                
+                    <button class="btn btn-primary btn-icon float-right right_icon_toggle_btn" type="button"><i class="zmdi zmdi-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row clearfix">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2><strong>API </strong>Settings</h2>
+                        </div>
+                        <div class="body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Name</th>
+                                        <th>Created</th>
+                                        <th>Last modified</th>
+                                        <th>Prefix</th>
+                                        <th>Local</th>
+                                        <th># of Access Rights</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{ range .APIKeys }}
+                                        <tr>
+                                            <td>{{ if .Active }}Active{{ else }}Inactive{{ end }}</td>
+                                            <td>{{ .Name }}</td>
+                                            <td>{{ .CreateDate }}</td>
+                                            <td>{{ .LastUpdate }}</td>
+                                            <td>{{ .APIPrefix }}</td>
+                                            <td>{{ .LocalKey }}</td>
+                                            <td>{{ .AccessRightCount }}</td>
+                                        </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{ template "scripts" }}
+
+<!-- Bootstrap Material Datetime Picker Plugin Js -->
+<script src="/static/plugins/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js"></script> 
+
+<script src="/static/js/pages/forms/basic-form-elements.js"></script>
+<!-- <script src="/static/js/pages/forms/advanced-form-elements.js"></script> -->
+</body>
+</html>

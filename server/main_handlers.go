@@ -128,6 +128,42 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// API Settings
+func handleAPISettings(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/settings/api/" {
+		handleNotFound(w, r)
+		return
+	}
+
+	session, _ := store.Get(r, "session")
+
+	ctx, err := createContextFromSession(db, session)
+	if !err.Empty() {
+		err.AddTraceback("handleAPISettings", "Error while creating the context.")
+		log.Println("[WARN]", err)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	apiKeys, err := models.GetAllAPIKeys(db)
+	if !err.Empty() {
+		err.AddTraceback("handleAPISettings", "Error while fetching API Keys.")
+		log.Println("[ERROR]", err)
+	}
+	ctx["Title"] = "API Settings"
+	ctx["APIKeys"] = apiKeys
+
+	if r.Method != http.MethodPost {
+		if e := tmpl.ExecuteTemplate(w, "settings_api.html", ctx); e != nil {
+			err.Init("handleAPISettings", e.Error())
+			log.Println("[ERROR]", err)
+		}
+		return
+	}
+}
+
 // 404 Page
 func handleNotFound(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
