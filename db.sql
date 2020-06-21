@@ -26,6 +26,21 @@ CREATE TABLE categories (
     hex text
 );
 
+CREATE TABLE api (
+    id serial,
+    primary key(id),
+    active boolean,
+    name text,
+    create_date timestamp,
+    last_update timestamp,
+    api_key text,
+    api_prefix text,
+    -- True: key is used by application itself
+    -- False: key is used by an external app
+    local_key boolean,
+    access_rights text
+);
+
 CREATE TABLE settings (
     name text,
     password text,
@@ -37,8 +52,7 @@ CREATE TABLE settings (
     currency text,
     session_key text,
     account_id int references accounts(id),
-    api_key text,
-    api_active boolean
+    api_key int references api(id)
 );
 
 CREATE TABLE statistics (

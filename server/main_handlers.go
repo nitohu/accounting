@@ -92,7 +92,8 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	sdate := r.FormValue("salary_date")
 	interval := r.FormValue("calc_interval")
 	settings.CalcUoM = r.FormValue("calc_uom")
-	settings.SetAPIKey(r.FormValue("api_key"))
+	// settings.SetAPIKey(r.FormValue("api_key"))
+	// api_key := r.FormValue("api_key")
 
 	// Converting the hashed password to a string
 	// password := fmt.Sprintf("%X", pw)

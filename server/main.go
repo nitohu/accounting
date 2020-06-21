@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/gorilla/sessions"
+	"github.com/nitohu/accounting/server/models"
 
 	_ "github.com/lib/pq"
 )
@@ -43,20 +44,7 @@ func init() {
 	if !err.Empty() {
 		log.Fatalln(err)
 	}
-	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
-
-	appDir = data["app_dir"]
-	tmpl = template.Must(template.ParseGlob(appDir + "/templates/*"))
-
-	if val, ok := data["port"]; ok {
-		port = ":" + val
-	}
-	if val, ok := data["certfile"]; ok {
-		certFilePath = val
-	}
-	if val, ok := data["keyfile"]; ok {
-		keyFilePath = val
-	}
+	// Setup log file
 	if val, ok := data["logfile"]; ok {
 		logFile, err := os.OpenFile(val, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
@@ -65,6 +53,41 @@ func init() {
 
 		log.SetOutput(logFile)
 		log.Println("test")
+	}
+	// Set up database
+	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
+
+	// Set app dir and load templates
+	appDir = data["app_dir"]
+	tmpl = template.Must(template.ParseGlob(appDir + "/templates/*"))
+
+	// Set port
+	if val, ok := data["port"]; ok {
+		port = ":" + val
+	}
+	// Setup SSL
+	if val, ok := data["certfile"]; ok {
+		certFilePath = val
+	}
+	if val, ok := data["keyfile"]; ok {
+		keyFilePath = val
+	}
+	// Check if API access exists for this application
+	apiAccess, err := models.GetLocalKeys(db)
+	if !err.Empty() {
+		log.Fatalf("[FATAL] init(): Error while getting api local keys:\n%s\n", err)
+	}
+	if len(apiAccess) == 0 {
+		a := models.API{
+			Name:         "Accounting Master Key",
+			Active:       true,
+			AccessRights: models.GetAllAccessRights(),
+			LocalKey:     true,
+		}
+		a.GenerateAPIKey()
+		if err = a.Create(db); !err.Empty() {
+			log.Fatalf("[FATAL] init(): Error while creating master api key:\n%s\n", err)
+		}
 	}
 }
 
