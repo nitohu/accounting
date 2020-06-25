@@ -87,7 +87,7 @@
                                 <tbody>
                                     {{ range .APIKeys }}
                                         <tr>
-                                            <td>{{ if .Active }}Active{{ else }}Inactive{{ end }}</td>
+                                            <td><i class="zmdi zmdi-hc-fw" style="color:{{ if .Active }}green{{ else }}red{{ end }}"></i></td>
                                             <td>{{ .Name }}</td>
                                             <td>{{ .CreateDate }}</td>
                                             <td>{{ .LastUpdate }}</td>
