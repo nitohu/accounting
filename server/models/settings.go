@@ -1,7 +1,9 @@
 package models
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -18,6 +20,7 @@ type Settings struct {
 	Currency     string
 	APIKey       API
 
+	password   string
 	lastUpdate time.Time
 
 	SalaryDateForm string
@@ -39,7 +42,7 @@ func InitializeSettings(cr *sql.DB) (Settings, err.Error) {
 
 // Init the settings
 func (s *Settings) Init(cr *sql.DB) err.Error {
-	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency,api_key FROM settings;"
+	query := "SELECT name,email,last_update,salary_date,calc_interval,calc_uom,currency,api_key,password FROM settings;"
 
 	var apiKey interface{}
 
@@ -52,6 +55,7 @@ func (s *Settings) Init(cr *sql.DB) err.Error {
 		&s.CalcUoM,
 		&s.Currency,
 		&apiKey,
+		&s.password,
 	)
 	if e != nil {
 		var err err.Error
@@ -119,11 +123,35 @@ func (s *Settings) Save(cr *sql.DB) err.Error {
 }
 
 // GetLastUpdate returns the value of the last_update field
-func (s *Settings) GetLastUpdate() time.Time {
+func (s Settings) GetLastUpdate() time.Time {
 	return s.lastUpdate
 }
 
-// ShiftSalaryDate ..
+// UpdateMasterPassword updates the master password if the provided password matches the current one
+func (s *Settings) UpdateMasterPassword(cr *sql.DB, currPassword, newPassword string) err.Error {
+	cpw := sha256.Sum256([]byte(currPassword))
+	currPassword = fmt.Sprintf("%X", cpw)
+	if currPassword != s.password {
+		var err err.Error
+		err.Init("Settings.UpdateMasterPassword", "The provided password does not match with the one from the database.")
+		return err
+	}
+	query := "UPDATE settings SET password=$1"
+
+	npw := sha256.Sum256([]byte(newPassword))
+	s.password = fmt.Sprintf("%x", npw)
+
+	_, e := cr.Exec(query, s.password)
+	if e != nil {
+		var err err.Error
+		err.Init("Settings.UpdateMasterPassword", e.Error())
+		return err
+	}
+
+	return err.Error{}
+}
+
+// ShiftSalaryDate .."
 func (s *Settings) ShiftSalaryDate(cr *sql.DB) err.Error {
 	n := time.Now()
 	shifted := false
