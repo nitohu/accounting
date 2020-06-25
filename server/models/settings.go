@@ -139,7 +139,7 @@ func (s *Settings) UpdateMasterPassword(cr *sql.DB, currPassword, newPassword st
 	query := "UPDATE settings SET password=$1"
 
 	npw := sha256.Sum256([]byte(newPassword))
-	s.password = fmt.Sprintf("%x", npw)
+	s.password = fmt.Sprintf("%X", npw)
 
 	_, e := cr.Exec(query, s.password)
 	if e != nil {
