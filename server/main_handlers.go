@@ -86,7 +86,20 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	// Receive data from from
 	settings.Name = r.FormValue("name")
 	settings.Email = r.FormValue("email")
-	// pw := sha256.Sum256([]byte(r.FormValue("password")))
+	// Old and new password
+	opw := r.FormValue("old_password")
+	npw := r.FormValue("password")
+	if opw != "" && npw != "" {
+		if err := settings.UpdateMasterPassword(db, opw, npw); !err.Empty() {
+			log.Println("[ERROR]", err.Error())
+			ctx["Error"] = "Error: " + err.Error()
+			if e := tmpl.ExecuteTemplate(w, "settings.html", ctx); e != nil {
+				err.Init("handleSettings", e.Error())
+				log.Println("[ERROR]" + err.Error())
+			}
+			return
+		}
+	}
 
 	settings.Currency = r.FormValue("currency")
 	sdate := r.FormValue("salary_date")
@@ -114,9 +127,12 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	err = settings.Save(db)
 
 	ctx["Settings"] = settings
+	ctx["Success"] = "Settings saved."
 
 	if !err.Empty() {
 		err.AddTraceback("handleSettings", "Error while saving the settings to the database.")
+		ctx["Error"] = "There was an error while saving the settings to the database. Please check the logs."
+		ctx["Success"] = ""
 		log.Println("[ERROR]", err)
 	}
 

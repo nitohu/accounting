@@ -17,6 +17,7 @@
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
 <link rel="stylesheet" href="/static/css/custom.css">
+<link rel="stylesheet" href="/static/plugins/sweetalert/sweetalert.css">
 </head>
 
 <body class="theme-blush">
@@ -73,6 +74,11 @@
                         <div class="body">
                             <form method="POST">
                                 <h3>General Settings</h3>
+                                {{ if .Error}}
+                                    <div class="alert alert-danger">
+                                        {{ .Error }}
+                                    </div>
+                                {{ end }}
 
                                 <!-- Name & E-Mail -->
                                 <div class="row clearfix">
@@ -95,11 +101,11 @@
                                 <!-- Master Password -->
                                 <div class="form-group">
                                     <label for="password">Old Master Password</label>
-                                    <input type="old_password" id="password" class="form-control" placeholder="••••••••••••••••••">
+                                    <input type="password" name="old_password" id="old_password" class="form-control" placeholder="••••••••••••••••••">
                                 </div>
                                 <div class="form-group">
                                     <label for="password">New Master Password</label>
-                                    <input type="password" id="password" class="form-control" placeholder="••••••••••••••••••">
+                                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••••••••••••">
                                 </div>
                                 
                                 <h3>Statistics Settings</h3>
@@ -168,9 +174,17 @@
 </section>
 
 {{ template "scripts" }}
-
 <!-- Bootstrap Material Datetime Picker Plugin Js -->
 <script src="/static/plugins/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js"></script> 
+<script src="/static/plugins/sweetalert/sweetalert.min.js"></script>
+
+{{ if .Success }}
+    <script>
+    $(document).ready(function() {
+        swal("Success", "{{ .Success }}", "success")
+    })
+    </script>
+{{ end }}
 
 <script src="/static/js/pages/forms/basic-form-elements.js"></script>
 <!-- <script src="/static/js/pages/forms/advanced-form-elements.js"></script> -->

@@ -52,7 +52,6 @@ func init() {
 		}
 
 		log.SetOutput(logFile)
-		log.Println("test")
 	}
 	// Set up database
 	db = dbInit(data["dbhost"], data["dbuser"], data["dbpassword"], data["dbdatabase"], data["dbport"])
