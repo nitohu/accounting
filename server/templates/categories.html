@@ -74,6 +74,9 @@
                         </ul>
                     </div>
                     <div class="body">
+                        <div class="alert alert-danger" id="errorMsg" style="visibility:hidden;position:absolute;">
+                            <strong>ERROR!</strong> Something went wrong while saving the categories.
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-striped table-hover c_table">
                                 <thead>
@@ -141,6 +144,8 @@
 
 {{ template "scripts" }}
 
+<script src="/static/js/pages/forms/basic-form-elements.js"></script>
+
 <script>
 function debounce(func, wait, immediate) {
     var timeout;
@@ -165,22 +170,30 @@ function debounce(func, wait, immediate) {
 };
 
 function saveCategories() {
+    $("#errorMsg").attr("style", "visibility: hidden;position: absolute;")
     let name = document.getElementById("name").value
     let hex  = document.getElementById("hex").value
 
     let data = {
-        "ID": categoryID,
+        "ID": Number(categoryID),
         "Name": String(name),
         "Hex": String(hex),
     }
 
     let xhr = new XMLHttpRequest()
-    xhr.open("POST", "/api/categories/create")
+    console.log(categoryID)
+    console.log(typeof(categoryID))
+    let url = categoryID ? "/api/categories/update" : "/api/categories/create"
+    xhr.open("POST", url)
     xhr.setRequestHeader("Content-Type", "application/json")
     xhr.setRequestHeader("Authorization", "Bearer {{ call $.GetAPIKey | js }}")
     xhr.onreadystatechange = debounce(getCategories, 200, false)
     xhr.onload = () => {
         console.log(xhr.status)
+        if (xhr.status != 200) {
+            $("#errorMsg").attr("style", "visibility: visible;position: relative;")
+            $("#errorMsg").value(xhr.response)
+        }
         console.log(xhr.response)
     }
     xhr.send(JSON.stringify(data))
@@ -206,6 +219,7 @@ function getCategoryInformation(id) {
 }
 
 function getCategories() {
+    $("#errorMsg").attr("style", "visibility: hidden;position: absolute;")
     let data = {
         "ID": 0,
     }
@@ -240,6 +254,7 @@ function getCategories() {
                 a.innerHTML=category["Name"]
                 a.addEventListener("click", function() {
                     let id = this.parentElement.parentElement.id
+                    categoryID = id
                     c = getCategoryInformation(id)
                 })
                 td.appendChild(a)
@@ -286,6 +301,9 @@ function deleteCategory(e) {
     xhr.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 400) {
             console.error(this.response)
+        } else if (this.readyState == 4 && this.status != 400) {
+            $("#errorMsg").attr("style", "visibility: visible;position: relative;")
+            $("#errorMsg").value(xhr.response)
         }
     }
     console.log(JSON.stringify(data))
@@ -300,6 +318,8 @@ getCategories()
 let addLineBtn = document.getElementById("addLineBtn")
 addLineBtn.addEventListener("click", function() {
     categoryID = 0
+    document.getElementById("name").value = ""
+    document.getElementById("hex").value = ""
 })
 
 let formBtn = document.getElementById("formBtn")
