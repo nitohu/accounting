@@ -13,3 +13,9 @@
     border-radius: 2px;
     text-align: center;
 }
+
+.scrollable {
+    overflow-y: auto;
+    position: relative;
+    height: calc(100vh - 70px);
+}

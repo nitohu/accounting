@@ -13,7 +13,7 @@
 <!-- Bootstrap Material Datetime Picker Css -->
 <link href="/static/plugins/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css" rel="stylesheet" />
 <!-- Bootstrap Select Css -->
-<link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
+<!-- <link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" /> -->
 <!-- Custom Css -->
 <link rel="stylesheet" href="/static/css/style.min.css">
 <link rel="stylesheet" href="/static/css/custom.css">
@@ -113,7 +113,7 @@
                                 <div class="row clearfix">
                                     <div class="col-sm-4">
                                         <label for="fromAccount">From</label>
-                                        <select name="fromAccount" id="fromAccount" class="form-control show-tick">
+                                        <select name="fromAccount" id="fromAccount" class="form-control custom-select">
                                             <option id="from_0" value="0">External Account</option>
                                             {{ range .Accounts }}
                                                 <option id="from_{{ .ID }}" value="{{ .ID }}"
@@ -123,7 +123,7 @@
                                     </div>
                                     <div class="col-sm-4">
                                         <label for="toAccount">To</label>
-                                        <select name="toAccount" id="toAccount" class="form-control show-tick">
+                                        <select name="toAccount" id="toAccount" class="form-control custom-select">
                                             <option id="to_0" value="0">External Account</option>
                                             {{ range .Accounts }}
                                                 <option id="to_{{ .ID }}" value="{{ .ID }}"
@@ -134,7 +134,7 @@
                                     <div class="col-sm-4">
                                         <div class="form-group">
                                             <label for="category">Category</label>
-                                            <select name="category" id="category" class="form-control select2">
+                                            <select name="category" id="category" class="form-control custom-select">
                                                 <option value="0" id="cat_0" style="background-color:#000;">No Category</option>
                                                 {{ range .Categories }}
                                                     <option id="cat_{{.ID}}" name="{{.ID}}" value="{{.ID}}" style="background-color:{{.Hex}};"
