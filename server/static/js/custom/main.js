@@ -18,6 +18,7 @@ $(document).ready(function() {
         for(let i = 0; i < l.length; i++) {
             if (l[i].className.includes("active")) {
                 m.fadeToggle()
+                e.toggleClass("toggled")
             }
         }
 
