@@ -55,7 +55,11 @@
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
                         <li class="breadcrumb-item active">Transactions</li>
-                        <li class="breadcrumb-item active">Create New</li>
+                        {{ if .Transaction.ID }}
+                            <li class="breadcrumb-item active">Edit</li>
+                        {{ else }}
+                            <li class="breadcrumb-item active">Create New</li>
+                        {{ end }}
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
                 </div>
@@ -69,10 +73,18 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="header">
-                            <h2><strong>Create</strong> a new Transaction</h2>
+                            {{ if .Transaction.ID }}
+                                <h2><strong>Edit</strong> Transaction</h2>
+                            {{ else }}
+                                <h2><strong>Create</strong> a new Transaction</h2>
+                            {{ end }}
                         </div>
                         <div class="body">
-                            <h5>Create a new Transaction</h5>
+                            {{ if .Transaction.ID }}
+                                <h5>Edit Transaction</h5>
+                            {{ else }}
+                                <h5>Create a new Transaction</h5>
+                            {{ end }}
 
                             <form method="POST">
                                 <!-- Name of the Transaction -->

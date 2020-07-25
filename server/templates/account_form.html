@@ -54,7 +54,11 @@
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
                         <li class="breadcrumb-item active">Accounts</li>
-                        <li class="breadcrumb-item active">Create New</li>
+                        {{ if .Account.ID }}
+                            <li class="breadcrumb-item active">Edit</li>
+                        {{ else }}
+                            <li class="breadcrumb-item active">Create New</li>
+                        {{ end }}
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
                 </div>
@@ -68,7 +72,11 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="header">
+                        {{ if .Account.ID }}
+                            <h2><strong>Edit</strong> Account</h2>
+                        {{ else }}
                             <h2><strong>Create</strong> a new Account</h2>
+                        {{ end }}
                         </div>
                         <div class="body">
                             <h5>{{ .Header }}</h5>
