@@ -146,7 +146,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="calc_uom">Calculation Unit of Measure</label>
-                                            <select name="calc_uom" id="calc_uom" class="form-control">
+                                            <select name="calc_uom" id="calc_uom" class="form-control custom-select">
                                                 <option {{ if eq .Settings.CalcUoM "minutes" }}selected{{end}} value="minutes">minutes</option>
                                                 <option {{ if eq .Settings.CalcUoM "hours" }}selected{{end}} value="hours">hours</option>
                                                 <option {{ if eq .Settings.CalcUoM "days" }}selected{{end}} value="days">days</option>

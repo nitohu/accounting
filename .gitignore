@@ -3,3 +3,4 @@
 development.conf
 *.log
 update-packages
+__debug_bin
