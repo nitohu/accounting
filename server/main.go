@@ -106,7 +106,8 @@ func main() {
 	// General
 	http.HandleFunc("/", logging(handleRoot))
 	http.HandleFunc("/settings/", logging(handleSettings))
-	http.HandleFunc("/settings/api/", logging(handleAPISettings))
+	http.HandleFunc("/settings/api/", logging(handleAPISettingsOverview))
+	http.HandleFunc("/settings/api/form/", logging(handleAPISettings))
 	http.HandleFunc("/login/", logging(handleLogin))
 	http.HandleFunc("/logout/", logging(handleLogout))
 

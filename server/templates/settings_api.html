@@ -54,8 +54,9 @@
                     <h2>Settings</h2>
                     <ul class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
-                        <li class="breadcrumb-item active">Settings</li>
+                        <li class="breadcrumb-item"><a href="/settings/">Settings</a></li>
                         <li class="breadcrumb-item active">API</li>
+                        <li class="breadcrumb-item active">Overview</li>
                     </ul>
                     <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
                 </div>
@@ -70,6 +71,13 @@
                     <div class="card">
                         <div class="header">
                             <h2><strong>API </strong>Settings</h2>
+                            <ul class="header-dropdown">
+                                <li class="dropdown"> <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>
+                                    <ul class="dropdown-menu dropdown-menu-right slideUp">
+                                        <li><a href="/settings/api/form/">Create</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </div>
                         <div class="body">
                             <table class="table table-striped">
@@ -88,7 +96,7 @@
                                     {{ range .APIKeys }}
                                         <tr>
                                             <td><i class="zmdi zmdi-hc-fw" style="color:{{ if .Active }}green{{ else }}red{{ end }}"></i></td>
-                                            <td>{{ .Name }}</td>
+                                            <td><a href="/settings/api/form/?id={{ .ID }}">{{ .Name }}</a></td>
                                             <td>{{ .CreateDate }}</td>
                                             <td>{{ .LastUpdate }}</td>
                                             <td>{{ .APIPrefix }}</td>

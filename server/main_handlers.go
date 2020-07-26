@@ -5,9 +5,11 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/nitohu/accounting/server/models"
+	"github.com/nitohu/err"
 )
 
 // Root
@@ -144,8 +146,8 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// API Settings
-func handleAPISettings(w http.ResponseWriter, r *http.Request) {
+// API Settings Overview
+func handleAPISettingsOverview(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/settings/api/" {
 		handleNotFound(w, r)
 		return
@@ -155,7 +157,7 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 
 	ctx, err := createContextFromSession(db, session)
 	if !err.Empty() {
-		err.AddTraceback("handleAPISettings", "Error while creating the context.")
+		err.AddTraceback("handleAPISettingsOverview", "Error while creating the context.")
 		log.Println("[WARN]", err)
 		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
 		return
@@ -165,7 +167,7 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 
 	apiKeys, err := models.GetAllAPIKeys(db)
 	if !err.Empty() {
-		err.AddTraceback("handleAPISettings", "Error while fetching API Keys.")
+		err.AddTraceback("handleAPISettingsOverview", "Error while fetching API Keys.")
 		log.Println("[ERROR]", err)
 	}
 	ctx["Title"] = "API Settings"
@@ -173,10 +175,134 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		if e := tmpl.ExecuteTemplate(w, "settings_api.html", ctx); e != nil {
-			err.Init("handleAPISettings", e.Error())
+			err.Init("handleAPISettingsOverview", e.Error())
 			log.Println("[ERROR]", err)
 		}
 		return
+	}
+}
+
+// API Settings Form
+func handleAPISettings(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/settings/api/form/" {
+		handleNotFound(w, r)
+		return
+	}
+
+	session, _ := store.Get(r, "session")
+	ctx, e := createContextFromSession(db, session)
+	if !e.Empty() {
+		e.AddTraceback("handleAPISettings", "Error while creating the context.")
+		log.Println("[WARN]", e)
+		http.Redirect(w, r, "/logout/", http.StatusSeeOther)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	ctx["Title"] = "Create API Key"
+	ctx["Btn"] = "Create"
+
+	vars := r.URL.Query()
+	key := models.API{}
+	if keyID, ok := vars["id"]; ok {
+		k, err := strconv.Atoi(keyID[0])
+		if err != nil {
+			log.Println("[WARN] handleAPISettings(): ", e)
+		}
+		ctx["Title"] = "Edit API Key"
+		ctx["Btn"] = "Save"
+		if e := key.FindByID(db, int64(k)); !e.Empty() {
+			e.AddTraceback("handleAPISettings", "Error while gettings API Key.")
+			log.Println("[WARN]", e)
+		}
+	}
+	ctx["API"] = key
+
+	// Format access rights for rendering
+	var arf [][]string
+	ar := models.GetAllAccessRights()
+	for x := 0; x < 3; x++ {
+		var row []string
+		for y := 0; y < (len(ar) / 3); y++ {
+			i := y + x*(len(ar)/3)
+			row = append(row, ar[i])
+		}
+		arf = append(arf, row)
+	}
+	ctx["AccessRights"] = arf
+	ctx["FormattedAR"] = key.FormatAccessRights()
+
+	if r.Method != http.MethodPost {
+		e := tmpl.ExecuteTemplate(w, "settings_api_form.html", ctx)
+		if e != nil {
+			var err err.Error
+			err.Init("handleAPISettings()", e.Error())
+			log.Println("[ERROR]", err)
+		}
+		return
+	}
+
+	active := r.FormValue("active")
+	local := r.FormValue("local")
+	key.Name = r.FormValue("name")
+
+	// Validate access rights, if they are invalid return an error to the user
+	key.AccessRights = strings.Split(r.FormValue("access_rights"), ";")
+	if !models.ValidateAccessRights(key.AccessRights) {
+		ctx["Error"] = "One of the access rights you've typed in is not in the list of access rights."
+
+		er := tmpl.ExecuteTemplate(w, "settings_api_form.html", ctx)
+		if er != nil {
+			var err err.Error
+			err.Init("handleAPISettings()", e.Error())
+			log.Println("[ERROR]", err)
+		}
+		return
+	}
+
+	// Convert FormValue strings into bool
+	if active == "on" {
+		key.Active = true
+	} else {
+		key.Active = false
+	}
+	if local == "on" {
+		key.LocalKey = true
+	} else {
+		key.LocalKey = false
+	}
+
+	log.Printf("Name: %s Active: %t Local: %t\n", key.Name, key.Active, key.LocalKey)
+
+	// Save the key and either render the next page
+	if key.ID > 0 {
+		if e = key.Save(db); !e.Empty() {
+			fmt.Println("[WARN]", e.Error())
+			ctx["Error"] = "There was an error while saving this item to the database, please check the logs."
+
+			if er := tmpl.ExecuteTemplate(w, "settings_api_form.html", ctx); er != nil {
+				var err err.Error
+				err.Init("handleAPISettings()", e.Error())
+				log.Println("[ERROR]", err)
+				return
+			}
+		}
+		http.Redirect(w, r, "/settings/api/", http.StatusSeeOther)
+	} else {
+		ctx["RawKey"] = key.GenerateAPIKey()
+
+		if e = key.Create(db); !e.Empty() {
+			ctx["Error"] = "There was an error while saving this item to the database, please check the logs."
+			fmt.Println("[WARN]", e.Error())
+		} else {
+			ctx["Success"] = "Success"
+		}
+
+		if er := tmpl.ExecuteTemplate(w, "settings_api_form.html", ctx); er != nil {
+			var err err.Error
+			err.Init("handleAPISettings()", e.Error())
+			log.Println("[ERROR]", err)
+		}
 	}
 }
 

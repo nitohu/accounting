@@ -1,0 +1,210 @@
+<!doctype html>
+<html class="no-js " lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<meta name="description" content="Responsive Bootstrap 4 and web Application ui kit.">
+
+<title>:: {{ .Title }} :: Accounting</title>
+<!-- Favicon-->
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="/static/plugins/bootstrap/css/bootstrap.min.css">
+<!-- Bootstrap Material Datetime Picker Css -->
+<link href="/static/plugins/bootstrap-material-datetimepicker/css/bootstrap-material-datetimepicker.css" rel="stylesheet" />
+<!-- Bootstrap Select Css -->
+<link href="/static/plugins/bootstrap-select/css/bootstrap-select.css" rel="stylesheet" />
+<!-- Custom Css -->
+<link rel="stylesheet" href="/static/css/style.min.css">
+<link rel="stylesheet" href="/static/css/custom.css">
+</head>
+
+<body class="theme-blush">
+
+<!-- Page Loader -->
+<div class="page-loader-wrapper">
+    <div class="loader">
+        <div class="m-t-30"><img class="zmdi-hc-spin" src="/static/images/loader.svg" width="48" height="48" alt="Aero"></div>
+        <p>Please wait...</p>
+    </div>
+</div>
+
+<!-- Overlay For Sidebars -->
+<div class="overlay"></div>
+
+<!-- Main Search -->
+<div id="search">
+    <button id="close" type="button" class="close btn btn-primary btn-icon btn-icon-mini btn-round">x</button>
+    <form>
+        <input type="search" value="" placeholder="Search..." />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+{{ template "rightSidebar" }}
+
+{{ template "leftSidebar" . }}
+
+<!-- Main Content -->
+<section class="content">
+    <div class="body_scroll">
+        <div class="block-header">
+            <div class="row">
+                <div class="col-lg-7 col-md-6 col-sm-12">
+                    <h2>Settings</h2>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/"><i class="zmdi zmdi-home"></i> Accounting</a></li>
+                        <li class="breadcrumb-item"><a href="/settings/">Settings</a></li>
+                        <li class="breadcrumb-item"><a href="/settings/api/">API</a></li>
+                        {{ if .API.ID }}
+                            <li class="breadcrumb-item active">Edit</li>
+                        {{ else }}
+                            <li class="breadcrumb-item active">Create New</li>
+                        {{ end }}
+                    </ul>
+                    <button class="btn btn-primary btn-icon mobile_menu" type="button"><i class="zmdi zmdi-sort-amount-desc"></i></button>
+                </div>
+                <div class="col-lg-5 col-md-6 col-sm-12">                
+                    <button class="btn btn-primary btn-icon float-right right_icon_toggle_btn" type="button"><i class="zmdi zmdi-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="row clearfix">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="header">
+                            {{ if .API.ID }}
+                                <h2><strong>Edit </strong>API Key</h2>
+                            {{ else }}
+                                <h2><strong>Create </strong>API Key</h2>
+                            {{ end }}
+                        </div>
+                        <div class="body">
+                            <h5>{{ .Title }}</h5>
+                            {{ if .Error }}
+                            <div class="alert alert-danger">
+                                {{ .Error }}
+                            </div>
+                            {{ end }}
+                            <form method="POST">
+                                <!-- Name of the Key -->
+                                <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="name"><b>Name of the Key</b></label>
+                                            <input type="text" id="name" name="name"
+                                                class="form-control" value="{{ .API.Name }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Active & Local booleans -->
+                                <div class="row clearfix">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="active"><b>Active</b></label>
+                                            <p>
+                                                <label class="switch">
+                                                    <input type="checkbox" name="active" id="api_active"
+                                                        {{ if .API.Active }} checked {{ end }}
+                                                        {{ if not .API.ID }} checked {{ end }}>
+                                                    <span class="slider round"></span>
+                                                </label>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="local"><b>Local</b></label>
+                                            <p>
+                                                <label class="switch">
+                                                    <input type="checkbox" name="local" id="local" {{ if .API.LocalKey }} checked {{ end }}>
+                                                    <span class="slider round"></span>
+                                                </label>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ if .API.ID }}
+                                <!-- Uneditable information -->
+                                <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <p><b>Prefix</b><br/>{{ .API.APIPrefix }}</p>
+                                        <p><b>Created:</b><br/>{{ .API.CreateDate }}</p>
+                                    </div>
+                                </div>
+                                {{ end }}
+                                <!-- Access Rights -->
+                                <b>Access Rights</b>
+                                <div class="row clearfix">
+                                    {{ range .AccessRights }}
+                                        <div class="col-sm-4">
+                                            <ul class="arList">
+                                                {{ range . }}
+                                                <li>{{ . }}</li>
+                                                {{ end }}
+                                            </ul>
+                                        </div>
+                                    {{ end }}
+                                </div>
+                                <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label for="access_rights">Active Access Rights</label>
+                                            <input type="text" name="access_rights" id="access_rights" class="form-control" value="{{ .FormattedAR }}"
+                                                placeholder="E.g. transaction.read;account.read;statistics.read;transaction.write">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <input type="submit" class="btn btn-primary" value="{{ .Btn }}">
+                                        <a href="/accounts" class="btn btn-neutral">Cancel</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{ template "scripts" }}
+<script src="/static/plugins/sweetalert/sweetalert.min.js"></script>
+
+<script>
+    function updateAccessRightList(items) {
+        let rights = $("#access_rights").val().split(";")
+        for (let x = 0; x < items.length; x++) {
+            $(items[x]).css("color", "#000")
+            if (rights.includes(items[x].innerHTML)) {
+                $(items[x]).css("color", "#05c46b")
+            }
+        }
+    }
+
+    let items = [];
+    $(".arList>li").each(function(i, e) {
+        items.push(e)
+    })
+
+    updateAccessRightList(items);
+    $("#access_rights").change(function() {
+        updateAccessRightList(items);
+    })
+</script>
+
+{{ if .Success }}
+    <script>
+        swal("API Key", "This is your API Key, make sure you store it in a safe place, this is the only time you will be able to see it.\n\n{{ .RawKey }}", "success")
+    </script>
+{{ end }}
+
+<!-- Bootstrap Material Datetime Picker Plugin Js -->
+<script src="/static/plugins/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js"></script> 
+</body>
+</html>
