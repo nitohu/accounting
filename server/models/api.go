@@ -27,7 +27,7 @@ type API struct {
 	AccessRightCount int
 }
 
-//GetAllAccessRights returns a list of all existing api access rights
+// GetAllAccessRights returns a list of all existing api access rights
 func GetAllAccessRights() []string {
 	return []string{
 		"transaction.read",
@@ -52,8 +52,7 @@ func formatAccessRights(rights []string) string {
 	res := ""
 
 	for i := 0; i < len(rights); i++ {
-		r := rights[i]
-		res += r
+		res += rights[i]
 		if i < (len(rights) - 1) {
 			res += ";"
 		}
@@ -78,13 +77,35 @@ func generateRandomKey(length int) string {
 	return key
 }
 
+func contains(a []string, b string) bool {
+	for _, e := range a {
+		if e == b {
+			return true
+		}
+	}
+	return false
+}
+
+// ValidateAccessRights takes an array of access rights and checks if they are actually existing
+// If one of the items is not part of the list returned by GetAllAccessRights() it's invalid and returns false
+// If all given items exist in the array of GetAllAccessRights() it returns true
+func ValidateAccessRights(rights []string) bool {
+	a := GetAllAccessRights()
+	for i := 0; i < len(rights); i++ {
+		if !contains(a, rights[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func (a *API) compute() {
 	a.AccessRightCount = len(a.AccessRights)
 }
 
 // Create the current instance in the database
 func (a *API) Create(cr *sql.DB) err.Error {
-	if a.ID != 0 {
+	if a.ID > 0 {
 		var e err.Error
 		e.Init("API.Create()", "This object already has an ID.")
 		return e
@@ -123,7 +144,7 @@ func (a *API) Create(cr *sql.DB) err.Error {
 
 // Save the current instance in the database
 func (a *API) Save(cr *sql.DB) err.Error {
-	if a.ID >= 0 {
+	if a.ID <= 0 {
 		var e err.Error
 		e.Init("API.Save()", "ID must be bigger than 0. ("+string(a.ID)+")")
 		return e
@@ -134,7 +155,7 @@ func (a *API) Save(cr *sql.DB) err.Error {
 		return e
 	}
 
-	query := "UPDATE api SET active=$2, name=$3, last_update=$4, api_key=5, api_prefix=6, local_key=$7, access_rights=$8 WHERE id=$1;"
+	query := "UPDATE api SET active=$2, name=$3, last_update=$4, api_key=$5, api_prefix=$6, local_key=$7, access_rights=$8 WHERE id=$1;"
 
 	a.LastUpdate = time.Now()
 	rights := formatAccessRights(a.AccessRights)
@@ -186,7 +207,7 @@ func (a *API) GetAPIKey() string {
 }
 
 // GenerateAPIKey generates an api key and sets it to the variable
-func (a *API) GenerateAPIKey() {
+func (a *API) GenerateAPIKey() string {
 	a.APIPrefix = generateRandomKey(6)
 	key := generateRandomKey(32)
 	fullKey := a.APIPrefix + "." + key
@@ -196,6 +217,7 @@ func (a *API) GenerateAPIKey() {
 		bhash := sha256.Sum256([]byte(fullKey))
 		a.apiKey = fmt.Sprintf("%x", bhash)
 	}
+	return fullKey
 }
 
 // FindByPrefix takes the given prefix and returns the corresponding API record
@@ -254,6 +276,11 @@ func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
 	a.compute()
 
 	return err.Error{}
+}
+
+// Format returns a formatted string of the access rights
+func (a *API) FormatAccessRights() string {
+	return formatAccessRights(a.AccessRights)
 }
 
 // GetLocalAPIKeys returns all local API Keys
