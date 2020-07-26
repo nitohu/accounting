@@ -75,7 +75,6 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 	vars := r.URL.Query()
 
 	ctx["Title"] = "Create Account"
-	ctx["Header"] = "Create Account"
 	ctx["Btn"] = "Create Account"
 	ctx["Account"] = account
 
