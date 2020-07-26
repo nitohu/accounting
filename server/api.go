@@ -66,7 +66,7 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 		if k[0] == "Bearer" {
 			var dbKey, fullKey string
 			var local bool
-			query := "SELECT api_key,local_key FROM api WHERE api_prefix=$1"
+			query := "SELECT api_key,local_key FROM api WHERE api_prefix=$1 AND active=true"
 			k = strings.Split(key, ".")
 			prefix := k[0]
 
