@@ -1,0 +1,35 @@
+version: "3.7"
+services:
+  # nginx:
+  #   container_name: nginx
+  #   image: nginx:1.17.9
+  #   depends_on:
+  #     - nitohu
+  #     - accounting
+  #   ports:
+  #     - 80:80/tcp
+  #     - 9080:9080/tcp
+  #   volumes:
+  #     - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/conf:/etc/nginx/conf.d:ro
+  #   restart: "always"
+
+  accounting:
+    container_name: accounting
+    build: ./accounting/
+    depends_on:
+      - postgresql
+    ports:
+      - 8080:8080
+    volumes: 
+      - ./accounting/accounting.conf:/etc/accounting.conf:ro
+    restart: "always"
+
+  postgresql:
+    container_name: postgres
+    image: postgres:12.2
+    build: ./postgres/
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgres/volumes/data:/var/lib/postgresql/data:delegated

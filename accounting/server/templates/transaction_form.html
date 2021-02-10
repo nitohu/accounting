@@ -117,6 +117,17 @@
                                             </div>
                                             <input type="text" id="datetime" class="form-control datetimepicker"
                                                 placeholder="Please choose date & time..." name="datetime" value="{{ .Transaction.TransactionDateStr }}">
+                                            <!-- <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" id="insertCurrentTime">Now</button> -->
+                                                <!-- 
+                                                    JavaScript Snippet:
+                                                    ===================
+                                                    let d = new Date();
+                                                    let date = Intl.DateTimeFormat("de", {day: "2-digit", month: "2-digit", year: "numeric"}).format(d);
+                                                    let time = Intl.DateTimeFormat("de", {hour: "2-digit", minute: "2-digit"}).format(d);
+                                                    document.getElementById("datetime").value = date + " - " + time;
+                                                -->
+                                            <!-- </div> -->
                                         </div>
                                     </div>
                                 </div>
@@ -195,6 +206,10 @@
         clearButton: true,
         weekStart: 1
     });
+
+    // $("#insertCurrentTime").click(function() {
+    //     console.log("Clicked now")
+    // })
 </script>
 
 </body>

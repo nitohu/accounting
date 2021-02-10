@@ -15,6 +15,7 @@ CREATE TABLE accounts (
     create_date timestamp,
     last_update timestamp
 );
+ALTER TABLE accounts OWNER TO "accounting";
 
 CREATE TABLE categories (
     id serial,
@@ -25,6 +26,7 @@ CREATE TABLE categories (
     last_update timestamp,
     hex text
 );
+ALTER TABLE categories OWNER TO "accounting";
 
 CREATE TABLE api (
     id serial,
@@ -40,6 +42,7 @@ CREATE TABLE api (
     local_key boolean,
     access_rights text
 );
+ALTER TABLE api OWNER TO "accounting";
 
 CREATE TABLE settings (
     name text,
@@ -54,6 +57,7 @@ CREATE TABLE settings (
     account_id int references accounts(id),
     api_key int references api(id)
 );
+ALTER TABLE settings OWNER TO "accounting";
 
 CREATE TABLE statistics (
     id serial,
@@ -72,6 +76,7 @@ CREATE TABLE statistics (
     monetary boolean,
     external_id text
 );
+ALTER TABLE statistics OWNER TO "accounting";
 
 CREATE TABLE transactions (
     id serial,
@@ -90,5 +95,6 @@ CREATE TABLE transactions (
     description text,
     category_id int references categories(id)
 );
+ALTER TABLE transactions OWNER TO "accounting";
 
 COMMIT;
