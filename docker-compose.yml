@@ -23,6 +23,7 @@ services:
       - 8080:8080
     volumes: 
       - ./accounting/accounting.conf:/etc/accounting.conf:ro
+      - ./accounting/server:/home/accounting:delegated
     restart: "always"
 
   postgresql:
