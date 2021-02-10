@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nitohu/accounting/server/models"
+	
 	"github.com/nitohu/err"
 )
 
@@ -32,15 +32,15 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	ctx["Title"] = "Dashboard"
 
-	if ctx["Transactions"], err = models.GetLatestTransactions(db, 10); !err.Empty() {
+	if ctx["Transactions"], err = GetLatestTransactions(db, 10); !err.Empty() {
 		err.AddTraceback("handleRoot", "Error while getting the latest transactions.")
 		log.Println("[WARN]", err)
 	}
-	if ctx["Accounts"], err = models.GetLimitAccounts(db, 4); !err.Empty() {
+	if ctx["Accounts"], err = GetLimitAccounts(db, 4); !err.Empty() {
 		err.AddTraceback("handleRoot", "Error while getting accounts.")
 		log.Println("[WARN]", err)
 	}
-	if ctx["Statistics"], err = models.GetAllStatistics(db); !err.Empty() {
+	if ctx["Statistics"], err = GetAllStatistics(db); !err.Empty() {
 		err.AddTraceback("handleRoot", "Error while getting statistics.")
 		log.Println("[WARN]", err)
 	}
@@ -71,7 +71,7 @@ func handleSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	settings := ctx["Settings"].(models.Settings)
+	settings := ctx["Settings"].(Settings)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
@@ -165,7 +165,7 @@ func handleAPISettingsOverview(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	apiKeys, err := models.GetAllAPIKeys(db)
+	apiKeys, err := GetAllAPIKeys(db)
 	if !err.Empty() {
 		err.AddTraceback("handleAPISettingsOverview", "Error while fetching API Keys.")
 		log.Println("[ERROR]", err)
@@ -203,7 +203,7 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 	ctx["Btn"] = "Create"
 
 	vars := r.URL.Query()
-	key := models.API{}
+	key := API{}
 	if keyID, ok := vars["id"]; ok {
 		k, err := strconv.Atoi(keyID[0])
 		if err != nil {
@@ -220,7 +220,7 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 
 	// Format access rights for rendering
 	var arf [][]string
-	ar := models.GetAllAccessRights()
+	ar := GetAllAccessRights()
 	for x := 0; x < 3; x++ {
 		var row []string
 		for y := 0; y < (len(ar) / 3); y++ {
@@ -248,7 +248,7 @@ func handleAPISettings(w http.ResponseWriter, r *http.Request) {
 
 	// Validate access rights, if they are invalid return an error to the user
 	key.AccessRights = strings.Split(r.FormValue("access_rights"), ";")
-	if !models.ValidateAccessRights(key.AccessRights) {
+	if !ValidateAccessRights(key.AccessRights) {
 		ctx["Error"] = "One of the access rights you've typed in is not in the list of access rights."
 
 		er := tmpl.ExecuteTemplate(w, "settings_api_form.html", ctx)

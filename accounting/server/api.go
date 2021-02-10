@@ -10,16 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nitohu/accounting/server/models"
-
 	"github.com/nitohu/err"
 )
 
-// API Handler for the Accounting app
-type API struct {
+// APIHandler for the Accounting app
+type APIHandler struct {
 	id  int64
 	obj interface{}
-	key models.API
+	key API
 }
 
 const (
@@ -27,7 +25,7 @@ const (
 	errorGetID = "{'error': 'There was an unexpected error while getting the record by ID.'}"
 )
 
-func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.Split(r.URL.Path, "/api")[1]
 	var body []byte
 
@@ -47,7 +45,7 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		body = make([]byte, r.ContentLength)
 		if _, e := io.ReadFull(b, body); e != nil {
 			var err err.Error
-			err.Init("API.ServeHTTP()", e.Error())
+			err.Init("APIHandler.ServeHTTP()", e.Error())
 			log.Println("[WARN]", err)
 		}
 	}
@@ -58,19 +56,20 @@ func (api API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	api.multiplexer(w, r, path, body)
 }
 
-func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
+func (api *APIHandler) authorize(w http.ResponseWriter, r *http.Request) bool {
 	key := r.Header.Get("Authorization")
 	if key != "" {
 		k := strings.Split(key, " ")
 		key := k[1]
 		if k[0] == "Bearer" {
+			var id int64
 			var dbKey, fullKey string
 			var local bool
-			query := "SELECT api_key,local_key FROM api WHERE api_prefix=$1 AND active=true"
+			query := "SELECT id,api_key,local_key FROM api WHERE api_prefix=$1 AND active=true"
 			k = strings.Split(key, ".")
 			prefix := k[0]
 
-			if e := db.QueryRow(query, prefix).Scan(&dbKey, &local); e != nil {
+			if e := db.QueryRow(query, prefix).Scan(&id, &dbKey, &local); e != nil {
 				log.Println("[ERROR]", e)
 			}
 
@@ -82,7 +81,7 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 
 			if fullKey == dbKey {
 				// Client is authenticated
-				var a models.API
+				var a API
 				if err := a.FindByPrefix(db, prefix); !err.Empty() {
 					w.WriteHeader(400)
 					err.AddTraceback("api.authorize", "Error while fetching API record.")
@@ -91,6 +90,13 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 					return false
 				}
 				api.key = a
+				query = "UPDATE api SET last_use=$1 WHERE id=$2"
+				if _, err := db.Exec(query, time.Now(), id); err != nil {
+					w.WriteHeader(400)
+					log.Println("[ERROR]", err)
+					fmt.Fprintln(w, "{'error': 'There was an internal server error.'}")
+					return false
+				}
 				return true
 			}
 			w.WriteHeader(401)
@@ -108,7 +114,7 @@ func (api *API) authorize(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
-func (api *API) checkAccessRight(w http.ResponseWriter, accessRight string) bool {
+func (api *APIHandler) checkAccessRight(w http.ResponseWriter, accessRight string) bool {
 	if !StrContains(api.key.AccessRights, accessRight) {
 		w.WriteHeader(403)
 		fmt.Fprintf(w, "{'error': 'The provided access key does not have the mandatory rights to perform this action.'}")
@@ -117,7 +123,7 @@ func (api *API) checkAccessRight(w http.ResponseWriter, accessRight string) bool
 	return true
 }
 
-func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
+func (api *APIHandler) multiplexer(w http.ResponseWriter, r *http.Request, path string, body []byte) {
 	switch path {
 	//
 	// Categories
@@ -126,7 +132,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "category.read") {
 			return
 		}
-		c := models.EmptyCategory()
+		c := EmptyCategory()
 		if len(body) > 0 {
 			if err := json.Unmarshal(body, &c); err != nil {
 				w.WriteHeader(400)
@@ -144,7 +150,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "category.write") {
 			return
 		}
-		c := models.EmptyCategory()
+		c := EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -157,7 +163,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "category.write") {
 			return
 		}
-		c := models.EmptyCategory()
+		c := EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -176,7 +182,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "category.delete") {
 			return
 		}
-		c := models.EmptyCategory()
+		c := EmptyCategory()
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -193,7 +199,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.id = 0
-		a := models.EmptyAccount()
+		a := EmptyAccount()
 		if len(body) > 0 {
 			if err := json.Unmarshal(body, &a); err != nil {
 				w.WriteHeader(400)
@@ -211,7 +217,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "account.write") {
 			return
 		}
-		a := models.EmptyAccount()
+		a := EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -224,7 +230,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "account.write") {
 			return
 		}
-		a := models.EmptyAccount()
+		a := EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -245,7 +251,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 		if !api.checkAccessRight(w, "account.delete") {
 			return
 		}
-		a := models.EmptyAccount()
+		a := EmptyAccount()
 		if err := json.Unmarshal(body, &a); err != nil {
 			w.WriteHeader(400)
 			fmt.Fprintf(w, "{'error': '%s'}", err)
@@ -261,7 +267,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.id = 0
-		t := models.EmptyTransaction()
+		t := EmptyTransaction()
 		if len(body) > 0 {
 			if e := json.Unmarshal(body, &t); e != nil {
 				w.WriteHeader(400)
@@ -280,7 +286,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.id = 0
-		t := models.EmptyTransaction()
+		t := EmptyTransaction()
 		if len(body) > 0 {
 			if e := json.Unmarshal(body, &t); e != nil {
 				w.WriteHeader(400)
@@ -297,7 +303,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.id = 0
-		t := models.Transaction{}
+		t := Transaction{}
 		if len(body) > 0 {
 			if e := json.Unmarshal(body, &t); e != nil {
 				w.WriteHeader(400)
@@ -312,7 +318,7 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 			return
 		}
 		api.id = 0
-		s := models.Statistic{}
+		s := Statistic{}
 		if len(body) > 0 {
 			if e := json.Unmarshal(body, &s); e != nil {
 				w.WriteHeader(400)
@@ -332,10 +338,10 @@ func (api *API) multiplexer(w http.ResponseWriter, r *http.Request, path string,
 	}
 }
 
-func (api API) sendResult(w http.ResponseWriter, data interface{}) {
+func (api APIHandler) sendResult(w http.ResponseWriter, data interface{}) {
 	d, err := json.Marshal(data)
 	if err != nil {
-		log.Println("[ERROR] API.sendResult():", err)
+		log.Println("[ERROR] APIHandler.sendResult():", err)
 		fmt.Fprint(w, "{'error': 'Server error while parsing data into JSON.'}")
 		return
 	}
@@ -353,16 +359,16 @@ func (api API) sendResult(w http.ResponseWriter, data interface{}) {
 
 // getCategories gets all Categories
 // Also handles if
-func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getCategories(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/: Method must be GET.'}")
 		return
 	}
 
-	c, err := models.GetAllCategories(db)
+	c, err := GetAllCategories(db)
 	if !err.Empty() {
-		err.AddTraceback("API.getCategories()", "Error getting all categories.")
+		err.AddTraceback("APIHandler.getCategories()", "Error getting all categories.")
 		log.Println("[ERROR]", err)
 		w.WriteHeader(500)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
@@ -373,7 +379,7 @@ func (api API) getCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 // getCategoryByID gets a category by it's ID
-func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/: Method must be POST for getting categories by ID.'}")
@@ -385,10 +391,10 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := models.EmptyCategory()
+	c := EmptyCategory()
 
 	if err := c.FindByID(db, api.id); !err.Empty() {
-		err.AddTraceback("API.getCategoryByID()", "Error getting category:"+fmt.Sprintf("%d", api.id))
+		err.AddTraceback("APIHandler.getCategoryByID()", "Error getting category:"+fmt.Sprintf("%d", api.id))
 		log.Println("[ERROR]", err)
 		w.WriteHeader(400)
 		fmt.Fprintln(w, errorGetID)
@@ -402,19 +408,19 @@ func (api API) getCategoryByID(w http.ResponseWriter, r *http.Request) {
 // if this category does not exist or has no ID, create one
 // Method MUST be POST
 // Returns the data written to the database
-func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) updateCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
 
-	c := models.EmptyCategory()
+	c := EmptyCategory()
 
 	// Get data if ID is present
 	if api.id > 0 {
 		if err := c.FindByID(db, api.id); !err.Empty() {
-			err.AddTraceback("API.updateCategory()", "Error getting category by ID: "+fmt.Sprintf("%d", api.id))
+			err.AddTraceback("APIHandler.updateCategory()", "Error getting category by ID: "+fmt.Sprintf("%d", api.id))
 			log.Println("[WARN]", err)
 			w.WriteHeader(400)
 			fmt.Fprint(w, errorGetID)
@@ -425,7 +431,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create necessary variables for parsing the data
-	reqData := api.obj.(models.Category)
+	reqData := api.obj.(Category)
 	name := c.Name
 	hex := c.Hex
 
@@ -458,7 +464,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	if !e.Empty() {
 		var err err.Error
-		err.AddTraceback("API.updateCategory()", "Error creating/saving the category.")
+		err.AddTraceback("APIHandler.updateCategory()", "Error creating/saving the category.")
 		log.Println("[WARN]", err)
 		w.WriteHeader(500)
 		fmt.Fprint(w, "{'error': 'Error creating/saving the category.'}")
@@ -469,7 +475,7 @@ func (api API) updateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 // deletes a category with an ID
-func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) deleteCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/delete: Method must be DELETE.'}")
@@ -481,12 +487,12 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := models.Category{
+	c := Category{
 		ID: api.id,
 	}
 
 	if e := c.Delete(db); !e.Empty() {
-		e.AddTraceback("API.deleteCategory", "Error deleting category with ID: "+fmt.Sprintf("%d", api.id))
+		e.AddTraceback("APIHandler.deleteCategory", "Error deleting category with ID: "+fmt.Sprintf("%d", api.id))
 		log.Println("[WARN]", e)
 		w.WriteHeader(400)
 		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
@@ -505,16 +511,16 @@ func (api API) deleteCategory(w http.ResponseWriter, r *http.Request) {
 */
 
 // Gives back all accounts
-func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getAccounts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
 		return
 	}
 
-	acc, e := models.GetAllAccounts(db)
+	acc, e := GetAllAccounts(db)
 	if !e.Empty() {
-		e.AddTraceback("API.getAccount()", "Error while getting accounts")
+		e.AddTraceback("APIHandler.getAccount()", "Error while getting accounts")
 		log.Println("[ERROR]", e)
 		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
@@ -525,7 +531,7 @@ func (api API) getAccounts(w http.ResponseWriter, r *http.Request) {
 }
 
 // Returns a specific account with the given id
-func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/: Method must be GET.'}")
@@ -537,9 +543,9 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acc := models.EmptyAccount()
+	acc := EmptyAccount()
 	if err := acc.FindByID(db, api.id); !err.Empty() {
-		err.AddTraceback("API.getAccountByID", "Error while getting account: "+fmt.Sprintf("%d", api.id))
+		err.AddTraceback("APIHandler.getAccountByID", "Error while getting account: "+fmt.Sprintf("%d", api.id))
 		log.Println("[ERROR]", err)
 
 		w.WriteHeader(400)
@@ -550,18 +556,18 @@ func (api API) getAccountByID(w http.ResponseWriter, r *http.Request) {
 	api.sendResult(w, acc)
 }
 
-func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) updateAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/categories/create: Method must be POST.'}")
 		return
 	}
 
-	acc := models.EmptyAccount()
+	acc := EmptyAccount()
 
 	if api.id > 0 {
 		if err := acc.FindByID(db, api.id); !err.Empty() {
-			err.AddTraceback("API.updateAccount()", "Error while getting account:"+fmt.Sprintf("%d", api.id))
+			err.AddTraceback("APIHandler.updateAccount()", "Error while getting account:"+fmt.Sprintf("%d", api.id))
 			log.Println("[ERROR]", err)
 			w.WriteHeader(400)
 			fmt.Fprint(w, errorGetID)
@@ -572,7 +578,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 		acc.Active = true
 	}
 
-	reqData := api.obj.(models.Account)
+	reqData := api.obj.(Account)
 
 	// Validate user input
 	if acc.ID == 0 && reqData.Name == "" && reqData.Balance == 0.0 {
@@ -613,7 +619,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 		e = acc.Save(db)
 	}
 	if !e.Empty() {
-		e.AddTraceback("API.updateAccount()", "Error while writing account to the database.")
+		e.AddTraceback("APIHandler.updateAccount()", "Error while writing account to the database.")
 		log.Println("[ERROR]", e)
 		return
 	}
@@ -622,7 +628,7 @@ func (api API) updateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // deletes an account with an ID
-func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error': '/api/accounts/delete: Method must be DELETE.'}")
@@ -634,9 +640,9 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a, err := models.FindAccountByID(db, api.id)
+	a, err := FindAccountByID(db, api.id)
 	if !err.Empty() {
-		err.AddTraceback("API.deleteAccount()", "Error getting account: "+fmt.Sprintf("%d", api.id))
+		err.AddTraceback("APIHandler.deleteAccount()", "Error getting account: "+fmt.Sprintf("%d", api.id))
 		log.Println("[WARN]", err)
 		w.WriteHeader(400)
 		fmt.Fprintln(w, "{'error': 'There was an error finding the record in the database.'}")
@@ -650,7 +656,7 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Delete(db); !err.Empty() {
-		err.AddTraceback("API.deleteAccount()", "Error while deleting account.")
+		err.AddTraceback("APIHandler.deleteAccount()", "Error while deleting account.")
 		log.Println("[ERROR]", err)
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "{'error': 'There was an error deleting the record from the database.'}")
@@ -670,15 +676,15 @@ func (api API) deleteAccount(w http.ResponseWriter, r *http.Request) {
 */
 
 // Returns all transactions
-func (api API) getTransactions(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getTransactions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		fmt.Fprint(w, "{'error': '/api/transactions/: Method must be GET.'}")
 		return
 	}
 
-	acc, e := models.GetLatestTransactions(db, -1)
+	acc, e := GetLatestTransactions(db, -1)
 	if !e.Empty() {
-		e.AddTraceback("API.getTransactions()", "Error while getting transactions")
+		e.AddTraceback("APIHandler.getTransactions()", "Error while getting transactions")
 		log.Println("[ERROR]", e)
 		fmt.Fprint(w, "{'error': 'Server error while fetching accounts.'}")
 		return
@@ -688,7 +694,7 @@ func (api API) getTransactions(w http.ResponseWriter, r *http.Request) {
 }
 
 // Returns a specific transaction with the given id
-func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		fmt.Fprint(w, "{'error': '/api/transactions/: Method must be GET.'}")
 		return
@@ -698,9 +704,9 @@ func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := models.EmptyTransaction()
+	t := EmptyTransaction()
 	if err := t.FindByID(db, api.id); !err.Empty() {
-		err.AddTraceback("API.getTransactionByID", "Error while getting transaction: "+fmt.Sprintf("%d", api.id))
+		err.AddTraceback("APIHandler.getTransactionByID", "Error while getting transaction: "+fmt.Sprintf("%d", api.id))
 		log.Println("[WARN]", err)
 		fmt.Fprint(w, errorGetID)
 		return
@@ -709,14 +715,14 @@ func (api API) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 	api.sendResult(w, t)
 }
 
-func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) updateTransaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(400)
 		fmt.Fprint(w, "{'error': '/api/transactions/update: Method must be POST.'}")
 		return
 	}
 
-	t := models.EmptyTransaction()
+	t := EmptyTransaction()
 	if api.id > 0 {
 		if e := t.FindByID(db, api.id); !e.Empty() {
 			e.AddTraceback("api.updateTransaction()", "Error while searching transaction per ID.")
@@ -730,7 +736,7 @@ func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
 		t.LastUpdate = time.Now()
 	}
 
-	req := api.obj.(models.Transaction)
+	req := api.obj.(Transaction)
 
 	if req.Name == "" || req.Amount <= 0 || (req.FromAccount <= 0 && req.ToAccount <= 0) {
 		w.WriteHeader(400)
@@ -781,7 +787,7 @@ func (api API) updateTransaction(w http.ResponseWriter, r *http.Request) {
 	api.sendResult(w, t)
 }
 
-func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(405)
 		fmt.Fprint(w, "{'error', '/api/transactions/delete: Method must be DELETE.'}")
@@ -793,7 +799,7 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate that the ID is existing in the database
-	t := models.Transaction{}
+	t := Transaction{}
 
 	if e := t.FindByID(db, api.id); !e.Empty() {
 		w.WriteHeader(400)
@@ -824,13 +830,13 @@ func (api API) deleteTransaction(w http.ResponseWriter, r *http.Request) {
 */
 
 // Returns all Statistics
-func (api API) getStatistics(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getStatistics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		fmt.Fprint(w, "{'error': '/api/statistics: Method must be GET.")
 		return
 	}
 
-	stats, e := models.GetAllStatistics(db)
+	stats, e := GetAllStatistics(db)
 	if !e.Empty() {
 		e.AddTraceback("api.getStatistics()", "Error while getting statistics.")
 		log.Println("[ERROR]", e)
@@ -842,7 +848,7 @@ func (api API) getStatistics(w http.ResponseWriter, r *http.Request) {
 }
 
 // Returns specific Statistic
-func (api API) getStatisticByID(w http.ResponseWriter, r *http.Request) {
+func (api APIHandler) getStatisticByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		fmt.Fprint(w, "{'error': '/api/statistics: Method must be GET.")
 		return
@@ -852,7 +858,7 @@ func (api API) getStatisticByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := models.Statistic{}
+	s := Statistic{}
 	if e := s.FindByID(db, api.id); !e.Empty() {
 		e.AddTraceback("api.getStatisticByID()", "Error getting Statistic by ID.")
 		log.Println("[WARN]", e)

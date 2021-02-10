@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"crypto/sha256"
@@ -18,6 +18,7 @@ type API struct {
 	Name         string
 	CreateDate   time.Time
 	LastUpdate   time.Time
+	LastUse      time.Time
 	apiKey       string
 	APIPrefix    string
 	AccessRights []string
@@ -116,10 +117,11 @@ func (a *API) Create(cr *sql.DB) err.Error {
 		return e
 	}
 
-	query := "INSERT INTO api (active, name, create_date, last_update, api_key, api_prefix, local_key, access_rights) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);"
+	query := "INSERT INTO api (active, name, create_date, last_update, last_use, api_key, api_prefix, local_key, access_rights) VALUES ($1, $2, $3, $4, $9, $5, $6, $7, $8);"
 
 	a.CreateDate = time.Now()
 	a.LastUpdate = time.Now()
+	a.LastUse = time.Now()
 	rights := formatAccessRights(a.AccessRights)
 
 	_, e := cr.Exec(query,
@@ -131,6 +133,7 @@ func (a *API) Create(cr *sql.DB) err.Error {
 		a.APIPrefix,
 		a.LocalKey,
 		rights,
+		a.LastUse,
 	)
 	if e != nil {
 		var err err.Error
@@ -222,7 +225,7 @@ func (a *API) GenerateAPIKey() string {
 
 // FindByPrefix takes the given prefix and returns the corresponding API record
 func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
-	query := "SELECT id,active,name,create_date,last_update,api_key,api_prefix,local_key,access_rights"
+	query := "SELECT id,active,name,create_date,last_update,last_use,api_key,api_prefix,local_key,access_rights"
 	query += " FROM api WHERE api_prefix=$1;"
 
 	var rights string
@@ -233,6 +236,7 @@ func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
 		&a.Name,
 		&a.CreateDate,
 		&a.LastUpdate,
+		&a.LastUse,
 		&a.apiKey,
 		&a.APIPrefix,
 		&a.LocalKey,
@@ -251,7 +255,7 @@ func (a *API) FindByPrefix(cr *sql.DB, prefix string) err.Error {
 
 // FindByID takes the given ID and returns the corresponding API record
 func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
-	query := "SELECT id,active,name,create_date,last_update,api_key,api_prefix,local_key,access_rights"
+	query := "SELECT id,active,name,create_date,last_update,last_use,api_key,api_prefix,local_key,access_rights"
 	query += " FROM api WHERE id=$1;"
 
 	var rights string
@@ -262,6 +266,7 @@ func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
 		&a.Name,
 		&a.CreateDate,
 		&a.LastUpdate,
+		&a.LastUse,
 		&a.apiKey,
 		&a.APIPrefix,
 		&a.LocalKey,
@@ -278,7 +283,7 @@ func (a *API) FindByID(cr *sql.DB, id int64) err.Error {
 	return err.Error{}
 }
 
-// Format returns a formatted string of the access rights
+// FormatAccessRights returns a formatted string of the access rights
 func (a *API) FormatAccessRights() string {
 	return formatAccessRights(a.AccessRights)
 }

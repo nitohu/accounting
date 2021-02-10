@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/nitohu/accounting/server/models"
 )
 
 func handleStatisticsOverview(w http.ResponseWriter, r *http.Request) {
@@ -26,13 +24,13 @@ func handleStatisticsOverview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset: utf-8")
 
 	ctx["Title"] = "Statistics"
-	if ctx["Statistics"], err = models.GetAllStatistics(db); !err.Empty() {
+	if ctx["Statistics"], err = GetAllStatistics(db); !err.Empty() {
 		err.AddTraceback("handleStatisticOverview", "Error while getting statistics.")
 		log.Println("[ERROR]", err)
 	}
 
-	fmt.Println(ctx["Statistics"].([]models.Statistic)[0].Name)
-	fmt.Println(ctx["Statistics"].([]models.Statistic)[0].Value)
+	fmt.Println(ctx["Statistics"].([]Statistic)[0].Name)
+	fmt.Println(ctx["Statistics"].([]Statistic)[0].Value)
 
 	if e := tmpl.ExecuteTemplate(w, "statistics.html", ctx); e != nil {
 		log.Println("[ERROR] handleStatisticsOverview(): ", e)

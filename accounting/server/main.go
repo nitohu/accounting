@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/gorilla/sessions"
-	"github.com/nitohu/accounting/server/models"
 
 	_ "github.com/lib/pq"
 )
@@ -72,15 +71,15 @@ func init() {
 		keyFilePath = val
 	}
 	// Check if API access exists for this application
-	apiAccess, err := models.GetLocalAPIKeys(db)
+	apiAccess, err := GetLocalAPIKeys(db)
 	if !err.Empty() {
 		log.Fatalf("[FATAL] init(): Error while getting api local keys:\n%s\n", err)
 	}
 	if len(apiAccess) == 0 {
-		a := models.API{
+		a := API{
 			Name:         "Accounting Master Key",
 			Active:       true,
-			AccessRights: models.GetAllAccessRights(),
+			AccessRights: GetAllAccessRights(),
 			LocalKey:     true,
 		}
 		a.GenerateAPIKey()
@@ -99,7 +98,7 @@ func main() {
 		),
 	)
 
-	var api API
+	var api APIHandler
 
 	http.Handle("/api/", api)
 

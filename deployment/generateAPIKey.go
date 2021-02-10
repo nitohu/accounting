@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nitohu/accounting/server/models"
+	
 )
 
 func main() {
-	var a models.API
+	var a API
 	a.LocalKey = true
 	a.GenerateAPIKey()
 	k := a.GetAPIKey()
@@ -25,7 +25,7 @@ func main() {
 	fmt.Println(query + "\n")
 	fmt.Println("You'll need to replace the ACCESS_RIGHTS string with the actual access rights you want to use.")
 	fmt.Println("You can choose from the following list:")
-	rights := models.GetAllAccessRights()
+	rights := GetAllAccessRights()
 	for _, r := range rights {
 		fmt.Printf("\t- %s\n", r)
 	}

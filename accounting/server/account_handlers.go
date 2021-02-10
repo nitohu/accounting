@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"github.com/nitohu/err"
-
-	"github.com/nitohu/accounting/server/models"
 )
 
 /*
@@ -38,7 +36,7 @@ func handleAccountOverview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Accounts"
-	if ctx["Accounts"], e = models.GetAllAccounts(db); !e.Empty() {
+	if ctx["Accounts"], e = GetAllAccounts(db); !e.Empty() {
 		e.AddTraceback("handleAccountOverview", "Error while getting the accounts.")
 		fmt.Println("[ERROR]", e)
 	}
@@ -71,7 +69,7 @@ func handleAccountForm(w http.ResponseWriter, r *http.Request) {
 
 	var accountID int
 
-	account := models.EmptyAccount()
+	account := EmptyAccount()
 	vars := r.URL.Query()
 
 	ctx["Title"] = "Create Account"

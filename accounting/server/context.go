@@ -6,7 +6,7 @@ import (
 	"github.com/nitohu/err"
 
 	"github.com/gorilla/sessions"
-	"github.com/nitohu/accounting/server/models"
+	
 )
 
 // Context type represents context
@@ -47,7 +47,7 @@ func createContextFromSession(cr *sql.DB, session *sessions.Session) (Context, e
 	}
 
 	// Get the settings from the database
-	settings, e := models.InitializeSettings(cr)
+	settings, e := InitializeSettings(cr)
 
 	if !e.Empty() {
 		e.AddTraceback("createContextFromSession", "Error initializing settings.")

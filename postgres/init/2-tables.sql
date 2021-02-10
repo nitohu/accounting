@@ -35,6 +35,7 @@ CREATE TABLE api (
     name text,
     create_date timestamp,
     last_update timestamp,
+    last_use timestamp,
     api_key text,
     api_prefix text,
     -- True: key is used by application itself

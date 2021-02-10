@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nitohu/accounting/server/models"
+	
 
 	"github.com/gorilla/mux"
 )
@@ -38,7 +38,7 @@ func handleTransactionOverview(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	ctx["Title"] = "Transactions"
-	if ctx["Transactions"], e = models.GetLatestTransactions(db, -1); !e.Empty() {
+	if ctx["Transactions"], e = GetLatestTransactions(db, -1); !e.Empty() {
 		e.AddTraceback("handleTransactionOverview()", "Error while getting all transactions.")
 		fmt.Println("[WARN]", e)
 	}
@@ -73,7 +73,7 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 
 	vars := r.URL.Query()
 
-	t := models.EmptyTransaction()
+	t := EmptyTransaction()
 
 	// Get the current transaction
 	if transactionID, ok := vars["id"]; ok {
@@ -97,13 +97,13 @@ func handleTransactionForm(w http.ResponseWriter, r *http.Request) {
 	ctx["Transaction"] = t
 
 	// Get the accounts
-	if ctx["Accounts"], err = models.GetAllAccounts(db); !err.Empty() {
+	if ctx["Accounts"], err = GetAllAccounts(db); !err.Empty() {
 		err.AddTraceback("handleTransactionForm()", "Error while getting the accounts.")
 		log.Println("[WARN]", err)
 	}
 
 	// Get Categories
-	if ctx["Categories"], err = models.GetAllCategories(db); !err.Empty() {
+	if ctx["Categories"], err = GetAllCategories(db); !err.Empty() {
 		err.AddTraceback("handleTransactionForm()", "Error while getting the categories.")
 		log.Println("[WARN]", err)
 	}
@@ -196,7 +196,7 @@ func handleTransactionDeletion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := models.FindTransactionByID(db, int64(id))
+	t, err := FindTransactionByID(db, int64(id))
 
 	if !err.Empty() {
 		err.AddTraceback("handleTransactionDeletion()", "Error while finding transaction by ID.")
