@@ -236,6 +236,7 @@ func (s *Statistic) FindByID(cr *sql.DB, id int64) err.Error {
 	if e != nil {
 		var err err.Error
 		err.Init("Statistic.FindByID()", "Error fetching data from database")
+		err.AddTraceback("Statistic.FindByID()", e.Error())
 		return err
 	}
 
