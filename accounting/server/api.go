@@ -70,7 +70,7 @@ func (api *APIHandler) authorize(w http.ResponseWriter, r *http.Request) bool {
 			prefix := k[0]
 
 			if e := db.QueryRow(query, prefix).Scan(&id, &dbKey, &local); e != nil {
-				log.Println("[ERROR]", e)
+				log.Println("[WARN]", e)
 			}
 
 			if local {
@@ -314,7 +314,7 @@ func (api *APIHandler) multiplexer(w http.ResponseWriter, r *http.Request, path 
 		api.id = t.ID
 		api.deleteTransaction(w, r)
 	case "/statistics":
-		if !api.checkAccessRight(w, "statistics.read") {
+		if !api.checkAccessRight(w, "statistic.read") {
 			return
 		}
 		api.id = 0

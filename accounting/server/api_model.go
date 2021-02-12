@@ -69,9 +69,13 @@ func generateRandomKey(length int) string {
 	r := rand.New(s)
 
 	for i := 0; i < length; i++ {
-		seed = time.Now().Nanosecond()
-		r.Seed(int64(seed))
-		code := int(r.Float64()*57 + 65)
+		// Workaround: Avoid backslashes in the api key
+		code := byte(92)
+		for code == 92 {
+			seed = time.Now().Nanosecond()
+			r.Seed(int64(seed))
+			code = byte(r.Float64()*57 + 65)
+		}
 		key += string(code)
 	}
 
